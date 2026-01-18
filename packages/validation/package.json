@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@obtp/shared-types": "workspace:*",
-    "@obtp/business-logic": "workspace:*",
     "zod": "latest"
   },
   "devDependencies": {

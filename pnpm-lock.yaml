@@ -294,9 +294,6 @@ importers:
 
   packages/validation:
     dependencies:
-      '@obtp/business-logic':
-        specifier: workspace:*
-        version: link:../business-logic
       '@obtp/shared-types':
         specifier: workspace:*
         version: link:../shared-types
