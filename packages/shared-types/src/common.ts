@@ -29,9 +29,3 @@ export interface ValidationErrorDetail {
   message: string;
   code?: string;
 }
-
-export interface JwtPayload {
-  sub: string;
-  email: string;
-  role: string;
-}

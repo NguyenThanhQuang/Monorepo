@@ -18,3 +18,17 @@ export const BUSINESS_CONSTANTS = {
     MONGO_ID: /^[0-9a-fA-F]{24}$/,
   },
 } as const;
+
+export const AUTH_CONSTANTS = {
+  PASSWORD_STRONG_REGEX:
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+  VN_PHONE_REGEX: /((09|03|07|08|05)+([0-9]{8})\b)/g,
+
+  DEFAULTS: {
+    EMAIL_VERIFICATION_EXPIRATION_MS: 86400000,
+    PASSWORD_RESET_EXPIRATION_MS: 3600000,
+    JWT_EXPIRATION_TIME: "7d",
+    MIN_PASSWORD_LENGTH: 6,
+    MIN_NEW_PASSWORD_LENGTH: 8,
+  },
+} as const;
