@@ -12,6 +12,7 @@ export interface JwtPayload {
 // Interface đại diện User sau khi Login/GetProfile (Sanitized)
 export interface AuthUserResponse {
   id: string; // Chuyển đổi từ _id
+  userId: string; // Legacy support
   email: string;
   name: string;
   phone: string;

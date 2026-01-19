@@ -10,7 +10,8 @@ export interface GeoJsonPoint {
 }
 
 export interface Location {
-  id: string; // ObjectId string
+  _id: string;
+  id: string;
   name: string;
   slug: string;
   province: string;

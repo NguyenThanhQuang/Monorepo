@@ -75,6 +75,9 @@ importers:
       class-validator:
         specifier: ^0.14.3
         version: 0.14.3
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
       mongoose:
         specifier: ^9.0.2
         version: 9.0.2
