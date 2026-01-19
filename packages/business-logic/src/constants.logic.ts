@@ -1,0 +1,20 @@
+export const BUSINESS_CONSTANTS = {
+  BOOKING: {
+    SEAT_HOLD_DURATION_MINUTES: 15,
+    MAX_SEATS_PER_BOOKING: 5,
+  },
+  REVIEW: {
+    EDIT_WINDOW_DAYS: 7,
+  },
+  PAYMENT: {
+    DEFAULT_CURRENCY: "VND",
+    TRANSACTION_TIMEOUT_SECONDS: 600,
+  },
+  SYSTEM: {
+    DEFAULT_PAGE_SIZE: 10,
+    MAX_PAGE_SIZE: 100,
+  },
+  REGEX: {
+    MONGO_ID: /^[0-9a-fA-F]{24}$/,
+  },
+} as const;
