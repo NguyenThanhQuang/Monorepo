@@ -16,7 +16,7 @@ export const PaginationQuerySchema = z.object({
     .default(BUSINESS_CONSTANTS.SYSTEM.DEFAULT_PAGE_SIZE),
   search: z.string().optional(),
   sortBy: z.string().optional(),
-  order: z.nativeEnum(SortOrder).optional().default(SortOrder.ASC),
+  order: z.enum(SortOrder).optional().default(SortOrder.ASC),
 });
 
 export const ParamIdSchema = z.object({
