@@ -18,3 +18,5 @@ export const BUSINESS_CONSTANTS = {
     MONGO_ID: /^[0-9a-fA-F]{24}$/,
   },
 } as const;
+
+export const SALT_ROUNDS = 10;
