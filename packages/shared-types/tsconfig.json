@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
     "module": "CommonJS",
     "target": "ES6",
     "declaration": true,
-    "outDir": "./dist",
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "../validation/src/map.schema.ts"]
+  "include": ["src/**/*.ts"]
 }

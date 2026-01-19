@@ -10,3 +10,12 @@ export enum UserRole {
   USER = "user",
   STAFF = "staff",
 }
+
+export enum LocationType {
+  BUS_STATION = 'bus_station',
+  COMPANY_OFFICE = 'company_office',
+  PICKUP_POINT = 'pickup_point',
+  REST_STOP = 'rest_stop',
+  CITY = 'city',
+  OTHER = 'other',
+}
