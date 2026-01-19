@@ -16,6 +16,7 @@ export type LocationDocument = HydratedDocument<LocationDefinition>;
   },
 })
 export class LocationDefinition implements Omit<sharedTypes.Location, 'id'> {
+  _id: string;
   @Prop({ type: String, required: true, trim: true, index: 'text' })
   name: string;
 

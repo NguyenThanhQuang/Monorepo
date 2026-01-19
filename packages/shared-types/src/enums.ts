@@ -16,7 +16,7 @@ export enum CompanyStatus {
   ACTIVE = "active",
   INACTIVE = "inactive",
   PENDING = "pending",
-  REJECTED = "rejected",
+  SUSPENDED = "suspended",
 }
 
 export enum LocationType {
@@ -26,4 +26,10 @@ export enum LocationType {
   REST_STOP = "rest_stop",
   CITY = "city",
   OTHER = "other",
+}
+
+export enum UserAccountStatus {
+  ACTIVE = "active",
+  BANNED = "banned",
+  UNVERIFIED = "unverified",
 }

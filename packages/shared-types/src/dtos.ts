@@ -1,5 +1,5 @@
-import { LocationType, UserRole } from "./enums";
-import { GeoJsonPoint } from "./models";
+import { CompanyStatus, LocationType, UserRole } from "./enums";
+import { Company, GeoJsonPoint } from "./models";
 
 // --- AUTH INFRASTRUCTURE ---
 export interface JwtPayload {
@@ -95,4 +95,88 @@ export interface SearchLocationQuery {
 
 export interface PopularLocationsQuery {
   limit?: number;
+}
+
+// --- REQUEST PAYLOADS ---
+
+// Admin tạo User sẽ nhiều quyền hơn User tự Register
+export interface CreateUserPayload {
+  email: string;
+  phone: string;
+  password: string; // Có thể optional nếu là luồng invite (tạo password sau)
+  name: string;
+  role?: UserRole; // Legacy DTO allows singular 'role' assignment
+  companyId?: string;
+}
+
+export interface UpdateUserPayload {
+  name?: string;
+  phone?: string;
+}
+
+export interface UpdateUserStatusPayload {
+  isBanned: boolean;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
+
+// Dùng chung CreateOrPromote cho Company Admin logic
+export interface CreateCompanyAdminPayload {
+  name: string;
+  email: string;
+  phone: string;
+  companyId: string;
+}
+
+// --- RESPONSES ---
+
+// Response này giống hệt AuthUserResponse (tên mới SanitizedUserResponse cho chuẩn nghĩa)
+export interface SanitizedUserResponse {
+  id: string;
+  _id: string; // Legacy support
+  email: string;
+  name: string;
+  phone: string;
+  roles: UserRole[];
+  companyId?: string;
+  isEmailVerified: boolean;
+  isBanned: boolean;
+  lastLoginDate?: Date;
+}
+
+// --- COMPANIES ---
+
+export interface CreateCompanyPayload {
+  // Thông tin nhà xe
+  name: string;
+  code: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  description?: string;
+  logoUrl?: string;
+  status?: CompanyStatus;
+
+  // Thông tin Admin ban đầu (Onboarding)
+  adminName: string;
+  adminEmail: string;
+  adminPhone: string;
+}
+
+// UpdatePayload: Loại bỏ thông tin Admin vì API update company chỉ sửa thông tin công ty
+export interface UpdateCompanyPayload extends Partial<
+  Omit<CreateCompanyPayload, "adminName" | "adminEmail" | "adminPhone">
+> {}
+
+export interface CompanyResponse extends Company {}
+
+// DTO trả về cho Dashboard có thống kê
+export interface CompanyStatsResponse extends CompanyResponse {
+  totalTrips: number;
+  totalRevenue: number;
+  averageRating: number | null;
 }

@@ -24,6 +24,10 @@ export const AUTH_CONSTANTS = {
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
   VN_PHONE_REGEX: /((09|03|07|08|05)+([0-9]{8})\b)/g,
 
+  REGEX: {
+    MONGO_ID: /^[0-9a-fA-F]{24}$/,
+  },
+
   DEFAULTS: {
     EMAIL_VERIFICATION_EXPIRATION_MS: 86400000,
     PASSWORD_RESET_EXPIRATION_MS: 3600000,
