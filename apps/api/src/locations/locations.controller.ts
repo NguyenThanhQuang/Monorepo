@@ -16,16 +16,13 @@ import type {
   CreateLocationPayload,
   UpdateLocationPayload,
 } from '@obtp/shared-types';
-import { createLocationSchema, updateLocationSchema } from '@obtp/validation';
-import { LocationsService } from './locations.service';
-
-// PLACEHOLDERS: Auth logic chưa migrate
-// TODO: Replace with real Auth guards from @obtp/auth
 import { UserRole } from '@obtp/shared-types';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { createLocationSchema, updateLocationSchema } from '@obtp/validation';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { LocationsService } from './locations.service';
 
 @Controller('locations')
 export class LocationsController {

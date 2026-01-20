@@ -5,7 +5,7 @@ import {
   CompanyStatsResponse,
   UpdateCompanyPayload,
 } from '@obtp/shared-types';
-import { ClientSession, FilterQuery, Model } from 'mongoose';
+import { ClientSession, Model, QueryFilter } from 'mongoose';
 import { CompanyDefinition, CompanyDocument } from './schemas/company.schema';
 
 @Injectable()
@@ -16,7 +16,6 @@ export class CompaniesRepository {
   ) {}
 
   async create(
-    // Payload lúc này đã tách AdminInfo, chỉ còn info của Company
     doc: Partial<Company>,
     session?: ClientSession,
   ): Promise<Company> {
@@ -24,7 +23,7 @@ export class CompaniesRepository {
     return newCompany.save({ session });
   }
 
-  async findOne(filter: FilterQuery<CompanyDocument>): Promise<Company | null> {
+  async findOne(filter: QueryFilter<CompanyDocument>): Promise<Company | null> {
     return this.companyModel.findOne(filter).exec();
   }
 

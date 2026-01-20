@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   ClientSession,
-  FilterQuery,
   Model,
+  QueryFilter,
   Types,
   UpdateQuery,
 } from 'mongoose';
-import { User, UserDocument } from './user.schema';
+import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UsersRepository {
@@ -49,7 +49,7 @@ export class UsersRepository {
   }
 
   async findOne(
-    filter: FilterQuery<UserDocument>,
+    filter: QueryFilter<UserDocument>,
   ): Promise<UserDocument | null> {
     return this.userModel.findOne(filter).exec();
   }

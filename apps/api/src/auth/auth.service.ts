@@ -10,8 +10,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
-
-// TYPES & LOGIC
 import {
   AuthUserResponse,
   ForgotPasswordPayload,
@@ -29,10 +27,7 @@ import {
   generateRandomToken,
   hashPassword,
 } from '@obtp/business-logic';
-
-// MODULES
 import { UsersService } from '../users/users.service';
-// import { CompaniesService } from '../companies/companies.service';
 
 @Injectable()
 export class AuthService {

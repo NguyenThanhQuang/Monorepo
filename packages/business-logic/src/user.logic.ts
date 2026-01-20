@@ -3,10 +3,7 @@ import { SanitizedUserResponse, User } from "@obtp/shared-types";
 // Logic: Chuyển DB Entity (Full fields) -> API Response (Safe fields)
 
 export function sanitizeUser(user: Partial<User> | any): SanitizedUserResponse {
-  // Check nếu là Mongoose Document
   const obj = typeof user.toObject === "function" ? user.toObject() : user;
-
-  // Transform ID (legacy support for _id and standard id)
   const idStr = obj._id ? obj._id.toString() : obj.id || "";
   const companyIdStr = obj.companyId ? obj.companyId.toString() : undefined;
 

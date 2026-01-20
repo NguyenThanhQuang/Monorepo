@@ -4,16 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
-import { Connection, Types } from 'mongoose';
-
-// REPOSITORIES
-import { UsersRepository } from './users.repository';
-// Giữ logic cũ về booking
-// Lưu ý: BookingsModule phải export BookingsService/Repo
-// Tạm thời giả định dùng forwardRef để tránh vòng lặp nếu có
-// import { BookingsRepository } from '../bookings/bookings.repository';
-
-// CONTRACTS & TYPES
+import {
+  AUTH_CONSTANTS,
+  comparePassword,
+  generateRandomToken,
+  hashPassword,
+  sanitizeUser,
+} from '@obtp/business-logic';
 import {
   AuthUserResponse,
   ChangePasswordPayload,
@@ -23,16 +20,9 @@ import {
   UpdateUserPayload,
   UserRole,
 } from '@obtp/shared-types';
-
-// LOGIC & VALIDATION
-import {
-  AUTH_CONSTANTS,
-  comparePassword,
-  generateRandomToken,
-  hashPassword,
-  sanitizeUser,
-} from '@obtp/business-logic';
+import { Connection, Types } from 'mongoose';
 import { UserDocument } from './schemas/user.schema';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
@@ -46,6 +36,7 @@ export class UsersService {
   // --- PUBLIC HELPERS (Used by Auth Module) ---
 
   async findById(id: string): Promise<UserDocument | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
     return this.usersRepository.findById(id);
   }
 
@@ -57,32 +48,42 @@ export class UsersService {
     return this.usersRepository.findOneByPhoneWithPassword(phone);
   }
 
-  // Dùng để expose logic sanitization cho AuthModule
   sanitizeUser(user: UserDocument): AuthUserResponse {
-    return sanitizeUser(user);
+    const raw = sanitizeUser(user);
+    return {
+      ...raw,
+      userId: raw.id,
+      companyId: raw.companyId,
+    } as unknown as AuthUserResponse;
   }
 
   // --- CORE FEATURES ---
 
   async create(
     payload: CreateUserPayload & {
+      passwordHash?: string;
       isEmailVerified?: boolean;
       emailVerificationToken?: string;
       emailVerificationExpires?: Date;
     },
   ): Promise<UserDocument> {
-    // Nếu payload chưa hash pass (logic create từ Auth Service thường đã hash)
-    // Nhưng kiểm tra an toàn:
-    const finalPassword = payload.password.startsWith('$2b$')
-      ? payload.password
-      : await hashPassword(payload.password);
+    let finalHash = payload.passwordHash;
+    if (!finalHash && payload.password) {
+      finalHash = await hashPassword(payload.password);
+    }
 
-    return this.usersRepository.create({
+    // Build object insert DB (Dùng 'any' hoặc 'Partial<User>' để xây dựng cấu trúc Mongoose)
+    const doc: any = {
       ...payload,
-      passwordHash: finalPassword,
-      // Default roles logic handle in schema or here
+      passwordHash: finalHash,
       roles: payload.role ? [payload.role] : [UserRole.USER],
-    });
+    };
+
+    if (payload.companyId) {
+      doc.companyId = new Types.ObjectId(payload.companyId);
+    }
+
+    return this.usersRepository.create(doc);
   }
 
   async updateProfile(
