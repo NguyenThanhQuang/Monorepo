@@ -21,7 +21,7 @@ import { UsersModule } from './users/users.module';
 // import { DashboardModule } from './dashboard/dashboard.module';
 // import { LocationsModule } from './locations/locations.module';
 // import { MapsModule } from './maps/maps.module';
-// import { NotificationsModule } from './notifications/notifications.module';
+import { NotificationsModule } from './notifications/notifications.module';
 // import { PaymentsModule } from './payments/payments.module';
 // import { ReviewsModule } from './reviews/reviews.module';
 // import { TripsModule } from './trips/trips.module';
@@ -102,7 +102,7 @@ import { UsersModule } from './users/users.module';
     // TripsModule,
     // LocationsModule,
     // MapsModule,
-    // NotificationsModule,
+    NotificationsModule,
     // DashboardModule,
     // PaymentsModule,
     // ReviewsModule,

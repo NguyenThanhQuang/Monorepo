@@ -232,3 +232,10 @@ export interface MailContentResult {
   subject: string;
   html: string;
 }
+
+// Notifications
+export interface UserEventPayload {
+  email: string;
+  name: string;
+  token: string;
+}

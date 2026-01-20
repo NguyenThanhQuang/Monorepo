@@ -165,7 +165,9 @@ export class AuthService {
     }
 
     if (!user)
-      throw new UnauthorizedException('Thông tin đăng nhập không chính xác.');
+      throw new UnauthorizedException(
+        'Thông tin đăng nhập người dùng không chính xác.',
+      );
 
     // 2. Security Checks
     const isPasswordValid = await comparePassword(
