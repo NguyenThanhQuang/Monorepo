@@ -73,17 +73,17 @@ export class CompaniesService {
             'Lỗi: Không tạo được token kích hoạt.',
           );
         }
-        await this.mailService.sendCompanyAdminActivationEmail(
-          adminAccount.email,
-          adminAccount.name,
-          adminAccount.accountActivationToken,
-        );
+        await this.mailService.sendCompanyAdminActivationEmail({
+          email: adminAccount.email,
+          name: adminAccount.name,
+          token: adminAccount.accountActivationToken,
+        });
       } else {
-        await this.mailService.sendCompanyAdminPromotionEmail(
-          adminAccount.email,
-          adminAccount.name,
-          savedCompany.name,
-        );
+        await this.mailService.sendCompanyAdminPromotionEmail({
+          email: adminAccount.email,
+          name: adminAccount.name,
+          companyName: savedCompany.name,
+        });
       }
 
       await session.commitTransaction();

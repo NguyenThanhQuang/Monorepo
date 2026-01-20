@@ -5,7 +5,7 @@ import {
   Location,
   LocationType,
 } from '@obtp/shared-types';
-import { QueryFilter, Model } from 'mongoose';
+import { Model, QueryFilter } from 'mongoose';
 import {
   LocationDefinition,
   LocationDocument,
@@ -22,19 +22,20 @@ export class LocationsRepository {
     payload: CreateLocationPayload & { slug: string },
   ): Promise<Location> {
     const newDoc = new this.locationModel(payload);
-    return newDoc.save();
+    return (await newDoc.save()) as unknown as Location;
   }
 
   async findById(id: string): Promise<Location | null> {
-    return this.locationModel.findById(id).exec();
+    return this.locationModel.findById(id).exec() as unknown as Location | null;
   }
 
-  // Hàm check trùng (Composite Unique Check)
   async findByNameAndProvince(
     name: string,
     province: string,
   ): Promise<Location | null> {
-    return this.locationModel.findOne({ name, province }).exec();
+    return this.locationModel
+      .findOne({ name, province })
+      .exec() as unknown as Location | null;
   }
 
   async findAll(
@@ -43,7 +44,7 @@ export class LocationsRepository {
     return this.locationModel
       .find(filter)
       .sort({ province: 1, name: 1 })
-      .exec();
+      .exec() as unknown as Location[];
   }
 
   async search(
@@ -54,7 +55,7 @@ export class LocationsRepository {
       .find(filter)
       .sort({ province: 1, name: 1 })
       .limit(limit)
-      .exec();
+      .exec() as unknown as Location[];
   }
 
   async findPopular(limit = 10): Promise<Location[]> {
@@ -65,7 +66,7 @@ export class LocationsRepository {
       })
       .sort({ province: 1 })
       .limit(limit)
-      .exec();
+      .exec() as unknown as Location[];
   }
 
   async update(
@@ -74,10 +75,12 @@ export class LocationsRepository {
   ): Promise<Location | null> {
     return this.locationModel
       .findByIdAndUpdate(id, { $set: updateData }, { new: true })
-      .exec();
+      .exec() as unknown as Location | null;
   }
 
   async delete(id: string): Promise<Location | null> {
-    return this.locationModel.findByIdAndDelete(id).exec();
+    return this.locationModel
+      .findByIdAndDelete(id)
+      .exec() as unknown as Location | null;
   }
 }

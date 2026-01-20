@@ -20,19 +20,21 @@ export class CompaniesRepository {
     session?: ClientSession,
   ): Promise<Company> {
     const newCompany = new this.companyModel(doc);
-    return newCompany.save({ session });
+    return (await newCompany.save({ session })) as unknown as Company;
   }
 
   async findOne(filter: QueryFilter<CompanyDocument>): Promise<Company | null> {
-    return this.companyModel.findOne(filter).exec();
+    return this.companyModel
+      .findOne(filter)
+      .exec() as unknown as Company | null;
   }
 
   async findById(id: string): Promise<Company | null> {
-    return this.companyModel.findById(id).exec();
+    return this.companyModel.findById(id).exec() as unknown as Company | null;
   }
 
   async findAll(): Promise<Company[]> {
-    return this.companyModel.find().exec();
+    return this.companyModel.find().exec() as unknown as Company[];
   }
 
   async update(
@@ -42,11 +44,13 @@ export class CompaniesRepository {
   ): Promise<Company | null> {
     return this.companyModel
       .findByIdAndUpdate(id, { $set: updateData }, { new: true, session })
-      .exec();
+      .exec() as unknown as Company | null;
   }
 
   async delete(id: string): Promise<Company | null> {
-    return this.companyModel.findByIdAndDelete(id).exec();
+    return this.companyModel
+      .findByIdAndDelete(id)
+      .exec() as unknown as Company | null;
   }
 
   /**
