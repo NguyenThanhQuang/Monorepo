@@ -148,7 +148,7 @@ export interface SanitizedUserResponse {
   lastLoginDate?: Date;
 }
 
-// --- COMPANIES ---
+// COMPANIES
 
 export interface CreateCompanyPayload {
   // Thông tin nhà xe
@@ -179,4 +179,56 @@ export interface CompanyStatsResponse extends CompanyResponse {
   totalTrips: number;
   totalRevenue: number;
   averageRating: number | null;
+}
+
+// --- MAIL PAYLOADS ---
+
+// Payload chung cho ngữ cảnh Email
+export interface EmailContext {
+  appName: string; // VD: "Online Bus Ticket Platform"
+  verifyTokenUrl?: string; // Link full xác thực
+  resetPasswordUrl?: string;
+  loginUrl?: string; // Link đăng nhập
+  expireText?: string; // VD: "24 giờ"
+}
+
+export interface SendVerificationEmailPayload {
+  email: string;
+  name: string;
+  token: string;
+}
+
+export interface SendForgotPasswordPayload {
+  email: string;
+  name: string;
+  token: string;
+}
+
+export interface SendCompanyAdminActivationPayload {
+  email: string;
+  name: string;
+  token: string;
+}
+
+export interface SendCompanyAdminPromotionPayload {
+  email: string;
+  name: string;
+  companyName: string;
+}
+
+// Chuyển BookingDocument thành Plain Object để gửi mail an toàn
+export interface BookingConfirmationEmailPayload {
+  customerName: string;
+  email: string;
+  ticketCode: string;
+  routeName: string; // VD: "Hà Nội → Đà Nẵng" (Đã format từ ngoài)
+  companyName: string;
+  departureTime: string; // Dạng string hiển thị: "10:00 20/01/2024"
+  seatNumbers: string; // VD: "A01, A02"
+  totalAmount: string; // VD: "500.000" (Đã format tiền)
+}
+
+export interface MailContentResult {
+  subject: string;
+  html: string;
 }
