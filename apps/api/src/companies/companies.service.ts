@@ -26,47 +26,34 @@ export class CompaniesService {
   ) {}
 
   async create(payload: CreateCompanyPayload): Promise<Company> {
-    // Validation Logic
     const existsByName = await this.repo.findOne({ name: payload.name });
     if (existsByName) {
       throw new ConflictException(`Nhà xe "${payload.name}" đã tồn tại.`);
     }
-
     const code = payload.code.toUpperCase();
     const existsByCode = await this.repo.findOne({ code });
     if (existsByCode) {
       throw new ConflictException(`Mã nhà xe "${code}" đã tồn tại.`);
     }
 
-    // Prepare Data Splitting
     const { adminName, adminEmail, adminPhone, ...companyInfo } = payload;
-
-    // Transaction Execution
     const session = await this.connection.startSession();
     session.startTransaction();
 
     try {
-      // Step A:reate Company
       const savedCompany = await this.repo.create(
         { ...companyInfo, code },
         session,
       );
 
-      // Step B: Create Admin via UsersService
-      // Logic: User admin này sẽ gắn liền với companyId vừa tạo
       const { user: adminAccount, isNew } =
-        await this.usersService.createOrPromoteCompanyAdmin(
-          {
-            name: adminName,
-            email: adminEmail,
-            phone: adminPhone,
-            companyId: savedCompany.id, // Service/Schema của Users cần nhận string ID
-          },
-          session, // Truyền session để rollback nếu user create fail
-        );
+        await this.usersService.createOrPromoteCompanyAdmin({
+          name: adminName,
+          email: adminEmail,
+          phone: adminPhone,
+          companyId: savedCompany.id,
+        });
 
-      // Step C: Send Email Logic (Post-process logic inside transaction is fine for simple ops)
-      // Tốt nhất gửi mail nên để sau commit, nhưng ở đây code cũ check token kích hoạt ngay
       if (isNew) {
         if (!adminAccount.accountActivationToken) {
           throw new InternalServerErrorException(
@@ -79,6 +66,7 @@ export class CompaniesService {
           token: adminAccount.accountActivationToken,
         });
       } else {
+        // FIX: Wrap thành 1 object
         await this.mailService.sendCompanyAdminPromotionEmail({
           email: adminAccount.email,
           name: adminAccount.name,

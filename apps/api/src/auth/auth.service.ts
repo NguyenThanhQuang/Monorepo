@@ -64,7 +64,6 @@ export class AuthService {
     }
     return {
       id: user._id.toString(),
-      _id: user._id.toString(),
       userId: user._id.toString(),
       email: user.email,
       name: user.name,
@@ -95,13 +94,16 @@ export class AuthService {
         // Check expiration, regen token logic...
         // ... (Tối giản code demo: Update token & Resend)
         const newToken = generateRandomToken();
-        await this.usersService.updateVerificationInfo(existingUser._id, {
-          token: newToken,
-          expires: new Date(
-            Date.now() +
-              AUTH_CONSTANTS.DEFAULTS.EMAIL_VERIFICATION_EXPIRATION_MS,
-          ),
-        });
+        await this.usersService.updateVerificationInfo(
+          existingUser._id.toString(),
+          {
+            token: newToken,
+            expires: new Date(
+              Date.now() +
+                AUTH_CONSTANTS.DEFAULTS.EMAIL_VERIFICATION_EXPIRATION_MS,
+            ),
+          },
+        );
 
         this.eventEmitter.emit('user.resend_verification', {
           email: existingUser.email,
@@ -193,15 +195,13 @@ export class AuthService {
       user: this.sanitizeUser(user),
     };
   }
-
+  a;
   // --- TOKEN VERIFICATION FLOWS (Verify, Resend, Forgot...) ---
   // Các hàm này cần logic tìm user theo token, kiểm tra hạn (dùng date trong users schema)
   // và update lại state của user thông qua usersService.
 
   async verifyEmail(token: string): Promise<LoginResponse> {
-    // Code tương tự processEmailVerification cũ nhưng clean hơn
-    // await this.usersService.findOneByCondition({ emailVerificationToken: token })...
-    const user = await this.usersService.verifyEmailToken(token); // Giả sử UsersService handle logic DB check
+    const user = await this.usersService.verifyEmailToken(token);
     if (!user)
       throw new BadRequestException('Token không hợp lệ hoặc hết hạn.');
 
@@ -221,7 +221,7 @@ export class AuthService {
       Date.now() + AUTH_CONSTANTS.DEFAULTS.PASSWORD_RESET_EXPIRATION_MS,
     );
 
-    await this.usersService.setResetToken(user._id, token, expires);
+    await this.usersService.updateLastLogin(user._id.toString());
 
     this.eventEmitter.emit('user.forgot_password', {
       email: user.email,

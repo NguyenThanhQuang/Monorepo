@@ -24,6 +24,16 @@ import { Connection, Types } from 'mongoose';
 import { UserDocument } from './schemas/user.schema';
 import { UsersRepository } from './users.repository';
 
+interface CreateInternalUserParams extends CreateUserPayload {
+  passwordHash?: string;
+  isEmailVerified?: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
+  roles?: UserRole[];
+  accountActivationToken?: string;
+  accountActivationExpires?: Date;
+}
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -59,31 +69,32 @@ export class UsersService {
 
   // --- CORE FEATURES ---
 
-  async create(
-    payload: CreateUserPayload & {
-      passwordHash?: string;
-      isEmailVerified?: boolean;
-      emailVerificationToken?: string;
-      emailVerificationExpires?: Date;
-    },
-  ): Promise<UserDocument> {
+  async create(payload: CreateInternalUserParams): Promise<UserDocument> {
     let finalHash = payload.passwordHash;
     if (!finalHash && payload.password) {
       finalHash = await hashPassword(payload.password);
     }
 
-    // Build object insert DB (Dùng 'any' hoặc 'Partial<User>' để xây dựng cấu trúc Mongoose)
-    const doc: any = {
-      ...payload,
+    const docInput: Record<string, any> = {
+      email: payload.email,
+      phone: payload.phone,
+      name: payload.name,
       passwordHash: finalHash,
-      roles: payload.role ? [payload.role] : [UserRole.USER],
+      roles: payload.roles || (payload.role ? [payload.role] : [UserRole.USER]),
+      isEmailVerified: payload.isEmailVerified ?? false,
+
+      emailVerificationToken: payload.emailVerificationToken,
+      emailVerificationExpires: payload.emailVerificationExpires,
+
+      accountActivationToken: payload.accountActivationToken,
+      accountActivationExpires: payload.accountActivationExpires,
     };
 
     if (payload.companyId) {
-      doc.companyId = new Types.ObjectId(payload.companyId);
+      docInput.companyId = new Types.ObjectId(payload.companyId);
     }
 
-    return this.usersRepository.create(doc);
+    return this.usersRepository.create(docInput);
   }
 
   async updateProfile(
@@ -115,6 +126,22 @@ export class UsersService {
     await this.usersRepository.save(user);
 
     return { message: 'Đổi mật khẩu thành công.' };
+  }
+
+  async updateLastLogin(id: string): Promise<void> {
+    // Repository nhận string ID và tự xử lý logic DB
+    await this.usersRepository.update(id, { lastLoginDate: new Date() });
+  }
+
+  // Input 'data' được typed chặt chẽ
+  async updateVerificationInfo(
+    userId: string,
+    data: { token: string; expires: Date },
+  ): Promise<void> {
+    await this.usersRepository.update(userId, {
+      emailVerificationToken: data.token,
+      emailVerificationExpires: data.expires,
+    });
   }
 
   // --- ADMIN FEATURES ---

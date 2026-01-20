@@ -34,7 +34,6 @@ export class UsersController {
   async getMyProfile(
     @CurrentUser() user: sharedTypes.AuthUserResponse,
   ): Promise<sharedTypes.SanitizedUserResponse> {
-    // CurrentUser là payload từ Token (gọn nhẹ), nếu cần full info DB thì fetch lại
     const fullUser = await this.usersService.findById(user.id);
     // @ts-expect-error FullUser could be null, handled by guards/service
     return this.usersService.sanitizeUser(fullUser);

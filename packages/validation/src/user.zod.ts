@@ -46,7 +46,6 @@ export const CreateUserInternalSchema = z.object({
 });
 
 export const UpdateUserStatusSchema = z.object({
-  // Đã sửa ở bước trước (dùng error prop thay required_error)
   isBanned: z.boolean({ error: "Trạng thái cấm phải là true/false" }),
 });
 
