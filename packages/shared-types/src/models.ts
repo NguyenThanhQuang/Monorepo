@@ -1,4 +1,4 @@
-import { CompanyStatus, LocationType, UserRole } from "./enums";
+import { CompanyStatus, LocationType, UserRole, VehicleStatus } from "./enums";
 
 /**
  * Interface chuẩn GeoJSON cho tọa độ không gian.
@@ -64,6 +64,37 @@ export interface Company {
   description?: string;
   logoUrl?: string;
   status: CompanyStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type SeatMapLayout = (string | null)[][];
+
+export interface SeatMap {
+  rows: number;
+  cols: number;
+  layout: SeatMapLayout;
+}
+
+export interface Vehicle {
+  id: string;
+  _id: string;
+
+  companyId: string;
+  vehicleNumber: string;
+  type: string;
+  description?: string;
+  status: VehicleStatus;
+
+  floors: number;
+  seatRows: number;
+  seatColumns: number;
+  aislePositions: number[];
+
+  totalSeats: number;
+  seatMap?: SeatMap;
+  seatMapFloor2?: SeatMap;
+
   createdAt: Date;
   updatedAt: Date;
 }

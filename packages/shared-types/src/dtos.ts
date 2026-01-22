@@ -1,4 +1,4 @@
-import { CompanyStatus, LocationType, UserRole } from "./enums";
+import { CompanyStatus, LocationType, UserRole, VehicleStatus } from "./enums";
 import { Company, GeoJsonPoint } from "./models";
 
 // --- AUTH INFRASTRUCTURE ---
@@ -239,3 +239,34 @@ export interface UserEventPayload {
   name: string;
   token: string;
 }
+
+export interface CreateVehiclePayload {
+  companyId: string;
+  vehicleNumber: string;
+  type: string;
+  description?: string;
+  status?: VehicleStatus;
+
+  // Configuration params để generate map
+  floors: number; // 1 or 2
+  seatRows: number; // > 0
+  seatColumns: number; // > 0
+  aislePositions?: number[]; // [2] -> Cột 2 là lối đi
+}
+
+export interface UpdateVehiclePayload {
+  // Cho phép sửa các thông số này, Service sẽ phải regen map nếu thay đổi
+  vehicleNumber?: string;
+  type?: string;
+  description?: string;
+  status?: VehicleStatus;
+
+  floors?: number;
+  seatRows?: number;
+  seatColumns?: number;
+  aislePositions?: number[];
+
+  // Không cho sửa companyId trực tiếp (Logic check role riêng)
+}
+
+// Response tái sử dụng Model Vehicle vì shape khớp 1-1

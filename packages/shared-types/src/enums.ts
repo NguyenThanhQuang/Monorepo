@@ -11,7 +11,6 @@ export enum UserRole {
   COMPANY_ADMIN = "company_admin",
 }
 
-// Bổ sung Company Status cho login logic check
 export enum CompanyStatus {
   ACTIVE = "active",
   INACTIVE = "inactive",
@@ -32,4 +31,10 @@ export enum UserAccountStatus {
   ACTIVE = "active",
   BANNED = "banned",
   UNVERIFIED = "unverified",
+}
+
+export enum VehicleStatus {
+  ACTIVE = "active",
+  MAINTENANCE = "maintenance",
+  INACTIVE = "inactive",
 }
