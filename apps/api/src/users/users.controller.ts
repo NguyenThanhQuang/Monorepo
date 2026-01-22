@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   UseGuards,
@@ -35,6 +36,9 @@ export class UsersController {
     @CurrentUser() user: sharedTypes.AuthUserResponse,
   ): Promise<sharedTypes.SanitizedUserResponse> {
     const fullUser = await this.usersService.findById(user.id);
+    if (!fullUser) {
+      throw new NotFoundException('Không tìm thấy thông tin người dùng.');
+    }
     // @ts-expect-error FullUser could be null, handled by guards/service
     return this.usersService.sanitizeUser(fullUser);
   }

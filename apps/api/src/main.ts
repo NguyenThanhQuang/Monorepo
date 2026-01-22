@@ -3,26 +3,21 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
-// Không cần import tay Filters/Pipes/Interceptors vì CommonModule đã tự apply Global
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 3000;
 
-  // 1. Prefix: api/v1/...
   app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
   });
 
-  // 2. CORS Config
   const clientUrl = configService.get<string>('CLIENT_URL', '*');
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow Requests with no origin (like mobile apps or curl calls)
       if (!origin) return callback(null, true);
 
       if (
@@ -39,11 +34,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // NOTE: Ta không dùng app.useGlobalPipes(new ValidationPipe({...})) nữa
-  // Vì các Module mới sử dụng ZodValidationPipe cục bộ cho từng Controller.
-  // Điều này giúp tránh conflict validate legacy DTO.
-
-  // 3. Graceful Shutdown
   app.enableShutdownHooks();
 
   await app.listen(port);
