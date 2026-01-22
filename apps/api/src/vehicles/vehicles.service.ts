@@ -9,6 +9,7 @@ import { Model, Types } from 'mongoose';
 // CONTRACTS & TYPES
 import {
   CreateVehiclePayload,
+  TripStatus,
   UpdateVehiclePayload,
   VehicleStatus,
 } from '@obtp/shared-types';
@@ -19,7 +20,7 @@ import { calculateVehicleConfig } from '@obtp/business-logic';
 // REPOS & SCHEMAS
 import { VehiclesRepository } from './vehicles.repository';
 // TODO: Refactor: Move checking logic to TripsService when available
-import { Trip, TripStatus } from '../trips/schemas/trip.schema'; // Cần Trip schema để check conflict
+import { Trip } from '../trips/schemas/trip.schema'; // Cần Trip schema để check conflict
 // import { CompaniesService } from '../companies/companies.service'; // Enable if needing to check company exists
 
 @Injectable()
