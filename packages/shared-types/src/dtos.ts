@@ -270,3 +270,50 @@ export interface UpdateVehiclePayload {
 }
 
 // Response tái sử dụng Model Vehicle vì shape khớp 1-1
+
+import { SeatStatus, TripStatus } from "./enums";
+
+export interface TripStopDto {
+  locationId: string;
+  expectedArrivalTime: string; // ISO Date String
+  expectedDepartureTime?: string;
+}
+
+export interface CreateTripPayload {
+  companyId: string;
+  vehicleId: string;
+
+  route: {
+    fromLocationId: string;
+    toLocationId: string;
+    stops?: TripStopDto[];
+  };
+
+  departureTime: string; // ISO
+  expectedArrivalTime: string; // ISO
+  price: number;
+
+  isRecurrenceTemplate?: boolean; // Nếu true -> Dùng làm mẫu để sinh daily trip
+}
+
+export interface UpdateTripPayload {
+  price?: number;
+  status?: TripStatus;
+  departureTime?: string;
+  expectedArrivalTime?: string;
+  isRecurrenceActive?: boolean;
+}
+
+// Payload query tìm chuyến đi
+export interface SearchTripQuery {
+  from: string; // Tên tỉnh/thành hoặc ID (thường là ID sẽ chuẩn hơn, nhưng public thì text)
+  to: string;
+  date: string; // YYYY-MM-DD
+  passengers?: number; // Mặc định 1
+}
+
+export interface UpdateTripSeatStatusPayload {
+  seatNumbers: string[];
+  status: SeatStatus;
+  bookingId?: string;
+}

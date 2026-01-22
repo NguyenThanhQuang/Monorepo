@@ -98,3 +98,54 @@ export interface Vehicle {
   createdAt: Date;
   updatedAt: Date;
 }
+
+import { SeatStatus, TripStatus, TripStopStatus } from "./enums";
+
+// Sub-Interface cho ghế trong chuyến đi
+export interface TripSeat {
+  seatNumber: string; // A01, B02...
+  status: SeatStatus;
+  bookingId?: string; // Ref ID nếu đã book
+}
+
+export interface TripStopInfo {
+  locationId: string; // Ref Location
+  expectedArrivalTime: Date;
+  expectedDepartureTime?: Date;
+  status: TripStopStatus;
+}
+
+export interface RouteInfo {
+  fromLocationId: string;
+  toLocationId: string;
+  stops: TripStopInfo[];
+  duration?: number; // Minutes
+  distance?: number; // Meters or KM
+}
+
+export interface Trip {
+  id: string;
+  _id: string;
+
+  companyId: string;
+  vehicleId: string;
+
+  route: RouteInfo;
+
+  departureTime: Date;
+  expectedArrivalTime: Date;
+
+  price: number;
+  status: TripStatus;
+
+  seats: TripSeat[]; // Mảng phẳng chứa trạng thái ghế
+  availableSeatsCount: number; // Field computed hoặc cached (quan trọng cho search)
+
+  // Recurrence logic fields
+  isRecurrenceTemplate: boolean;
+  isRecurrenceActive: boolean;
+  recurrenceParentId?: string;
+
+  createdAt: Date;
+  updatedAt: Date;
+}

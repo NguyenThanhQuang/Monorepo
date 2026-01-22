@@ -38,3 +38,24 @@ export enum VehicleStatus {
   MAINTENANCE = "maintenance",
   INACTIVE = "inactive",
 }
+
+export enum TripStatus {
+  SCHEDULED = "scheduled",
+  DEPARTED = "departed",
+  ARRIVED = "arrived",
+  CANCELLED = "cancelled",
+}
+
+export enum SeatStatus {
+  AVAILABLE = "available",
+  HELD = "held", // Đang giữ chỗ (lúc đang thanh toán)
+  BOOKED = "booked", // Đã đặt thành công
+  LOCKED = "locked", // Khóa bởi admin hoặc không bán
+}
+
+export enum TripStopStatus {
+  PENDING = "pending",
+  ARRIVED = "arrived",
+  DEPARTED = "departed",
+  SKIPPED = "skipped",
+}
