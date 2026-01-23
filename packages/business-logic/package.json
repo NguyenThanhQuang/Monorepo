@@ -12,6 +12,7 @@
   "dependencies": {
     "@obtp/shared-types": "workspace:*",
     "bcrypt": "^6.0.0",
+    "dayjs": "^1.11.19",
     "mongoose": "^9.0.2",
     "slugify": "^1.6.6"
   },

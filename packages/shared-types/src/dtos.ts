@@ -1,4 +1,10 @@
-import { CompanyStatus, LocationType, UserRole, VehicleStatus } from "./enums";
+import {
+  CompanyStatus,
+  LocationType,
+  ReportPeriod,
+  UserRole,
+  VehicleStatus,
+} from "./enums";
 import { Company, GeoJsonPoint } from "./models";
 
 // --- AUTH INFRASTRUCTURE ---
@@ -415,4 +421,59 @@ export interface ReviewQuery {
 // Admin Update (Hide/Show)
 export interface AdminUpdateReviewPayload {
   isVisible: boolean;
+}
+
+// Requests
+export interface FinanceReportQuery {
+  period?: ReportPeriod;
+  startDate?: string;
+  endDate?: string;
+  companyId?: string; // Dùng cho Admin lọc
+}
+
+// Chart Data Elements
+export interface ChartDataPoint {
+  date: string; // YYYY-MM-DD
+  revenue: number;
+  bookings: number;
+}
+
+export interface TopCompanyStat {
+  name: string;
+  revenue: number;
+  bookings: number;
+}
+
+// Responses
+export interface AdminDashboardStats {
+  totalCompanies: number;
+  totalUsers: number;
+  totalBookings: number;
+  totalRevenue: number;
+  activeTrips: number;
+  newCompaniesToday: number;
+  todayBookings: number;
+}
+
+export interface FinancialReportResponse {
+  overview: {
+    totalRevenue: number;
+    periodRevenue: number;
+    totalBookings: number;
+    averageOrderValue: number;
+    commission: number;
+    refunds: number;
+  };
+  revenueChartData: ChartDataPoint[];
+  topCompanies: TopCompanyStat[];
+  recentTransactions: PaymentTransactionSummary[];
+}
+
+export interface PaymentTransactionSummary {
+  id: string;
+  date: string;
+  type: "booking" | "commission" | "refund";
+  amount: number;
+  description: string;
+  companyName: string;
 }

@@ -88,3 +88,10 @@ export enum PayOSCode {
   INVALID_ORDER = "01",
   // Thêm các mã lỗi khác nếu cần (tuy nhiên logic chỉ quan tâm 00 là thành công)
 }
+
+export enum ReportPeriod {
+  WEEK = "7d",
+  MONTH = "30d",
+  QUARTER = "90d",
+  YEAR = "365d",
+}
