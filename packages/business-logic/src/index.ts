@@ -4,6 +4,7 @@ export * from "./constants.logic";
 export * from "./dashboard.logic";
 export * from "./location.logic";
 export * from "./mail.logic";
+export * from "./map.logic";
 export * from "./payment.logic";
 export * from "./review.logic";
 export * from "./trip.logic";

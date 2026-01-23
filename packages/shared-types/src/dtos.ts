@@ -477,3 +477,21 @@ export interface PaymentTransactionSummary {
   description: string;
   companyName: string;
 }
+
+// Shared Geo Structures
+export interface GeoPoint {
+  lat: number;
+  lng: number;
+}
+
+// Request Payload
+export interface CalculateRoutePayload {
+  waypoints: GeoPoint[]; // Mảng các điểm đi qua (bao gồm origin ở 0 và dest ở cuối)
+}
+
+// Normalized Response (Dù dùng OSRM hay Google thì kết quả trả về cũng phải format này)
+export interface RouteInfoResponse {
+  polyline: string; // Chuỗi mã hóa đường đi
+  duration: number; // Giây
+  distance: number; // Mét
+}

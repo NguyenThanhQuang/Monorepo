@@ -4,6 +4,7 @@ export * from "./common.zod";
 export * from "./company.zod";
 export * from "./dashboard.zod";
 export * from "./location.zod";
+export * from "./map.zod";
 export * from "./payment.zod";
 export * from "./review.zod";
 export * from "./trip.zod";
