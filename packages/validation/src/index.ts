@@ -1,4 +1,5 @@
 export * from "./auth.zod";
+export * from "./booking.zod";
 export * from "./common.zod";
 export * from "./company.zod";
 export * from "./location.zod";

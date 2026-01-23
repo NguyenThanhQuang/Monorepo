@@ -1,4 +1,5 @@
 export * from "./auth.logic";
+export * from "./booking.logic";
 export * from "./constants.logic";
 export * from "./location.logic";
 export * from "./mail.logic";
