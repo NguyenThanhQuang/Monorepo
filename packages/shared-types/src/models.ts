@@ -149,3 +149,49 @@ export interface Trip {
   createdAt: Date;
   updatedAt: Date;
 }
+
+import { BookingStatus, PaymentStatus } from "./enums";
+
+export interface PassengerInfo {
+  name: string;
+  phone: string;
+  seatNumber: string; // Số ghế (A01, B02...)
+  price: number; // Giá vé tại thời điểm đặt (Snapshot)
+}
+
+export interface Booking {
+  id: string;
+  _id: string;
+
+  userId?: string; // Nếu là user đã login
+  companyId: string;
+  tripId: string;
+
+  // Thông tin liên hệ đặt vé
+  contactName: string;
+  contactPhone: string;
+  contactEmail?: string;
+
+  // Chi tiết vé
+  passengers: PassengerInfo[];
+  totalAmount: number;
+
+  status: BookingStatus;
+  paymentStatus: PaymentStatus;
+  paymentMethod?: string;
+
+  ticketCode?: string; // Mã vé (khi đã confirm)
+  paymentOrderCode?: number; // Mã đơn hàng payment gateway
+  paymentGatewayTransactionId?: string;
+
+  // TTL Management
+  bookingTime: Date;
+  heldUntil?: Date; // Thời hạn giữ ghế
+
+  // Reference Review (Sau khi hoàn thành chuyến đi)
+  reviewId?: string;
+  isReviewed?: boolean;
+
+  createdAt: Date;
+  updatedAt: Date;
+}

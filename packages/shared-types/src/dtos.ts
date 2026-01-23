@@ -317,3 +317,32 @@ export interface UpdateTripSeatStatusPayload {
   status: SeatStatus;
   bookingId?: string;
 }
+
+// Interface rút gọn dùng cho Input
+export interface PassengerInput {
+  name: string;
+  phone: string;
+  seatNumber: string;
+}
+
+export interface CreateBookingPayload {
+  tripId: string;
+  passengers: PassengerInput[];
+
+  contactName: string;
+  contactPhone: string;
+  contactEmail?: string;
+}
+
+// Payload lookup đơn giản (tra cứu vé khách vãng lai)
+export interface LookupBookingPayload {
+  identifier: string; // Ticket Code hoặc Order ID
+  contactPhone: string;
+}
+
+// Payload confirm manual (ví dụ Admin confirm)
+export interface ConfirmBookingPayload {
+  paidAmount: number;
+  paymentMethod: string;
+  transactionDateTime: string;
+}

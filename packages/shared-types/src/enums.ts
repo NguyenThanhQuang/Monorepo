@@ -59,3 +59,18 @@ export enum TripStopStatus {
   DEPARTED = "departed",
   SKIPPED = "skipped",
 }
+
+export enum BookingStatus {
+  PENDING = "pending", // Mới khởi tạo, chưa giữ chỗ xong
+  HELD = "held", // Đã giữ ghế thành công (chờ thanh toán)
+  CONFIRMED = "confirmed", // Đã thanh toán, xuất vé
+  CANCELLED = "cancelled", // Hủy do user hoặc admin
+  EXPIRED = "expired", // Hết hạn giữ chỗ mà không thanh toán
+}
+
+export enum PaymentStatus {
+  PENDING = "pending",
+  PAID = "paid",
+  FAILED = "failed",
+  REFUNDED = "refunded",
+}
