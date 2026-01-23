@@ -386,3 +386,33 @@ export interface PayOSWebhookPayload {
   data: PayOSWebhookData;
   signature: string;
 }
+
+// Requests
+export interface CreateReviewPayload {
+  bookingId: string;
+  tripId: string; // Thực tế tripId có thể suy ra từ booking, nhưng truyền lên để validate cho chắc
+  rating: number;
+  comment?: string;
+  isAnonymous?: boolean;
+}
+
+export interface CreateGuestReviewPayload extends CreateReviewPayload {
+  contactPhone: string; // Để verify sở hữu với Booking contactPhone
+}
+
+export interface UpdateUserReviewPayload {
+  rating?: number;
+  comment?: string;
+}
+
+export interface ReviewQuery {
+  companyId?: string;
+  tripId?: string;
+  rating?: number;
+  // Page limit handling is common utils
+}
+
+// Admin Update (Hide/Show)
+export interface AdminUpdateReviewPayload {
+  isVisible: boolean;
+}

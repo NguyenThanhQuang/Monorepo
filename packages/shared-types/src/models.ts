@@ -217,3 +217,30 @@ export interface PaymentTransaction {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Review Entity
+export interface Review {
+  id: string;
+  _id: string;
+
+  userId?: string; // Có thể null nếu Guest review hoặc logic xóa user
+
+  bookingId: string; // Unique
+  tripId: string; // Reference
+  companyId: string; // Reference (Denormalized)
+
+  displayName: string; // Tên hiển thị (User thật hoặc Tên khách)
+
+  rating: number; // 1-5
+  comment?: string;
+
+  isAnonymous: boolean; // Nếu true -> Frontend tự mask tên
+
+  editCount: number;
+  lastEditedAt?: Date;
+
+  isVisible: boolean; // Moderation flag
+
+  createdAt: Date;
+  updatedAt: Date;
+}
