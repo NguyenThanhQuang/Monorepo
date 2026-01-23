@@ -68,9 +68,23 @@ export enum BookingStatus {
   EXPIRED = "expired", // Hết hạn giữ chỗ mà không thanh toán
 }
 
+// Payment Related Enums
+export enum PaymentMethod {
+  PAYOS = "payos",
+  CASH = "cash",
+  BANK_TRANSFER = "bank_transfer",
+}
+
 export enum PaymentStatus {
   PENDING = "pending",
   PAID = "paid",
   FAILED = "failed",
+  CANCELLED = "cancelled",
   REFUNDED = "refunded",
+}
+
+export enum PayOSCode {
+  SUCCESS = "00",
+  INVALID_ORDER = "01",
+  // Thêm các mã lỗi khác nếu cần (tuy nhiên logic chỉ quan tâm 00 là thành công)
 }

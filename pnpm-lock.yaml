@@ -66,6 +66,9 @@ importers:
       '@obtp/validation':
         specifier: workspace:*
         version: link:../../packages/validation
+      '@payos/node':
+        specifier: ^2.0.4
+        version: 2.0.4
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -1218,6 +1221,9 @@ packages:
 
   '@paralleldrive/cuid2@2.3.1':
     resolution: {integrity: sha512-XO7cAxhnTZl0Yggq6jOgjiOHhbgcO4NqFqwSmQpjK3b6TEE6Uj/jfSk6wzYyemh3+I0sHirKSetjQwn5cZktFw==}
+
+  '@payos/node@2.0.4':
+    resolution: {integrity: sha512-ZJ5jgKVJDx2OBfOrhLqjWBZwC4JCidEFgHXz8k3CkhfmyZImd0raL85+DtKCJABMLrMLM6Sb0G8Xsru7HFxInA==}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -5453,6 +5459,8 @@ snapshots:
   '@paralleldrive/cuid2@2.3.1':
     dependencies:
       '@noble/hashes': 1.8.0
+
+  '@payos/node@2.0.4': {}
 
   '@pkgjs/parseargs@0.11.0':
     optional: true

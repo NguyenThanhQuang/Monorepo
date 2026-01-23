@@ -346,3 +346,43 @@ export interface ConfirmBookingPayload {
   paymentMethod: string;
   transactionDateTime: string;
 }
+
+// Request tạo link
+export interface CreatePaymentLinkPayload {
+  bookingId: string;
+}
+
+// Response từ Server về Client (chứa link checkout)
+export interface PaymentLinkResponse {
+  checkoutUrl: string;
+  orderCode: number;
+  qrCode?: string;
+}
+
+// Sub-structure của Webhook
+export interface PayOSWebhookData {
+  orderCode: number;
+  amount: number;
+  description: string;
+  accountNumber: string;
+  reference: string;
+  transactionDateTime: string;
+  currency: string;
+  paymentLinkId: string;
+  code: string;
+  desc: string;
+  counterAccountBankName?: string;
+  counterAccountName?: string;
+  counterAccountNumber?: string;
+  virtualAccountName?: string;
+  virtualAccountNumber?: string;
+}
+
+// Main Webhook DTO
+export interface PayOSWebhookPayload {
+  code: string; // "00"
+  desc: string;
+  success: boolean;
+  data: PayOSWebhookData;
+  signature: string;
+}

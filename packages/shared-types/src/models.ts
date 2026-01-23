@@ -195,3 +195,25 @@ export interface Booking {
   createdAt: Date;
   updatedAt: Date;
 }
+
+import { PaymentMethod } from "./enums";
+
+export interface PaymentTransaction {
+  id: string;
+  _id: string;
+
+  orderCode: number; // Unique int required by PayOS
+  bookingId: string;
+  amount: number;
+
+  paymentMethod: string | PaymentMethod;
+  status: PaymentStatus;
+
+  // Data thô từ gateway để debug
+  gatewayTransactionId?: string;
+  transactionDateTime?: string; // string ISO/Format from gateway
+  rawResponse?: Record<string, any>;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
