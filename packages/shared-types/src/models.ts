@@ -23,6 +23,19 @@ export interface Location {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  nameVi: string;
+  nameEn: string;
+  image: string;
+  routes: number;
+  popular: boolean;
+  description?: string;
+  popularRoutes?: Array<{
+    from: string;
+    to: string;
+    duration: string;
+    price: string;
+    trips: number;
+  }>;
 }
 
 export interface User {
