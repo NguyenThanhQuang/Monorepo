@@ -257,3 +257,10 @@ export interface Review {
   createdAt: Date;
   updatedAt: Date;
 }
+/// bổ sung ui 
+export interface LocationSuggestion {
+  id: string;
+  name: string;
+  province: string;
+  type: string;
+}

@@ -10,12 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "axios": "^1.13.2",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-       "@obtp/business-logic": "workspace:*",
-    "@obtp/shared-types": "workspace:*",
-    "@obtp/validation": "workspace:*"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
