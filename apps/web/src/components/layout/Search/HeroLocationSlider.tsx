@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MapPin, TrendingUp, X, Bus, Clock, DollarSign } from 'lucide-react';
-import { useLanguage } from './LanguageContext';
 import { Location } from '@obtp/shared-types';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 
 const popularLocations: Location[] = [
