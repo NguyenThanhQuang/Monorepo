@@ -4,8 +4,8 @@ import {
 } from 'lucide-react';
 import { HeroLocationSlider } from './HeroLocationSlider';
 import { CustomDatePicker } from './CustomDatePicker';
-import type { HeroSearchProps } from '../../../hooks/Props/layout/HeaderProps';
-import { useHeroSearchLogic } from '../../../hooks/Logic/useHeaderLogic';
+import { useHeroSearchLogic } from '../../../hooks/Logic/useHeroSearchLogic';
+import type { HeroSearchProps } from '../../../hooks/Props/layout/HeroSearchProps';
 
 export function HeroSearch(props: HeroSearchProps) {
   const logic = useHeroSearchLogic(props);

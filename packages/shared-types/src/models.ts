@@ -13,6 +13,7 @@ export interface Location {
   _id: string;
   id: string;
   name: string;
+  
   slug: string;
   province: string;
   district?: string;
@@ -134,6 +135,9 @@ export interface RouteInfo {
   stops: TripStopInfo[];
   duration?: number; // Minutes
   distance?: number; // Meters or KM
+    // ✅ FIX: dùng cho UI
+  from?: Location;
+  to?: Location;
 }
 
 export interface Trip {
@@ -141,7 +145,12 @@ export interface Trip {
   _id: string;
 
   companyId: string;
-  vehicleId: string;
+
+  vehicleId: string; // backend ref
+  vehicle?: {
+    id: string;
+    vehicleNumber: string;
+  }; // ✅ UI dùng
 
   route: RouteInfo;
 
@@ -151,10 +160,10 @@ export interface Trip {
   price: number;
   status: TripStatus;
 
-  seats: TripSeat[]; // Mảng phẳng chứa trạng thái ghế
-  availableSeatsCount: number; // Field computed hoặc cached (quan trọng cho search)
+  seats: TripSeat[];
+  availableSeatsCount: number;
+  totalSeats: number;
 
-  // Recurrence logic fields
   isRecurrenceTemplate: boolean;
   isRecurrenceActive: boolean;
   recurrenceParentId?: string;
@@ -162,6 +171,7 @@ export interface Trip {
   createdAt: Date;
   updatedAt: Date;
 }
+
 
 import { BookingStatus, PaymentStatus } from "./enums";
 
@@ -263,4 +273,64 @@ export interface LocationSuggestion {
   name: string;
   province: string;
   type: string;
+}
+// @obtp/shared-types
+
+export interface AdminBookingResponse {
+  id: string;
+  ticketCode?: string;
+
+  contactName: string;
+  contactPhone: string;
+
+  routeName: string;        // "TP.HCM → Đà Lạt"
+  departureDate: string;    // ISO
+  departureTime: string;    // "05:00"
+
+  seatNumbers: string[];    // ["A15", "A16"]
+
+  vehiclePlate?: string;
+
+  totalAmount: number;
+
+  status: BookingStatus;
+
+  createdAt: Date;
+}
+export interface CompanyStats {
+  totalTrips: number;
+  totalVehicles: number;
+  totalBookings: number;
+  totalRevenue?: number;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  code: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  description?: string;
+  logoUrl?: string;
+  status: CompanyStatus;
+
+  stats?: CompanyStats; // ✅ FIX
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AdminUserListItem {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  roles: UserRole[];
+  isBanned: boolean;
+  createdAt: string;
+
+  // FE computed (optional)
+  totalTrips?: number;
+  totalSpent?: number;
 }

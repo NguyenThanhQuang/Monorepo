@@ -334,4 +334,5 @@ export class BookingsService {
       throw new InternalServerErrorException('Lỗi sinh mã vé. Thử lại sau.');
     return code;
   }
+  
 }

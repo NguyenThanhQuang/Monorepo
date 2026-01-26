@@ -1,8 +1,12 @@
-import { Bus, User, Globe, Menu, Sun, Moon, ChevronDown, LogOut, Ticket, UserCircle, Phone } from 'lucide-react';
+import { Bus, User, Globe, Menu, Sun, Moon, ChevronDown, LogOut, Ticket, UserCircle, Phone, Shield } from 'lucide-react';
+import { useState } from 'react';
 import type { HeaderProps } from '../../../hooks/Props/layout/HeaderProps';
-import { useHeaderLogic } from '../../../hooks/Logic/useHeaderLogic';
+import { useTheme } from '../../../contexts/ThemeProvider';
+import { useLanguage } from '../../../contexts/LanguageContext';
+
 export function Header({ 
   isLoggedIn = false, 
+  isAdmin = false,
   onLoginClick,
   onMyTripsClick,
   onProfileClick,
@@ -11,17 +15,17 @@ export function Header({
   onContactClick,
   onTicketLookupClick,
   onHotlineClick,
-  onHomeClick
+  onHomeClick,
+  onAdminAccess
 }: HeaderProps) {
-    const {
-    theme,
-    toggleTheme,
-    language,
-    t,
-    showUserMenu,
-    setShowUserMenu,
-    toggleLanguage,
-  } = useHeaderLogic();
+  const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'vi' ? 'en' : 'vi');
+  };
+
   return (
     <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-sm sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4">
@@ -87,6 +91,17 @@ export function Header({
               <span className="uppercase">{language}</span>
             </button>
             
+            {/* Admin access button (chỉ hiển thị khi là admin) */}
+            {isAdmin && onAdminAccess && (
+              <button
+                onClick={onAdminAccess}
+                className="hidden md:flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all px-4 py-2 rounded-xl hover:bg-purple-50 dark:hover:bg-gray-800 group"
+              >
+                <Shield className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                <span>{t('admin') || 'Admin'}</span>
+              </button>
+            )}
+            
             <button
               onClick={toggleTheme}
               className="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all hover:scale-110"
@@ -133,6 +148,21 @@ export function Header({
                         <UserCircle className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" />
                         <span className="text-gray-900 dark:text-white">{t('profile')}</span>
                       </button>
+                      
+                      {/* Admin access trong dropdown (nếu là admin) */}
+                      {isAdmin && onAdminAccess && (
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            onAdminAccess();
+                          }}
+                          className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors text-left group"
+                        >
+                          <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                          <span className="text-purple-600 dark:text-purple-400">{t('admin') || 'Admin'}</span>
+                        </button>
+                      )}
+                      
                       <div className="border-t border-gray-100 dark:border-gray-700 my-2"></div>
                       <button
                         onClick={() => {

@@ -1,82 +1,125 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import type { LocationItem, UseHeroSearchLogicProps } from '../Props/layout/HeroSearchProps';
+import type { Location } from '@obtp/shared-types';
+import type { UseHeroSearchLogicProps } from '../Props/layout/HeroSearchProps';
+import { locationApi } from '../../api/service/location/apiLocation';
+
 export function useHeroSearchLogic({
   onSearch,
-  initialFrom = '',
-  initialTo = '',
+  initialFrom = null,
+  initialTo = null,
 }: UseHeroSearchLogicProps) {
   const { t } = useLanguage();
 
-  const [from, setFrom] = useState(initialFrom);
-  const [to, setTo] = useState(initialTo);
+  /* =====================
+     STATE
+  ===================== */
+  const [fromText, setFromText] = useState(
+    initialFrom ? `${initialFrom.name}, ${initialFrom.province}` : '',
+  );
+  const [toText, setToText] = useState(
+    initialTo ? `${initialTo.name}, ${initialTo.province}` : '',
+  );
+
+  const [fromLocation, setFromLocation] = useState<Location | null>(initialFrom);
+  const [toLocation, setToLocation] = useState<Location | null>(initialTo);
+
   const [date, setDate] = useState('');
 
-  const [locations, setLocations] = useState<LocationItem[]>([]);
+  const [fromSuggestions, setFromSuggestions] = useState<Location[]>([]);
+  const [toSuggestions, setToSuggestions] = useState<Location[]>([]);
+
   const [showFromSuggestions, setShowFromSuggestions] = useState(false);
   const [showToSuggestions, setShowToSuggestions] = useState(false);
 
   const fromInputRef = useRef<HTMLInputElement>(null);
   const toInputRef = useRef<HTMLInputElement>(null);
 
+  /* =====================
+     EFFECTS – AUTOCOMPLETE
+  ===================== */
   useEffect(() => {
-    setFrom(initialFrom);
-    setTo(initialTo);
-  }, [initialFrom, initialTo]);
+    if (!fromText || fromLocation) return;
 
-  /** 🔹 LOAD POPULAR LOCATIONS */
+    const timer = setTimeout(async () => {
+      const res = await locationApi.search(fromText);
+      setFromSuggestions(res.data);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [fromText, fromLocation]);
+
   useEffect(() => {
-    fetch('/api/locations/popular')
-      .then(res => res.json())
-      .then(data => setLocations(data))
-      .catch(console.error);
-  }, []);
+    if (!toText || toLocation) return;
 
+    const timer = setTimeout(async () => {
+      const res = await locationApi.search(toText);
+      setToSuggestions(res.data);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [toText, toLocation]);
+
+  /* =====================
+     HANDLERS
+  ===================== */
   const handleSearch = () => {
-    if (!from || !to) {
+    if (!fromLocation || !toLocation) {
       alert(t('selectBothLocations'));
       return;
     }
 
-    const searchDate = date || new Date().toISOString().split('T')[0];
-    setDate(searchDate);
-    onSearch?.(from, to, searchDate);
+    const finalDate =
+      date || new Date().toISOString().split('T')[0];
+
+    setDate(finalDate);
+    onSearch?.(fromLocation.id, toLocation.id, finalDate);
   };
 
   const handleSwap = () => {
-    setFrom(to);
-    setTo(from);
+    setFromLocation(toLocation);
+    setToLocation(fromLocation);
+
+    setFromText(
+      toLocation ? `${toLocation.name}, ${toLocation.province}` : '',
+    );
+    setToText(
+      fromLocation ? `${fromLocation.name}, ${fromLocation.province}` : '',
+    );
   };
-
-  const filteredFromLocations = locations.filter(
-    l =>
-      l.name.toLowerCase().includes(from.toLowerCase()) &&
-      l.name !== to,
-  );
-
-  const filteredToLocations = locations.filter(
-    l =>
-      l.name.toLowerCase().includes(to.toLowerCase()) &&
-      l.name !== from,
-  );
 
   return {
     t,
-    from,
-    to,
+
+    // text
+    fromText,
+    toText,
+    setFromText,
+    setToText,
+
+    // selected location
+    fromLocation,
+    toLocation,
+    setFromLocation,
+    setToLocation,
+
+    // date
     date,
-    setFrom,
-    setTo,
     setDate,
-    locations,
-    filteredFromLocations,
-    filteredToLocations,
+
+    // suggestions
+    fromSuggestions,
+    toSuggestions,
     showFromSuggestions,
     showToSuggestions,
     setShowFromSuggestions,
     setShowToSuggestions,
+
+    // refs
     fromInputRef,
     toInputRef,
+
+    // handlers
     handleSearch,
     handleSwap,
   };

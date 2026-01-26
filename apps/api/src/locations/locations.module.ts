@@ -1,18 +1,18 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { LocationsController } from './locations.controller';
-import { LocationsRepository } from './locations.repository';
-import { LocationsService } from './locations.service';
-import { LocationDefinition, LocationSchema } from './schemas/location.schema';
+// import { Module } from '@nestjs/common';
+// import { MongooseModule } from '@nestjs/mongoose';
+// import { LocationsController } from './locations.controller';
+// import { LocationsRepository } from './locations.repository';
+// import { LocationsService } from './locations.service';
+// import { LocationDefinition, LocationSchema } from './schemas/location.schema';
 
-@Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: LocationDefinition.name, schema: LocationSchema },
-    ]),
-  ],
-  controllers: [LocationsController],
-  providers: [LocationsService, LocationsRepository],
-  exports: [LocationsService, LocationsRepository],
-})
-export class LocationsModule {}
+// @Module({
+//   imports: [
+//     MongooseModule.forFeature([
+//       { name: LocationDefinition.name, schema: LocationSchema },
+//     ]),
+//   ],
+//   controllers: [LocationsController],
+//   providers: [LocationsService, LocationsRepository],
+//   exports: [LocationsService, LocationsRepository],
+// })
+// export class LocationsModule {}

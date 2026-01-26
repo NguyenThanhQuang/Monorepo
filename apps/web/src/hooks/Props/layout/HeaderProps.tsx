@@ -1,9 +1,15 @@
-import type { Location } from '@obtp/shared-types';
-
-export interface UseHeroSearchLogicProps {
-  onSearch?: (fromId: string, toId: string, date: string) => void;
-  initialFrom?: Location | null;
-  initialTo?: Location | null;
+// Trong file HeaderProps.ts hoặc types.ts
+export interface HeaderProps {
+  isLoggedIn?: boolean;
+  isAdmin?: boolean;
+  onLoginClick?: () => void;
+  onMyTripsClick?: () => void;
+  onProfileClick?: () => void;
+  onLogout?: () => void;
+  onRoutesClick?: () => void;
+  onContactClick?: () => void;
+  onTicketLookupClick?: () => void;
+  onHotlineClick?: () => void;
+  onHomeClick?: () => void;
+  onAdminAccess?: () => void;
 }
-
-export interface HeroSearchProps extends UseHeroSearchLogicProps {}

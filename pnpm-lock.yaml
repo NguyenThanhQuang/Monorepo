@@ -205,6 +205,15 @@ importers:
 
   apps/web:
     dependencies:
+      '@obtp/business-logic':
+        specifier: workspace:*
+        version: link:../../packages/business-logic
+      '@obtp/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+      '@obtp/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       axios:
         specifier: ^1.13.2
         version: 1.13.2
@@ -221,15 +230,6 @@ importers:
       '@eslint/js':
         specifier: ^9.39.1
         version: 9.39.1
-      '@obtp/business-logic':
-        specifier: workspace:*
-        version: link:../../packages/business-logic
-      '@obtp/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
-      '@obtp/validation':
-        specifier: workspace:*
-        version: link:../../packages/validation
       '@types/node':
         specifier: ^24.10.9
         version: 24.10.9
