@@ -58,7 +58,7 @@ export default function VehicleManagementPage() {
               <tr key={v.id}>
                 <td>{v.vehicleNumber}</td>
                 <td>{v.type}</td>
-                <td>{v.totalSeats}</td>
+                <td>{v.totalSeats}</td> 
                 <td>
                   <span className={status.color} /> {status.label}
                 </td>

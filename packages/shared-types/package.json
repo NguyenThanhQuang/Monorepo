@@ -4,9 +4,37 @@
   "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./enums": {
+      "types": "./dist/enums.d.ts",
+      "import": "./dist/enums.d.ts",
+      "require": "./dist/enums.d.ts"
+    },
+    "./models": {
+      "types": "./dist/models.d.ts",
+      "import": "./dist/models.js",
+      "require": "./dist/models.js"
+    },
+    "./dtos": {
+      "types": "./dist/dtos.d.ts",
+      "import": "./dist/dtos.js",
+      "require": "./dist/dtos.js"
+    },
+    "./common": {
+      "types": "./dist/common.d.ts",
+      "import": "./dist/common.js",
+      "require": "./dist/common.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc -w"
+    "dev": "tsc -w",
+    "clean": "rm -rf dist"
   },
   "devDependencies": {
     "typescript": "^5.3.0"

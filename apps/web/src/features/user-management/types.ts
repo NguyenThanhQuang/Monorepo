@@ -1,7 +1,6 @@
-// src/features/user-management/types.ts
-export type UserStatus = 'active' | 'banned';
+import { UserAccountStatus, UserRole } from "@obtp/shared-types";
 
-export type UserRoleUI = 'user' | 'driver' | 'company-admin';
+export type UserRoleUI = UserRole | "driver";
 
 export interface UserRow {
   id: string;
@@ -11,6 +10,6 @@ export interface UserRow {
   joinDate: string;
   totalTrips: number;
   totalSpent: number;
-  status: UserStatus;
+  status: UserAccountStatus;
   role: UserRoleUI;
 }

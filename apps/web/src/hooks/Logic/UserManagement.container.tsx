@@ -1,81 +1,92 @@
-// src/features/user-management/UserManagement.container.tsx
 import { useEffect, useMemo, useState } from "react";
-import type { SanitizedUserResponse } from "@obtp/shared-types";
+import {  UserRole } from "@obtp/shared-types";
 import type { UserRow } from "../../features/user-management/types";
-import { usersApi } from "../../api/service/user/user.api";
-import { UserManagement } from "../../pages/admin/UserManagement";
-
+import { UserManagementView } from "../../pages/admin/UserManagement";
+export declare enum UserAccountStatus {
+    ACTIVE = "active",
+    BANNED = "banned",
+    UNVERIFIED = "unverified"
+}
 export function UserManagementContainer() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [search, setSearch] = useState("");
+  const [role, setRole] = useState<"all" | UserRole>("all");
+  const [status, setStatus] = useState<"all" | UserAccountStatus>("all");
+
+  /* ================= FETCH USERS ================= */
   useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      setLoading(true);
+    const fetchUsers = async () => {
       try {
-        const data = await usersApi.getAllForAdmin();
-        if (!mounted) return;
-
-        setUsers(data.map(mapUserToRow));
-      } catch {
-        if (mounted) setError("Không thể tải danh sách người dùng");
+        setLoading(true);
+        // TODO: replace bằng API thật
+        const data: UserRow[] = [];
+        setUsers(data);
+      } catch (e) {
+        setError("Failed to load users");
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     };
 
-    load();
-    return () => {
-      mounted = false;
-    };
+    fetchUsers();
   }, []);
 
-  const banUser = async (userId: string) => {
-    const updated = await usersApi.updateStatus(userId, { isBanned: true });
+  /* ================= FILTER ================= */
+  const filteredUsers = useMemo(() => {
+    const q = search.toLowerCase();
+
+    return users.filter(u => {
+      const matchSearch =
+        u.name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.phone.includes(q);
+
+      const matchRole = role === "all" || u.role === role;
+      const matchStatus = status === "all" || u.status === status;
+
+      return matchSearch && matchRole && matchStatus;
+    });
+  }, [users, search, role, status]);
+
+  /* ================= ACTIONS ================= */
+  const handleBan = (id: string) => {
+    // TODO: call API
     setUsers(prev =>
-      prev.map(u => (u.id === userId ? mapUserToRow(updated) : u)),
+      prev.map(u =>
+        u.id === id ? { ...u, status: UserAccountStatus.BANNED } : u
+      )
     );
   };
 
-  const unbanUser = async (userId: string) => {
-    const updated = await usersApi.updateStatus(userId, { isBanned: false });
+  const handleUnban = (id: string) => {
+    // TODO: call API
     setUsers(prev =>
-      prev.map(u => (u.id === userId ? mapUserToRow(updated) : u)),
+      prev.map(u =>
+        u.id === id ? { ...u, status: UserAccountStatus.ACTIVE } : u
+      )
     );
   };
 
   return (
-    <UserManagement
-      users={users}
+    <UserManagementView
+      users={filteredUsers}
       loading={loading}
       error={error}
-      onBan={banUser}
-      onUnban={unbanUser}
+      search={search}
+      role={role}
+      status={status}
+      onSearchChange={setSearch}
+      onRoleChange={setRole}
+      onStatusChange={setStatus}
+      onBan={handleBan}
+      onUnban={handleUnban}
+      totalUsers={users.length}
+      totalActive={users.filter(u => u.status === UserAccountStatus.ACTIVE).length}
+      totalBanned={users.filter(u => u.status === UserAccountStatus.BANNED).length}
+      totalTrips={users.reduce((s, u) => s + u.totalTrips, 0)}
     />
   );
-}
-
-/* ---------------- helpers ---------------- */
-
-function mapUserToRow(user: SanitizedUserResponse): UserRow {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    joinDate: new Date(user.createdAt).toLocaleDateString("vi-VN"),
-    totalTrips: user.totalTrips ?? 0,
-    totalSpent: user.totalSpent ?? 0,
-    status: user.isBanned ? "banned" : "active",
-    role: mapRole(user.roles),
-  };
-}
-
-function mapRole(roles: string[]): "user" | "driver" | "company-admin" {
-  if (roles.includes("COMPANY_ADMIN")) return "company-admin";
-  if (roles.includes("DRIVER")) return "driver";
-  return "user";
 }

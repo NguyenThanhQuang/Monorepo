@@ -1,9 +1,15 @@
-// src/features/admin-auth/AdminLogin.container.tsx
+
 import { useState } from "react";
-import {  UserRole, type LoginResponse } from "@obtp/shared-types";
+
+import {   type LoginResponse } from "@obtp/shared-types";
 import { loginAdmin } from "../../api/service/auth/auth.api";
 import { AdminLogin } from "../../pages/admin/AdminLogin";
-
+export declare enum UserRole {
+    ADMIN = "admin",
+    USER = "user",
+    STAFF = "staff",
+    COMPANY_ADMIN = "company_admin"
+}
 interface Props {
   adminType: "company" | "system";
   onLoginSuccess: (data: LoginResponse["user"]) => void;
@@ -18,6 +24,7 @@ export function AdminLoginContainer({
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (identifier: string, password: string) => {
+
     setLoading(true);
     try {
       const result = await loginAdmin({ identifier, password });

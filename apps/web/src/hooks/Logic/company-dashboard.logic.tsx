@@ -12,15 +12,17 @@ export function useCompanyDashboardLogic() {
 
   useEffect(() => {
     async function fetchData() {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      const cmp = await companyApi.getMyCompany();
-      setCompany(cmp);
+        const cmp = await companyApi.getMyCompany();
+        setCompany(cmp);
 
-      const tripList = await TripsApi.getManagementTrips(cmp.id);
-      setTrips(tripList);
-
-      setLoading(false);
+        const tripList = await TripsApi.getManagementTrips(cmp.id);
+        setTrips(tripList);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchData();
@@ -31,16 +33,19 @@ export function useCompanyDashboardLogic() {
 
     return {
       totalVehicles: company?.stats?.totalVehicles ?? 0,
+
       todayTrips: trips.filter(
         t => new Date(t.departureTime).toDateString() === today,
       ).length,
+
       totalPassengers: trips.reduce(
         (sum, t) => sum + (t.totalSeats - t.availableSeatsCount),
         0,
       ),
+
       monthlyRevenue: trips.reduce(
         (sum, t) =>
-          t.status === TripStatus.ARRIVED 
+          t.status === TripStatus.ARRIVED
             ? sum + t.price * (t.totalSeats - t.availableSeatsCount)
             : sum,
         0,
@@ -49,7 +54,7 @@ export function useCompanyDashboardLogic() {
   }, [company, trips]);
 
   const recentTrips = useMemo(() => {
-    return trips
+    return [...trips]
       .sort(
         (a, b) =>
           new Date(b.departureTime).getTime() -
