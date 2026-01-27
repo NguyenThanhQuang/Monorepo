@@ -1,9 +1,13 @@
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  forwardRef,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
-import { JwtPayload, AuthUserResponse } from '@obtp/shared-types';
+import { PassportStrategy } from '@nestjs/passport';
+import { AuthUserResponse, JwtPayload } from '@obtp/shared-types';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../../users/users.service';
 
 @Injectable()
@@ -21,9 +25,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<AuthUserResponse> {
-    // Gọi sang UsersModule để lấy data mới nhất (check active/ban status)
     const user = await this.usersService.findById(payload.sub);
-    
+
     if (!user) {
       throw new UnauthorizedException('Người dùng không tồn tại.');
     }
@@ -32,10 +35,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Tài khoản đã bị khóa.');
     }
 
-    // Mapping sang format chuẩn Interface
     return {
-      id: user._id.toString(), // Standard ID
-      userId: user._id.toString(), // JWT Strategy Legacy support
+      id: user._id.toString(),
+      userId: user._id.toString(),
       email: user.email,
       name: user.name,
       phone: user.phone,

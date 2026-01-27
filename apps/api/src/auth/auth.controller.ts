@@ -9,21 +9,6 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
-import type { Response } from 'express';
-import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { UrlBuilderService } from '../common/services/url-builder.service';
-import { AuthService } from './auth.service';
-
-// SCHEMAS (CONTRACT)
-import {
-  ForgotPasswordSchema,
-  LoginSchema,
-  RegisterSchema,
-  ResendVerificationSchema,
-  ResetPasswordSchema,
-} from '@obtp/validation';
-
-// DTO INTERFACES
 import type {
   ForgotPasswordPayload,
   LoginPayload,
@@ -31,6 +16,17 @@ import type {
   ResendVerificationEmailPayload,
   ResetPasswordPayload,
 } from '@obtp/shared-types';
+import {
+  ForgotPasswordSchema,
+  LoginSchema,
+  RegisterSchema,
+  ResendVerificationSchema,
+  ResetPasswordSchema,
+} from '@obtp/validation';
+import type { Response } from 'express';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { UrlBuilderService } from '../common/services/url-builder.service';
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
@@ -54,7 +50,6 @@ export class AuthController {
 
   @Get('verify-email')
   async verifyEmail(@Query('token') token: string, @Res() res: Response) {
-    // Redirect logic using UrlBuilder
     try {
       const result = await this.authService.verifyEmail(token);
       const url = this.urlBuilderService.buildVerificationResultUrl(
@@ -64,7 +59,6 @@ export class AuthController {
       );
       return res.redirect(url);
     } catch (error) {
-      // Improve error mapping later
       const url = this.urlBuilderService.buildVerificationResultUrl(
         false,
         'VerificationFailed',
@@ -76,9 +70,7 @@ export class AuthController {
   @Post('resend-verification-email')
   @UsePipes(new ZodValidationPipe(ResendVerificationSchema))
   async resendEmail(@Body() payload: ResendVerificationEmailPayload) {
-    await this.authService.register({ ...payload } as any); // Logic resend nằm trong register cũ, hoặc gọi hàm riêng nếu tách
-    // Trong thiết kế mới ở service, nên tách ra: await this.authService.resendVerification(payload.email);
-    // Giả sử service đã có hàm resend riêng
+    await this.authService.register({ ...payload } as any);
     return { message: 'Yêu cầu gửi lại đã được tiếp nhận.' };
   }
 

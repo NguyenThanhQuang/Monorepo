@@ -79,8 +79,6 @@ export class ReviewsService {
       userId: new Types.ObjectId(user.id),
       bookingId: new Types.ObjectId(payload.bookingId),
       tripId: new Types.ObjectId(payload.tripId),
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore (Accessing internal mongoose doc props if types mismatched or generic)
       companyId: trip.companyId._id ? trip.companyId._id : trip.companyId,
 
       rating: payload.rating,
