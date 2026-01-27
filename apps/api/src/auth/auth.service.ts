@@ -13,7 +13,6 @@ import { JwtService } from '@nestjs/jwt';
 import {
   AuthUserResponse,
   ForgotPasswordPayload,
-  JwtPayload,
   LoginPayload,
   LoginResponse,
   RegisterPayload,
@@ -28,6 +27,7 @@ import {
   hashPassword,
 } from '@obtp/business-logic';
 import { UsersService } from '../users/users.service';
+import { TokenService } from './token/token.service';
 
 @Injectable()
 export class AuthService {
@@ -36,29 +36,13 @@ export class AuthService {
   constructor(
     @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
-    // @Inject(forwardRef(() => CompaniesService))
-    // private companiesService: CompaniesService,
-
     private jwtService: JwtService,
     private eventEmitter: EventEmitter2,
     private configService: ConfigService,
+    private tokenService: TokenService,
   ) {}
 
-  /**
-   * HELPERS
-   */
-  private generateAccessToken(user: any): string {
-    const payload: JwtPayload = {
-      email: user.email,
-      sub: user._id.toString(),
-      roles: user.roles,
-      companyId: user.companyId?.toString(),
-    };
-    return this.jwtService.sign(payload);
-  }
-
   private sanitizeUser(user: any): AuthUserResponse {
-    // Delegate to UsersService if needed, or map locally
     if (this.usersService.sanitizeUser) {
       return this.usersService.sanitizeUser(user);
     }
@@ -75,24 +59,16 @@ export class AuthService {
     };
   }
 
-  /**
-   * CORE FLOWS
-   */
-
   async register(payload: RegisterPayload): Promise<{ message: string }> {
     const emailLower = payload.email.toLowerCase();
 
-    // 1. Check tồn tại qua UsersService (Abstract DB)
     const existingUser = await this.usersService.findOneByEmail(emailLower);
 
-    // Logic Resend Token nếu user đã tồn tại nhưng chưa active (Giữ lại logic cũ)
     if (existingUser) {
       if (
         !existingUser.isEmailVerified &&
         existingUser.emailVerificationToken
       ) {
-        // Check expiration, regen token logic...
-        // ... (Tối giản code demo: Update token & Resend)
         const newToken = generateRandomToken();
         await this.usersService.updateVerificationInfo(
           existingUser._id.toString(),
@@ -118,17 +94,14 @@ export class AuthService {
       throw new ConflictException('Email đã được sử dụng.');
     }
 
-    // Check Phone
     const existingPhone = await this.usersService.findOneByPhone(payload.phone);
     if (existingPhone) {
       throw new ConflictException('Số điện thoại đã được sử dụng.');
     }
 
-    // 2. Prepare Data
     const verificationToken = generateRandomToken();
     const hashedPassword = await hashPassword(payload.password);
 
-    // 3. Create User (Delegated to UsersService)
     const newUser = await this.usersService.create({
       ...payload,
       email: emailLower,
@@ -141,7 +114,6 @@ export class AuthService {
       ),
     });
 
-    // 4. Emit Event
     this.eventEmitter.emit('user.registered', {
       email: newUser.email,
       name: newUser.name,
@@ -156,7 +128,6 @@ export class AuthService {
   async login(payload: LoginPayload): Promise<LoginResponse> {
     const { identifier, password } = payload;
 
-    // 1. Find User
     let user;
     if (identifier.includes('@')) {
       user = await this.usersService.findOneByEmail(identifier.toLowerCase());
@@ -169,11 +140,10 @@ export class AuthService {
         'Thông tin đăng nhập người dùng không chính xác.',
       );
 
-    // 2. Security Checks
     const isPasswordValid = await comparePassword(
       password,
       user.passwordHash || user.password,
-    ); // Fallback field
+    );
     if (!isPasswordValid)
       throw new UnauthorizedException('Thông tin đăng nhập không chính xác.');
 
@@ -181,42 +151,32 @@ export class AuthService {
     if (!user.isEmailVerified)
       throw new UnauthorizedException('Tài khoản chưa xác thực email.');
 
-    // 3. Company Admin Check (Optional Refactor later)
     if (user.roles.includes(UserRole.COMPANY_ADMIN) && user.companyId) {
-      // TODO: Call CompaniesService.findById(user.companyId) -> Check Status
-      // if (company.status !== CompanyStatus.ACTIVE) throw ...
     }
 
-    // 4. Finalize
-    // Update Last Login
     await this.usersService.updateLastLogin(user._id);
 
-    const accessToken = this.generateAccessToken(user);
+    const accessToken = this.tokenService.generateAccessToken(user);
     return {
       accessToken,
       user: this.sanitizeUser(user),
     };
   }
-  a;
-  // --- TOKEN VERIFICATION FLOWS (Verify, Resend, Forgot...) ---
-  // Các hàm này cần logic tìm user theo token, kiểm tra hạn (dùng date trong users schema)
-  // và update lại state của user thông qua usersService.
 
   async verifyEmail(token: string): Promise<LoginResponse> {
     const user = await this.usersService.verifyEmailToken(token);
     if (!user)
       throw new BadRequestException('Token không hợp lệ hoặc hết hạn.');
 
-    const accessToken = this.generateAccessToken(user);
+    const accessToken = this.tokenService.generateAccessToken(user);
     return { accessToken, user: this.sanitizeUser(user) };
   }
 
-  // ... (Tương tự cho requestPasswordReset, resetPassword - gọi Logic lib tạo token, hash pass, rồi gọi UsersService save)
   async requestPasswordReset(payload: ForgotPasswordPayload): Promise<void> {
     const user = await this.usersService.findOneByEmail(
       payload.email.toLowerCase(),
     );
-    if (!user) return; // Silent fail security
+    if (!user) return;
 
     const token = generateRandomToken();
     const expires = new Date(
@@ -234,7 +194,6 @@ export class AuthService {
 
   async resetPassword(payload: ResetPasswordPayload): Promise<void> {
     const hashedPassword = await hashPassword(payload.newPassword);
-    // User service cần method: findByResetTokenAndUpdatePassword(token, newPassHash)
     const result = await this.usersService.resetPasswordWithToken(
       payload.token,
       hashedPassword,
