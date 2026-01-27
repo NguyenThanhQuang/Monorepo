@@ -34,9 +34,6 @@ import { BookingsRepository } from './bookings.repository';
 
 @Injectable()
 export class BookingsService {
-  findById(bookingId: string) {
-      throw new Error('Method not implemented.');
-  }
   private readonly logger = new Logger(BookingsService.name);
 
   constructor(

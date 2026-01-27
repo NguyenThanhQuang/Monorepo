@@ -35,7 +35,7 @@ export class ReviewsService {
 
   // Helper Logic Check chung
   private async validateAndGetResources(bookingId: string, tripId: string) {
-    const booking = await this.bookingsService.findById(bookingId);
+    const booking = await this.bookingsRepository.findById(bookingId);
     if (!booking) throw new NotFoundException('Đơn hàng không tồn tại.');
 
     if (booking.tripId.toString() !== tripId) {
