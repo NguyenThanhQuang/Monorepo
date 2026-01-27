@@ -16,7 +16,8 @@
     "react-dom": "^19.2.0",
     "@obtp/business-logic": "workspace:*",
     "@obtp/shared-types": "workspace:*",
-    "@obtp/validation": "workspace:*"
+    "@obtp/validation": "workspace:*",
+    "@obtp/api-client": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
