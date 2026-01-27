@@ -8,6 +8,91 @@ export interface GeoJsonPoint {
   type: "Point";
   coordinates: [number, number];
 }
+// src/pages/ticket-lookup/types.ts
+
+export interface TicketLookupForm {
+  identifier: string;
+  contactPhone: string;
+}
+// src/pages/user-profile/types.ts
+// src/pages/trip-detail/types.ts
+
+
+export interface TripSeat {
+  seatNumber: string;
+  status: SeatStatus;
+  floor: number;
+  position: 'left' | 'right';
+}
+
+export interface TripDetailResponse {
+  _id: string;
+  price: number;
+  departureTime: string;
+  expectedArrivalTime: string;
+  companyId: {
+    name: string;
+  };
+  vehicleId: {
+    type: string;
+    totalSeats: number;
+  };
+  route: {
+    fromLocationId: { name: string };
+    toLocationId: { name: string };
+  };
+  seats: TripSeat[];
+}
+
+export interface UserProfileResponse {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export interface UpdateProfilePayload {
+  name: string;
+  phone: string;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+
+export interface TicketLookupResponse {
+  _id: string;
+  ticketCode: string;
+  status: 'HELD' | 'CONFIRMED' | 'CANCELLED';
+
+  contactName: string;
+  contactPhone: string;
+
+  totalAmount: number;
+
+  passengers: {
+    seatNumber: string;
+    price: number;
+  }[];
+
+  tripId: {
+    departureTime: string;
+    route: {
+      fromLocationId: {
+        name: string;
+      };
+      toLocationId: {
+        name: string;
+      };
+    };
+    companyId: {
+      name: string;
+      logoUrl?: string;
+    };
+  };
+}
 
 export interface Location {
   _id: string;
