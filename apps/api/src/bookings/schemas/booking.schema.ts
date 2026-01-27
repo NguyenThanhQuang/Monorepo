@@ -1,15 +1,13 @@
+import { CompanyDefinition } from '@/companies/schemas/company.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { BookingStatus, PaymentStatus } from '@obtp/shared-types';
 import { HydratedDocument, Types } from 'mongoose';
-
-// References
-import { CompanyDefinition } from '@/companies/schemas/company.schema';
 import { Trip } from '../../trips/schemas/trip.schema';
 import { User } from '../../users/schemas/user.schema';
 
-export type BookingDocument = HydratedDocument<Booking>;
+export type BookingDocument = HydratedDocument<BookingDefinition>;
 
-// EMBEDDED SCHEMA: Thông tin hành khách (Snapshot tại thời điểm đặt)
+// Thông tin hành khách (Snapshot tại thời điểm đặt)
 @Schema({ _id: false })
 export class PassengerInfo {
   @Prop({ type: String, required: true, trim: true })
@@ -27,16 +25,16 @@ export class PassengerInfo {
 export const PassengerInfoSchema = SchemaFactory.createForClass(PassengerInfo);
 
 @Schema({ timestamps: true })
-export class Booking {
+export class BookingDefinition {
   // Liên kết người đặt (Optional - vì khách vãng lai cũng đặt được)
   @Prop({ type: Types.ObjectId, ref: User.name, index: true, required: false })
   userId?: Types.ObjectId;
 
-  // Liên kết chuyến đi (Bắt buộc)
+  // Liên kết chuyến đi
   @Prop({ type: Types.ObjectId, ref: Trip.name, required: true, index: true })
   tripId: Types.ObjectId;
 
-  // Liên kết công ty (để tiện truy vấn doanh thu theo công ty)
+  // Liên kết công ty
   @Prop({
     type: Types.ObjectId,
     ref: CompanyDefinition.name,
@@ -57,8 +55,7 @@ export class Booking {
   })
   status: BookingStatus;
 
-  // --- TTL CONFIGURATION ---
-  // Trường này xác định thời điểm vé giữ chỗ bị xóa tự động nếu chưa thanh toán
+  // Xác định thời điểm vé giữ chỗ bị xóa tự động nếu chưa thanh toán
   @Prop({ type: Date, index: true })
   heldUntil?: Date;
 
@@ -105,9 +102,8 @@ export class Booking {
   reviewId?: Types.ObjectId;
 }
 
-export const BookingSchema = SchemaFactory.createForClass(Booking);
+export const BookingSchema = SchemaFactory.createForClass(BookingDefinition);
 
-// SETUP TTL INDEX
 // Chỉ xóa khi HELD và đã quá hạn heldUntil
 BookingSchema.index(
   { heldUntil: 1 },
@@ -117,5 +113,5 @@ BookingSchema.index(
   },
 );
 
-// Compound Index: Tìm vé theo SĐT User
+// Tìm vé theo SĐT User
 BookingSchema.index({ contactPhone: 1, createdAt: -1 });

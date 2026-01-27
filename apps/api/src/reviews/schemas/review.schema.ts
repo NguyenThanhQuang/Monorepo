@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
-// Interface
-// Lưu ý: Denormalization giúp ta query review của Company/Trip cực nhanh mà không cần Join
+export type ReviewDocument = HydratedDocument<ReviewDefinition>;
+
 @Schema({ timestamps: true })
-export class Review {
+export class ReviewDefinition {
   @Prop({ type: Types.ObjectId, ref: 'User', index: true, required: false })
-  userId?: Types.ObjectId; // Null nếu là guest (hoặc user đã xóa)
+  userId?: Types.ObjectId;
 
   @Prop({ type: String, required: true })
   displayName: string;
@@ -52,9 +52,7 @@ export class Review {
   @Prop()
   updatedAt?: Date;
 }
-
-export type ReviewDocument = HydratedDocument<Review>;
-export const ReviewSchema = SchemaFactory.createForClass(Review);
+export const ReviewSchema = SchemaFactory.createForClass(ReviewDefinition);
 
 // Indexes cho query phổ biến
 ReviewSchema.index({ companyId: 1, createdAt: -1 }); // Lấy review mới nhất của nhà xe

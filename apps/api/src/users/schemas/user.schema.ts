@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { UserRole } from '@obtp/shared-types';
 import { HydratedDocument, Types } from 'mongoose';
 
-export type UserDocument = HydratedDocument<User>;
+export type UserDocument = HydratedDocument<UserDefinition>;
 
 @Schema({ timestamps: true })
-export class User {
+export class UserDefinition {
   @Prop({
     type: String,
     required: true,
@@ -80,7 +80,7 @@ export class User {
   isBanned: boolean;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+export const UserSchema = SchemaFactory.createForClass(UserDefinition);
 
 // Xóa account ảo chưa active sau một thời gian
 UserSchema.index(

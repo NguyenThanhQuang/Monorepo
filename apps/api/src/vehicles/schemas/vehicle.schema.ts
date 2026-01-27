@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as sharedTypes from '@obtp/shared-types';
 import { HydratedDocument, Types } from 'mongoose';
 
-export type VehicleDocument = HydratedDocument<Vehicle>;
+export type VehicleDocument = HydratedDocument<VehicleDefinition>;
 
 @Schema({ timestamps: true })
-export class Vehicle {
+export class VehicleDefinition {
   @Prop({ type: Types.ObjectId, ref: 'Company', required: true, index: true })
   companyId: Types.ObjectId;
 
@@ -26,7 +26,6 @@ export class Vehicle {
   })
   status: sharedTypes.VehicleStatus;
 
-  // Cấu hình vật lý (lưu lại để tính toán diff khi update)
   @Prop({ type: Number, required: true, min: 1, default: 1 })
   floors: number;
 
@@ -39,11 +38,9 @@ export class Vehicle {
   @Prop({ type: [Number], required: true, default: [] })
   aislePositions: number[];
 
-  // Dữ liệu tính toán
   @Prop({ type: Number, required: true, min: 1 })
   totalSeats: number;
 
-  // Lưu Object dạng JSON (Mongoose Schema.Types.Mixed)
   @Prop({ type: Object })
   seatMap?: sharedTypes.SeatMap;
 
@@ -51,7 +48,7 @@ export class Vehicle {
   seatMapFloor2?: sharedTypes.SeatMap;
 }
 
-export const VehicleSchema = SchemaFactory.createForClass(Vehicle);
+export const VehicleSchema = SchemaFactory.createForClass(VehicleDefinition);
 
-// Unique Index: Mỗi công ty không được có 2 xe trùng biển số
+// Mỗi công ty không được có 2 xe trùng biển số
 VehicleSchema.index({ companyId: 1, vehicleNumber: 1 }, { unique: true });

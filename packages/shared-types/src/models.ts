@@ -13,7 +13,7 @@ export interface Location {
   _id: string;
   id: string;
   name: string;
-  
+
   slug: string;
   province: string;
   district?: string;
@@ -135,7 +135,7 @@ export interface RouteInfo {
   stops: TripStopInfo[];
   duration?: number; // Minutes
   distance?: number; // Meters or KM
-    // ✅ FIX: dùng cho UI
+  // ✅ FIX: dùng cho UI
   from?: Location;
   to?: Location;
 }
@@ -172,7 +172,6 @@ export interface Trip {
   updatedAt: Date;
 }
 
-
 import { BookingStatus, PaymentStatus } from "./enums";
 
 export interface PassengerInfo {
@@ -186,7 +185,7 @@ export interface Booking {
   id: string;
   _id: string;
 
-  userId?: string; // Nếu là user đã login
+  userId?: string;
   companyId: string;
   tripId: string;
 
@@ -267,7 +266,7 @@ export interface Review {
   createdAt: Date;
   updatedAt: Date;
 }
-/// bổ sung ui 
+/// bổ sung ui
 export interface LocationSuggestion {
   id: string;
   name: string;
@@ -283,11 +282,11 @@ export interface AdminBookingResponse {
   contactName: string;
   contactPhone: string;
 
-  routeName: string;        // "TP.HCM → Đà Lạt"
-  departureDate: string;    // ISO
-  departureTime: string;    // "05:00"
+  routeName: string; // "TP.HCM → Đà Lạt"
+  departureDate: string; // ISO
+  departureTime: string; // "05:00"
 
-  seatNumbers: string[];    // ["A15", "A16"]
+  seatNumbers: string[]; // ["A15", "A16"]
 
   vehiclePlate?: string;
 
