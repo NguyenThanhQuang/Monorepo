@@ -59,11 +59,11 @@ export class UsersService {
   }
 
   sanitizeUser(user: UserDocument): AuthUserResponse {
-    const raw = sanitizeUser(user);
+    const sanitizedData = sanitizeUser(user);
+
     return {
-      ...raw,
-      userId: raw.id,
-      companyId: raw.companyId,
+      ...sanitizedData,
+      userId: sanitizedData.id,
     } as unknown as AuthUserResponse;
   }
 

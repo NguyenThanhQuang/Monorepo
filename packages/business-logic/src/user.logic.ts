@@ -1,6 +1,4 @@
 import { SanitizedUserResponse, User } from "@obtp/shared-types";
-// Hàm lodash.omit type-safe tự viết hoặc dùng thủ công
-// Logic: Chuyển DB Entity (Full fields) -> API Response (Safe fields)
 
 export function sanitizeUser(user: Partial<User> | any): SanitizedUserResponse {
   const obj = typeof user.toObject === "function" ? user.toObject() : user;
@@ -18,6 +16,7 @@ export function sanitizeUser(user: Partial<User> | any): SanitizedUserResponse {
     isEmailVerified: !!obj.isEmailVerified,
     isBanned: !!obj.isBanned,
     lastLoginDate: obj.lastLoginDate,
+    createdAt: obj.createdAt,
   };
 }
 

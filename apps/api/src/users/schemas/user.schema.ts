@@ -6,8 +6,6 @@ export type UserDocument = HydratedDocument<User>;
 
 @Schema({ timestamps: true })
 export class User {
-  // Mapping _id (implicit in Mongoose) to interface requirement is handled in Logic layer
-
   @Prop({
     type: String,
     required: true,
@@ -20,7 +18,7 @@ export class User {
   @Prop({ type: String, required: true, unique: true, trim: true })
   phone: string;
 
-  @Prop({ type: String, select: false }) // Ẩn mặc định
+  @Prop({ type: String, select: false })
   passwordHash: string;
 
   @Prop({ type: String, required: true, trim: true })
@@ -84,7 +82,7 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// Index TTL để xóa account ảo chưa active sau một thời gian
+// Xóa account ảo chưa active sau một thời gian
 UserSchema.index(
   { accountActivationExpires: 1 },
   {

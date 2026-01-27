@@ -11,7 +11,6 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import {
-  AuthUserResponse,
   ForgotPasswordPayload,
   LoginPayload,
   LoginResponse,
@@ -20,6 +19,7 @@ import {
   UserRole,
 } from '@obtp/shared-types';
 
+import { UserDocument } from '@/users/schemas/user.schema';
 import {
   AUTH_CONSTANTS,
   comparePassword,
@@ -41,23 +41,6 @@ export class AuthService {
     private configService: ConfigService,
     private tokenService: TokenService,
   ) {}
-
-  private sanitizeUser(user: any): AuthUserResponse {
-    if (this.usersService.sanitizeUser) {
-      return this.usersService.sanitizeUser(user);
-    }
-    return {
-      id: user._id.toString(),
-      userId: user._id.toString(),
-      email: user.email,
-      name: user.name,
-      phone: user.phone,
-      roles: user.roles,
-      companyId: user.companyId?.toString(),
-      isEmailVerified: user.isEmailVerified,
-      lastLoginDate: user.lastLoginDate,
-    };
-  }
 
   async register(payload: RegisterPayload): Promise<{ message: string }> {
     const emailLower = payload.email.toLowerCase();
@@ -128,38 +111,45 @@ export class AuthService {
   async login(payload: LoginPayload): Promise<LoginResponse> {
     const { identifier, password } = payload;
 
-    let user;
+    let user: UserDocument | null = null;
+
     if (identifier.includes('@')) {
       user = await this.usersService.findOneByEmail(identifier.toLowerCase());
     } else {
       user = await this.usersService.findOneByPhone(identifier);
     }
 
-    if (!user)
+    if (!user) {
       throw new UnauthorizedException(
         'Thông tin đăng nhập người dùng không chính xác.',
       );
+    }
 
-    const isPasswordValid = await comparePassword(
-      password,
-      user.passwordHash || user.password,
-    );
+    const passToCompare = user.passwordHash;
+    if (!passToCompare) {
+      throw new UnauthorizedException(
+        'Tài khoản không hỗ trợ đăng nhập mật khẩu.',
+      );
+    }
+
+    const isPasswordValid = await comparePassword(password, passToCompare);
+
     if (!isPasswordValid)
       throw new UnauthorizedException('Thông tin đăng nhập không chính xác.');
 
     if (user.isBanned) throw new UnauthorizedException('Tài khoản bị khóa.');
+
     if (!user.isEmailVerified)
       throw new UnauthorizedException('Tài khoản chưa xác thực email.');
 
-    if (user.roles.includes(UserRole.COMPANY_ADMIN) && user.companyId) {
-    }
+    await this.usersService.updateLastLogin(user._id.toString());
 
-    await this.usersService.updateLastLogin(user._id);
-
+    const sanitizedUser = this.usersService.sanitizeUser(user);
     const accessToken = this.tokenService.generateAccessToken(user);
+
     return {
       accessToken,
-      user: this.sanitizeUser(user),
+      user: sanitizedUser,
     };
   }
 
@@ -169,7 +159,10 @@ export class AuthService {
       throw new BadRequestException('Token không hợp lệ hoặc hết hạn.');
 
     const accessToken = this.tokenService.generateAccessToken(user);
-    return { accessToken, user: this.sanitizeUser(user) };
+    return {
+      accessToken,
+      user: this.usersService.sanitizeUser(user),
+    };
   }
 
   async requestPasswordReset(payload: ForgotPasswordPayload): Promise<void> {

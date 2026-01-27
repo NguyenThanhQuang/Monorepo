@@ -10,7 +10,9 @@ import { TokenService } from './token.service';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRATION_TIME'),
+          expiresIn: configService.get<string>(
+            'JWT_EXPIRATION_TIME',
+          ) as unknown as import('jsonwebtoken').StringValue,
         },
       }),
       inject: [ConfigService],
