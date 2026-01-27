@@ -7,26 +7,21 @@ import * as Joi from 'joi';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
-// --- REFACTORED MODULES ---
 import { AuthModule } from './auth/auth.module';
+import { BookingsModule } from './bookings/bookings.module';
 import { CommonModule } from './common/common.module';
 import { CompaniesModule } from './companies/companies.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { LocationsModule } from './locations/locations.module';
 import { MailModule } from './mail/mail.module';
 import { UsersModule } from './users/users.module';
-
-// --- LEGACY/UNFINISHED MODULES (Restored later) ---
-// TODO: Restore imports after refactoring these modules
-// import { BookingsModule } from './bookings/bookings.module';
-// import { DashboardModule } from './dashboard/dashboard.module';
-// import { LocationsModule } from './locations/locations.module';
 // import { MapsModule } from './maps/maps.module';
 import { NotificationsModule } from './notifications/notifications.module';
 // import { PaymentsModule } from './payments/payments.module';
-// import { ReviewsModule } from './reviews/reviews.module';
-// import { TripsModule } from './trips/trips.module';
-// import { VehiclesModule } from './vehicles/vehicles.module';
-// import { HealthModule } from './health/health.module';
+import { HealthModule } from './health/health.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { TripsModule } from './trips/trips.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
 
 @Module({
   imports: [
@@ -62,21 +57,15 @@ import { NotificationsModule } from './notifications/notifications.module';
         MAIL_PASSWORD: Joi.string().required(),
         MAIL_FROM_ADDRESS: Joi.string().required(),
         MAIL_FROM_NAME: Joi.string().default('OBTP System'),
-
-        // Client
         API_BASE_URL: Joi.string().required(),
         CLIENT_URL: Joi.string().required(),
-
-        // Optional Params for future
-        // PAYOS_CLIENT_ID: Joi.string().optional(),
       }),
       validationOptions: {
-        allowUnknown: true, // Cho phép các key khác trong .env
+        allowUnknown: true,
         abortEarly: true,
       },
     }),
 
-    // 3. Database
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -86,27 +75,21 @@ import { NotificationsModule } from './notifications/notifications.module';
       }),
       inject: [ConfigService],
     }),
-
-    // 4. Global Core Logic (Chứa URL Builder, Interceptors, Filters)
     CommonModule,
-
-    // 5. Active Features (Refactored)
     MailModule,
     AuthModule,
     UsersModule,
     CompaniesModule,
-
-    // 6. Disabled Modules (Pending Refactor)
-    // BookingsModule,
-    // VehiclesModule,
-    // TripsModule,
-    // LocationsModule,
+    BookingsModule,
+    VehiclesModule,
+    TripsModule,
+    LocationsModule,
     // MapsModule,
     NotificationsModule,
-    // DashboardModule,
+    DashboardModule,
     // PaymentsModule,
-    // ReviewsModule,
-    // HealthModule,
+    ReviewsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

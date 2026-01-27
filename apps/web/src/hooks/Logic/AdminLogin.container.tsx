@@ -1,6 +1,6 @@
 // src/features/admin-auth/AdminLogin.container.tsx
 import { useState } from "react";
-import {  UserRole, type LoginResponse } from "@obtp/shared-types";
+import { UserRole, type LoginResponse } from "@obtp/shared-types";
 import { loginAdmin } from "../../api/service/auth/auth.api";
 import { AdminLogin } from "../../pages/admin/AdminLogin";
 
@@ -25,17 +25,11 @@ export function AdminLoginContainer({
       const roles = result.user.roles;
 
       // 🔐 ROLE CHECK
-      if (
-        adminType === "system" &&
-        !roles.includes(UserRole.ADMIN)
-      ) {
+      if (adminType === "system" && !roles.includes(UserRole.ADMIN)) {
         throw new Error("Bạn không có quyền Admin hệ thống");
       }
 
-      if (
-        adminType === "company" &&
-        !roles.includes(UserRole.COMPANY_ADMIN)
-      ) {
+      if (adminType === "company" && !roles.includes(UserRole.COMPANY_ADMIN)) {
         throw new Error("Bạn không có quyền Quản lý nhà xe");
       }
 

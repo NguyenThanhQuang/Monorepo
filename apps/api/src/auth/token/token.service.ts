@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserDocument } from 'src/users/schemas/user.schema';
-import { JwtPayload } from '../strategies/jwt.strategy';
+import { JwtPayload } from '@obtp/shared-types';
 import { randomBytes } from 'crypto';
+import { UserDocument } from 'src/users/schemas/user.schema';
 
 @Injectable()
 export class TokenService {
-  constructor(private readonly jwtService: JwtService) {}d
+  constructor(private readonly jwtService: JwtService) {};
   generateAccessToken(user: UserDocument): string {
     const payload: JwtPayload = {
       email: user.email,
