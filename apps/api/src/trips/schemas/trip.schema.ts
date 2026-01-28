@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { SeatStatus, TripStatus, TripStopStatus } from '@obtp/shared-types';
 import { HydratedDocument, Types } from 'mongoose';
 import { CompanyDefinition } from '../../companies/schemas/company.schema';
-import { Vehicle } from '../../vehicles/schemas/vehicle.schema';
+import { VehicleDefinition } from '../../vehicles/schemas/vehicle.schema';
 
 export type TripDocument = HydratedDocument<Trip>;
 
@@ -92,7 +92,7 @@ export class Trip {
 
   @Prop({
     type: Types.ObjectId,
-    ref: Vehicle.name,
+    ref: VehicleDefinition.name,
     required: true,
     index: true,
   })

@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ClientSession, QueryFilter, Model, Types } from 'mongoose';
-import { Booking, BookingDocument } from './schemas/booking.schema';
+import { ClientSession, Model, QueryFilter, Types } from 'mongoose';
+import { BookingDefinition, BookingDocument } from './schemas/booking.schema';
 
 @Injectable()
 export class BookingsRepository {
   constructor(
-    @InjectModel(Booking.name)
+    @InjectModel(BookingDefinition.name)
     private readonly bookingModel: Model<BookingDocument>,
   ) {}
 
   // TRANSACTION SUPPORT: session là Optional
   async create(
-    doc: Partial<Booking>,
+    doc: Partial<BookingDefinition>,
     session?: ClientSession,
   ): Promise<BookingDocument> {
     const newBooking = new this.bookingModel(doc);

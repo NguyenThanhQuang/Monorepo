@@ -1,17 +1,17 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, QueryFilter, Model, Types } from 'mongoose';
-import { Vehicle, VehicleDocument } from './schemas/vehicle.schema';
+import { VehicleDefinition, VehicleDocument } from './schemas/vehicle.schema';
 
 @Injectable()
 export class VehiclesRepository {
   constructor(
-    @InjectModel(Vehicle.name)
+    @InjectModel(VehicleDefinition.name)
     private readonly vehicleModel: Model<VehicleDocument>,
   ) {}
 
   async create(
-    doc: Partial<Vehicle>,
+    doc: Partial<VehicleDefinition>,
     session?: ClientSession,
   ): Promise<VehicleDocument> {
     try {
@@ -69,7 +69,7 @@ export class VehiclesRepository {
 
   async update(
     id: string,
-    updateData: Partial<Vehicle>,
+    updateData: Partial<VehicleDefinition>,
     session?: ClientSession,
   ): Promise<VehicleDocument | null> {
     return this.vehicleModel
