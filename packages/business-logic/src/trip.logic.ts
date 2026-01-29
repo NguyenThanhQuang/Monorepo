@@ -23,7 +23,6 @@ export function initializeTripSeats(vehicle: Partial<Vehicle>): TripSeat[] {
             generatedSeats.push({
               seatNumber: seatLabel,
               status: SeatStatus.AVAILABLE,
-              // bookingId undefined ban đầu
             });
           }
         });

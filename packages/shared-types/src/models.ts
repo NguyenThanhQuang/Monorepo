@@ -14,15 +14,12 @@ export interface TicketLookupForm {
   identifier: string;
   contactPhone: string;
 }
-// src/pages/user-profile/types.ts
-// src/pages/trip-detail/types.ts
-
 
 export interface TripSeat {
   seatNumber: string;
   status: SeatStatus;
-  floor: number;
-  position: 'left' | 'right';
+  floor?: number;
+  position?: { row: number; col: number; x?: number; y?: number };
 }
 
 export interface TripDetailResponse {
@@ -56,16 +53,10 @@ export interface UpdateProfilePayload {
   phone: string;
 }
 
-export interface ChangePasswordPayload {
-  currentPassword: string;
-  newPassword: string;
-}
-
-
 export interface TicketLookupResponse {
   _id: string;
   ticketCode: string;
-  status: 'HELD' | 'CONFIRMED' | 'CANCELLED';
+  status: "HELD" | "CONFIRMED" | "CANCELLED";
 
   contactName: string;
   contactPhone: string;
@@ -199,13 +190,6 @@ export interface Vehicle {
 }
 
 import { SeatStatus, TripStatus, TripStopStatus } from "./enums";
-
-// Sub-Interface cho ghế trong chuyến đi
-export interface TripSeat {
-  seatNumber: string; // A01, B02...
-  status: SeatStatus;
-  bookingId?: string; // Ref ID nếu đã book
-}
 
 export interface TripStopInfo {
   locationId: string; // Ref Location
