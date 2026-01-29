@@ -19,6 +19,7 @@ export interface TripSeat {
   seatNumber: string;
   status: SeatStatus;
   floor?: number;
+  bookingId?: string;
   position?: { row: number; col: number; x?: number; y?: number };
 }
 

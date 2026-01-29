@@ -42,7 +42,6 @@ export class TripSchedulerService {
         template.vehicleId._id.toString(),
       );
 
-      // --- FIX TYPE ERROR HERE ---
       const rawSeats = initializeTripSeats(vehicle);
       // Chuyển đổi kiểu dữ liệu bookingId cho khớp Schema
       const seats = rawSeats.map((seat) => ({
