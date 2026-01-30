@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { BookingsController } from './bookings.controller';
 import { BookingsRepository } from './bookings.repository';
 import { BookingsService } from './bookings.service';
-import { Booking, BookingSchema } from './schemas/booking.schema';
+import { BookingDefinition, BookingSchema } from './schemas/booking.schema';
 
 // DEPENDENCIES
 import { TripsModule } from '../trips/trips.module';
@@ -13,7 +13,7 @@ import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Booking.name, schema: BookingSchema }]),
+    MongooseModule.forFeature([{ name: BookingDefinition.name, schema: BookingSchema }]),
     ConfigModule,
 
     // Modules logic phụ thuộc

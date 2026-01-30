@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { User, UserSchema } from './schemas/user.schema';
+import { UserDefinition, UserSchema } from './schemas/user.schema';
 import { UsersController } from './users.controller';
 import { UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
@@ -10,7 +10,7 @@ import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: UserDefinition.name, schema: UserSchema }]),
     // Dùng forwardRef nếu AuthModule cần UsersService (chắc chắn có)
     forwardRef(() => AuthModule),
     // forwardRef(() => BookingsModule),

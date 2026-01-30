@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { BookingStatus, PaymentStatus } from '@obtp/shared-types';
 import { HydratedDocument, Types } from 'mongoose';
 import { Trip } from '../../trips/schemas/trip.schema';
-import { User } from '../../users/schemas/user.schema';
+import { UserDefinition } from '../../users/schemas/user.schema';
 
 export type BookingDocument = HydratedDocument<BookingDefinition>;
 
@@ -27,7 +27,7 @@ export const PassengerInfoSchema = SchemaFactory.createForClass(PassengerInfo);
 @Schema({ timestamps: true })
 export class BookingDefinition {
   // Liên kết người đặt (Optional - vì khách vãng lai cũng đặt được)
-  @Prop({ type: Types.ObjectId, ref: User.name, index: true, required: false })
+  @Prop({ type: Types.ObjectId, ref: UserDefinition.name, index: true, required: false })
   userId?: Types.ObjectId;
 
   // Liên kết chuyến đi

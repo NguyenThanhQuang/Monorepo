@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { Vehicle, VehicleSchema } from './schemas/vehicle.schema';
+import { VehicleDefinition, VehicleSchema } from './schemas/vehicle.schema';
 import { VehiclesController } from './vehicles.controller';
 import { VehiclesRepository } from './vehicles.repository';
 import { VehiclesService } from './vehicles.service';
@@ -13,7 +13,7 @@ import { VehiclesService } from './vehicles.service';
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Vehicle.name, schema: VehicleSchema },
+      { name: VehicleDefinition.name, schema: VehicleSchema },
     //   { name: Trip.name, schema: TripSchema }, // Legacy integrity check
     ]),
     // CompaniesModule, // Enable if required

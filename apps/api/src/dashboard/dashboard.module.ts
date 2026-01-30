@@ -5,10 +5,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { DashboardController } from './dashboard.controller';
 import { DashboardRepository } from './dashboard.repository';
 import { DashboardService } from './dashboard.service';
-import { Booking, BookingSchema } from '../bookings/schemas/booking.schema';
+import { BookingDefinition, BookingSchema } from '../bookings/schemas/booking.schema';
 
 import { Trip, TripSchema } from '../trips/schemas/trip.schema';
-import { User, UserSchema } from '../users/schemas/user.schema';
+import { UserDefinition, UserSchema } from '../users/schemas/user.schema';
 import { CompanyDefinition, CompanySchema } from '@/companies/schemas/company.schema';
 
 @Module({
@@ -17,8 +17,8 @@ import { CompanyDefinition, CompanySchema } from '@/companies/schemas/company.sc
     // Import đủ Models cần cho việc Report
     MongooseModule.forFeature([
       { name: CompanyDefinition.name, schema: CompanySchema },
-      { name: User.name, schema: UserSchema },
-      { name: Booking.name, schema: BookingSchema },
+      { name: UserDefinition.name, schema: UserSchema },
+      { name: BookingDefinition.name, schema: BookingSchema },
       { name: Trip.name, schema: TripSchema },
     ]),
   ],

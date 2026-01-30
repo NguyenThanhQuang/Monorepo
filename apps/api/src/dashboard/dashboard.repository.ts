@@ -1,10 +1,10 @@
-import { Booking, BookingDocument } from '@/bookings/schemas/booking.schema';
+import { BookingDefinition, BookingDocument } from '@/bookings/schemas/booking.schema';
 import {
   CompanyDefinition,
   CompanyDocument,
 } from '@/companies/schemas/company.schema';
 import { Trip, TripDocument } from '@/trips/schemas/trip.schema';
-import { User, UserDocument } from '@/users/schemas/user.schema';
+import { UserDefinition, UserDocument } from '@/users/schemas/user.schema';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -21,8 +21,8 @@ export class DashboardRepository {
   constructor(
     @InjectModel(CompanyDefinition.name)
     private readonly companyModel: Model<CompanyDocument>,
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
-    @InjectModel(Booking.name)
+    @InjectModel(UserDefinition.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(BookingDefinition.name)
     private readonly bookingModel: Model<BookingDocument>,
     @InjectModel(Trip.name) private readonly tripModel: Model<TripDocument>,
   ) {}

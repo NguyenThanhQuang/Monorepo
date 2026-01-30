@@ -9,9 +9,11 @@ import { AUTH_CONSTANTS } from '@obtp/business-logic';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { TokenModule } from './token/token.module';
 
 @Module({
   imports: [
+    TokenModule,
     forwardRef(() => UsersModule),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

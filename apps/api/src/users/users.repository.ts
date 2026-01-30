@@ -7,14 +7,14 @@ import {
   Types,
   UpdateQuery,
 } from 'mongoose';
-import { User, UserDocument } from './schemas/user.schema';
+import { UserDefinition, UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UsersRepository {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(@InjectModel(UserDefinition.name) private userModel: Model<UserDocument>) {}
 
   async create(
-    userData: Partial<User>,
+    userData: Partial<UserDefinition>,
     session?: ClientSession,
   ): Promise<UserDocument> {
     const newUser = new this.userModel(userData);

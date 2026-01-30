@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, QueryFilter, Types, UpdateQuery } from 'mongoose';
-import { Review, ReviewDocument } from './schemas/review.schema';
+import { ReviewDefinition, ReviewDocument } from './schemas/review.schema';
 
 @Injectable()
 export class ReviewsRepository {
   constructor(
-    @InjectModel(Review.name)
+    @InjectModel(ReviewDefinition.name)
     private readonly reviewModel: Model<ReviewDocument>,
   ) {}
 
-  async create(doc: Partial<Review>): Promise<ReviewDocument> {
+  async create(doc: Partial<ReviewDefinition>): Promise<ReviewDocument> {
     const newReview = new this.reviewModel(doc);
     return newReview.save();
   }
