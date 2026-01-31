@@ -1,22 +1,5 @@
-// src/features/admin-auth/types.ts
-
-import { BookingStatus, UserRole } from "./enums";
-
-export interface LoginPayload {
-  identifier: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  accessToken: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    roles: UserRole[];
-    companyId?: string;
-  };
-}
+import type { LucideIcon } from "lucide-react";
+import { BookingStatus } from "./enums";
 
 export interface BookingUI {
   id: string;
@@ -35,7 +18,6 @@ export interface BookingUI {
   bookingDate: string;
   vehiclePlate?: string;
 }
-import type { LucideIcon } from 'lucide-react';
 
 export interface CompanyDashboardStat {
   label: string;
@@ -46,10 +28,10 @@ export interface CompanyDashboardStat {
 }
 
 export type CompanyTripStatus =
-  | 'running'
-  | 'aboutToDepart'
-  | 'completed'
-  | 'cancelled';
+  | "running"
+  | "aboutToDepart"
+  | "completed"
+  | "cancelled";
 
 export interface CompanyDashboardTrip {
   id: string;

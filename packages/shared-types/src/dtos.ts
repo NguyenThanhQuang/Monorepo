@@ -152,7 +152,7 @@ export interface SanitizedUserResponse {
   isEmailVerified: boolean;
   isBanned: boolean;
   lastLoginDate?: Date;
-    createdAt: Date; // ⬅️ bắt buộc
+    createdAt: Date;
 
   totalTrips?: number;
   totalSpent?: number;

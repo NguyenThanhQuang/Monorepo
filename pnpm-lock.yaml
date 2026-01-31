@@ -357,6 +357,10 @@ importers:
         version: 8.49.0(eslint@9.39.1)(typescript@5.9.2)
 
   packages/shared-types:
+    dependencies:
+      lucide-react:
+        specifier: ^0.563.0
+        version: 0.563.0(react@19.2.0)
     devDependencies:
       typescript:
         specifier: ^5.3.0
