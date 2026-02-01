@@ -176,6 +176,7 @@ export class AuthService {
       Date.now() + AUTH_CONSTANTS.DEFAULTS.PASSWORD_RESET_EXPIRATION_MS,
     );
 
+    await this.usersService.setResetToken(user._id.toString(), token, expires);
     await this.usersService.updateLastLogin(user._id.toString());
 
     this.eventEmitter.emit('user.forgot_password', {
