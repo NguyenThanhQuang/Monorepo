@@ -30,29 +30,21 @@ import { NotificationsModule } from './notifications/notifications.module';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
-        // System
         NODE_ENV: Joi.string()
           .valid('development', 'production', 'test')
           .default('development'),
         PORT: Joi.number().default(3000),
-
-        // Database
-        MONGODB_URI: Joi.string().required().description('URI kết nối MongoDB'),
-
-        // Security
+        MONGODB_URI: Joi.string().required().description('Connection String'),
+        DB_NAME: Joi.string().required().description('Database Name'),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION_TIME: Joi.string().default('7d'),
-
-        // Business Defaults
         SEAT_HOLD_DURATION_MINUTES: Joi.number().default(15),
-
-        // Mail
         MAIL_HOST: Joi.string().required(),
         MAIL_PORT: Joi.number().required(),
         MAIL_USER: Joi.string().required(),
         MAIL_PASSWORD: Joi.string().required(),
         MAIL_FROM_ADDRESS: Joi.string().required(),
-        MAIL_FROM_NAME: Joi.string().default('OBTP System'),
+        MAIL_FROM_NAME: Joi.string().required(),
         API_BASE_URL: Joi.string().required(),
         CLIENT_URL: Joi.string().required(),
       }),
@@ -65,7 +57,7 @@ import { NotificationsModule } from './notifications/notifications.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>('MONGODB_URI'),
-        dbName: configService.get<string>('DB_NAME', 'obtp-system'),
+        dbName: configService.get<string>('DB_NAME'),
         retryAttempts: 3,
       }),
       inject: [ConfigService],
