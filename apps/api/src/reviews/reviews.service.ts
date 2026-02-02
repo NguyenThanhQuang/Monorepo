@@ -2,6 +2,8 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,6 +12,7 @@ import {
   AuthUserResponse,
   CreateGuestReviewPayload,
   CreateReviewPayload,
+  isPopulated,
   ReviewQuery,
   TripStatus,
   UpdateUserReviewPayload,
@@ -22,18 +25,19 @@ import { BookingsRepository } from '../bookings/bookings.repository';
 import { BookingsService } from '../bookings/bookings.service';
 import { TripsService } from '../trips/trips.service';
 import { ReviewsRepository } from './reviews.repository';
+import { ReviewDocument } from './schemas/review.schema';
 
 @Injectable()
 export class ReviewsService {
   constructor(
     private readonly reviewsRepository: ReviewsRepository,
+    @Inject(forwardRef(() => BookingsService))
     private readonly bookingsService: BookingsService,
     private readonly bookingsRepository: BookingsRepository,
     private readonly tripsService: TripsService,
     private readonly configService: ConfigService,
   ) {}
 
-  // Helper Logic Check chung
   private async validateAndGetResources(bookingId: string, tripId: string) {
     const booking = await this.bookingsRepository.findById(bookingId);
     if (!booking) throw new NotFoundException('Đơn hàng không tồn tại.');
@@ -44,7 +48,6 @@ export class ReviewsService {
       );
     }
 
-    // Check duplicate
     const exist = await this.reviewsRepository.existsByBookingId(bookingId);
     if (exist) throw new ConflictException('Booking này đã được đánh giá.');
 
@@ -58,32 +61,34 @@ export class ReviewsService {
     return { booking, trip };
   }
   async findByUserId(userId: string) {
-    return this.reviewsRepository.findByUserId(
-      new Types.ObjectId(userId),
-    );
+    return this.reviewsRepository.findByUserId(new Types.ObjectId(userId));
   }
   async create(
     payload: CreateReviewPayload,
     user: AuthUserResponse,
-  ): Promise<any> {
+  ): Promise<ReviewDocument> {
     const { booking, trip } = await this.validateAndGetResources(
       payload.bookingId,
       payload.tripId,
     );
 
-    // Verify Owner
     if (!booking.userId || booking.userId.toString() !== user.id) {
       throw new ForbiddenException(
         'Booking này không thuộc tài khoản của bạn.',
       );
     }
+    let companyIdToSave: Types.ObjectId;
+    if (isPopulated(trip.companyId)) {
+      companyIdToSave = new Types.ObjectId(trip.companyId._id);
+    } else {
+      companyIdToSave = new Types.ObjectId(trip.companyId.toString());
+    }
 
-    // Create Review
     const review = await this.reviewsRepository.create({
       userId: new Types.ObjectId(user.id),
       bookingId: new Types.ObjectId(payload.bookingId),
       tripId: new Types.ObjectId(payload.tripId),
-      companyId: trip.companyId._id ? trip.companyId._id : trip.companyId,
+      companyId: companyIdToSave,
 
       rating: payload.rating,
       comment: payload.comment,
@@ -94,34 +99,37 @@ export class ReviewsService {
         : user.name,
     });
 
-    // Update Link in Booking
     booking.reviewId = review._id;
-    // Dùng repository để save document booking đã fetch
     await this.bookingsRepository.save(booking);
 
     return review;
   }
 
-  async createAsGuest(payload: CreateGuestReviewPayload): Promise<any> {
+  async createAsGuest(
+    payload: CreateGuestReviewPayload,
+  ): Promise<ReviewDocument> {
     const { booking, trip } = await this.validateAndGetResources(
       payload.bookingId,
       payload.tripId,
     );
 
-    // Verify Owner via Phone (Simple check for Guest)
     if (booking.contactPhone !== payload.contactPhone) {
       throw new ForbiddenException(
         'Số điện thoại xác thực không khớp với đơn đặt vé.',
       );
     }
 
+    let companyIdToSave: Types.ObjectId;
+    if (isPopulated(trip.companyId)) {
+      companyIdToSave = new Types.ObjectId(trip.companyId._id);
+    } else {
+      companyIdToSave = new Types.ObjectId(trip.companyId.toString());
+    }
+
     const review = await this.reviewsRepository.create({
-      // Guest review has no userId
       bookingId: new Types.ObjectId(payload.bookingId),
       tripId: new Types.ObjectId(payload.tripId),
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      companyId: trip.companyId._id ? trip.companyId._id : trip.companyId,
+      companyId: companyIdToSave,
 
       rating: payload.rating,
       comment: payload.comment,
@@ -154,7 +162,6 @@ export class ReviewsService {
       throw new ForbiddenException('Chỉ được phép chỉnh sửa đánh giá 1 lần.');
     }
 
-    // Check window time logic (From config or Constant default)
     const windowDays = this.configService.get<number>(
       'REVIEW_EDIT_WINDOW_DAYS',
       BUSINESS_CONSTANTS.REVIEW.EDIT_WINDOW_DAYS,
@@ -166,7 +173,6 @@ export class ReviewsService {
         `Quá thời hạn chỉnh sửa (${windowDays} ngày).`,
       );
 
-    // Update
     if (payload.rating) review.rating = payload.rating;
     if (payload.comment !== undefined) review.comment = payload.comment;
 
@@ -176,8 +182,7 @@ export class ReviewsService {
     return this.reviewsRepository.save(review);
   }
 
-  // READ OPERATIONS
-  async findAllPublic(query: ReviewQuery): Promise<any[]> {
+  async findAllPublic(query: ReviewQuery): Promise<ReviewDocument[]> {
     const filter: any = { isVisible: true };
 
     if (query.companyId) filter.companyId = new Types.ObjectId(query.companyId);
@@ -187,7 +192,6 @@ export class ReviewsService {
     return this.reviewsRepository.findAllPublic(filter);
   }
 
-  // ADMIN OPS
   async findAllForAdmin(query: ReviewQuery): Promise<any[]> {
     const filter: any = {};
     if (query.companyId) filter.companyId = new Types.ObjectId(query.companyId);

@@ -214,4 +214,18 @@ export class TripsRepository {
       .findByIdAndUpdate(id, updateData, { new: true, session })
       .exec();
   }
+
+  /**
+   * Kiểm tra xem xe có đang được sử dụng trong các chuyến đi Sắp/Đang chạy hay không
+   * Dùng cho việc Validation bên Vehicles Module
+   */
+  async hasActiveTripsForVehicle(vehicleId: string): Promise<boolean> {
+    const count = await this.tripModel
+      .countDocuments({
+        vehicleId: new Types.ObjectId(vehicleId),
+        status: { $in: [TripStatus.SCHEDULED, TripStatus.DEPARTED] },
+      })
+      .exec();
+    return count > 0;
+  }
 }

@@ -7,20 +7,18 @@ import * as Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { BookingsModule } from './bookings/bookings.module';
 import { CommonModule } from './common/common.module';
 import { CompaniesModule } from './companies/companies.module';
-import { MailModule } from './mail/mail.module';
-import { UsersModule } from './users/users.module';
-// import { BookingsModule } from './bookings/bookings.module';
-// import { DashboardModule } from './dashboard/dashboard.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { HealthModule } from './health/health.module';
 import { LocationsModule } from './locations/locations.module';
-// import { MapsModule } from './maps/maps.module';
+import { MailModule } from './mail/mail.module';
 import { NotificationsModule } from './notifications/notifications.module';
-// import { PaymentsModule } from './payments/payments.module';
 import { ReviewsModule } from './reviews/reviews.module';
-// import { TripsModule } from './trips/trips.module';
-// import { VehiclesModule } from './vehicles/vehicles.module';
-// import { HealthModule } from './health/health.module';
+import { TripsModule } from './trips/trips.module';
+import { UsersModule } from './users/users.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
 
 @Module({
   imports: [
@@ -67,16 +65,15 @@ import { ReviewsModule } from './reviews/reviews.module';
     AuthModule,
     UsersModule,
     CompaniesModule,
-    // BookingsModule,
-    // VehiclesModule,
-    // TripsModule,
+    BookingsModule,
+    VehiclesModule,
+    TripsModule,
     LocationsModule,
-    // MapsModule,
     NotificationsModule,
-    // DashboardModule,
+    DashboardModule,
     // PaymentsModule,
     ReviewsModule,
-    // HealthModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

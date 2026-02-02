@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { initializeTripSeats } from '@obtp/business-logic';
-import { TripStatus } from '@obtp/shared-types';
+import { TripStatus, Vehicle } from '@obtp/shared-types';
 import { Types } from 'mongoose';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { TripsRepository } from './trips.repository';
@@ -42,8 +42,12 @@ export class TripSchedulerService {
         template.vehicleId._id.toString(),
       );
 
-      const rawSeats = initializeTripSeats(vehicle);
-      // Chuyển đổi kiểu dữ liệu bookingId cho khớp Schema
+      const vehicleParam: Partial<Vehicle> = {
+        ...vehicle.toObject(),
+        _id: vehicle._id.toString(),
+      } as unknown as Partial<Vehicle>;
+
+      const rawSeats = initializeTripSeats(vehicleParam);
       const seats = rawSeats.map((seat) => ({
         ...seat,
         bookingId: seat.bookingId

@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ConflictException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -13,6 +15,7 @@ import {
   TripStatus,
   UpdateTripPayload,
   UpdateTripSeatStatusPayload,
+  Vehicle,
   VehicleStatus,
 } from '@obtp/shared-types';
 import { Types } from 'mongoose';
@@ -24,11 +27,10 @@ import { TripsRepository } from './trips.repository';
 export class TripsService {
   constructor(
     private readonly tripsRepository: TripsRepository,
+    @Inject(forwardRef(() => VehiclesService))
     private readonly vehiclesService: VehiclesService,
-    private readonly companiesService: CompaniesService,
-    // private readonly locationsService: LocationsService,
-    // private readonly mapsService: MapsService,
 
+    private readonly companiesService: CompaniesService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -67,8 +69,14 @@ export class TripsService {
 
     const mapInfo = { polyline: '', duration: 0, distance: 0 };
 
-    // 4. GENERATE SEATS & CAST TYPES (FIX TYPE ERROR HERE)
-    const rawSeats = initializeTripSeats(vehicle);
+    // 🔥 FIX LỖI TS2345 (Dòng ~72):
+    // Convert Document -> Plain Object -> Cast type safely
+    const vehicleParam: Partial<Vehicle> = {
+      ...vehicle.toObject(),
+      _id: vehicle._id.toString(),
+    } as unknown as Partial<Vehicle>;
+
+    const rawSeats = initializeTripSeats(vehicleParam);
 
     // Chuyển đổi bookingId từ string sang ObjectId để khớp với Schema
     const initialSeats = rawSeats.map((seat) => ({
@@ -232,5 +240,9 @@ export class TripsService {
 
     trip.isRecurrenceActive = isActive;
     return this.tripsRepository.save(trip);
+  }
+
+  async checkVehicleHasActiveTrips(vehicleId: string): Promise<boolean> {
+    return this.tripsRepository.hasActiveTripsForVehicle(vehicleId);
   }
 }
