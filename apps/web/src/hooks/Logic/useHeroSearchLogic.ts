@@ -38,12 +38,20 @@ export function useHeroSearchLogic({
   /* =====================
      EFFECTS – AUTOCOMPLETE
   ===================== */
-  useEffect(() => {
+    useEffect(() => {
     if (!fromText || fromLocation) return;
 
     const timer = setTimeout(async () => {
-      const res = await locationApi.search(fromText);
-      setFromSuggestions(res.data);
+      try {
+        const res = await locationApi.search(fromText);
+        // res.data có type ApiResponse<Location[]>
+        // Lấy mảng locations từ res.data.data
+        const locations = res.data?.data || [];
+        setFromSuggestions(locations);
+      } catch (error) {
+        console.error('Error fetching from suggestions:', error);
+        setFromSuggestions([]);
+      }
     }, 300);
 
     return () => clearTimeout(timer);
@@ -53,8 +61,15 @@ export function useHeroSearchLogic({
     if (!toText || toLocation) return;
 
     const timer = setTimeout(async () => {
-      const res = await locationApi.search(toText);
-      setToSuggestions(res.data);
+      try {
+        const res = await locationApi.search(toText);
+        // res.data có type ApiResponse<Location[]>
+        const locations = res.data?.data || [];
+        setToSuggestions(locations);
+      } catch (error) {
+        console.error('Error fetching to suggestions:', error);
+        setToSuggestions([]);
+      }
     }, 300);
 
     return () => clearTimeout(timer);

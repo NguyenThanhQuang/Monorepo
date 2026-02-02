@@ -18,7 +18,14 @@ export class ReviewsRepository {
   async findById(id: string | Types.ObjectId): Promise<ReviewDocument | null> {
     return this.reviewModel.findById(id).exec();
   }
-
+ findByUserId(userId: Types.ObjectId) {
+    return this.reviewModel
+      .find({ userId })
+      .populate('tripId')
+      .populate('companyId')
+      .sort({ createdAt: -1 })
+      .lean();
+  }
   async findOne(
     filter: QueryFilter<ReviewDocument>,
   ): Promise<ReviewDocument | null> {

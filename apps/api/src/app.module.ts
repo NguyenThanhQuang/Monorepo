@@ -13,7 +13,7 @@ import { MailModule } from './mail/mail.module';
 import { UsersModule } from './users/users.module';
 // import { BookingsModule } from './bookings/bookings.module';
 // import { DashboardModule } from './dashboard/dashboard.module';
-// import { LocationsModule } from './locations/locations.module';
+import { LocationsModule } from './locations/locations.module';
 // import { MapsModule } from './maps/maps.module';
 import { NotificationsModule } from './notifications/notifications.module';
 // import { PaymentsModule } from './payments/payments.module';
@@ -70,7 +70,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     // BookingsModule,
     // VehiclesModule,
     // TripsModule,
-    // LocationsModule,
+    LocationsModule,
     // MapsModule,
     NotificationsModule,
     // DashboardModule,

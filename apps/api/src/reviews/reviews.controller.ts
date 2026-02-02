@@ -37,7 +37,13 @@ export class ReviewsController {
   findAll(@Query() query: sharedTypes.ReviewQuery) {
     return this.reviewsService.findAllPublic(query);
   }
-
+  @Get('my')
+  @UseGuards(JwtAuthGuard)
+  getMyReviews(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+  ) {
+    return this.reviewsService.findByUserId(user.id);
+  }
   // AUTH USER CREATE
   @Post()
   @UseGuards(JwtAuthGuard)

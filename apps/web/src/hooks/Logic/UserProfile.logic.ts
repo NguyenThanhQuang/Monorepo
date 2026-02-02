@@ -1,16 +1,12 @@
-// src/pages/user-profile/UserProfile.logic.ts
-
 import { useEffect, useState } from 'react';
-import {
-  getMyProfile,
-  updateMyProfile,
-  changeMyPassword,
-} from './userProfile.api';
+
 import type { UserProfileResponse } from '@obtp/shared-types';
+import { getMyReviewsApi } from '../../api/service/review/review.api';
+import { changeMyPassword, getMyProfile, updateMyProfile } from '../../api/userProfile.api';
 
 export function useUserProfileLogic() {
   const [user, setUser] = useState<UserProfileResponse | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
 
@@ -21,48 +17,46 @@ export function useUserProfileLogic() {
   });
 
   useEffect(() => {
-    setLoading(true);
-    getMyProfile()
-      .then(setUser)
-      .finally(() => setLoading(false));
+    getMyProfile().then(setUser);
+    getMyReviewsApi().then(setReviews);
   }, []);
 
   const saveProfile = async () => {
     if (!user) return;
-    setLoading(true);
-    try {
-      const updated = await updateMyProfile({
-        name: user.name,
-        phone: user.phone,
-      });
-      setUser(updated);
-      setIsEditing(false);
-    } finally {
-      setLoading(false);
-    }
+    const updated = await updateMyProfile({
+      name: user.name,
+      phone: user.phone,
+    });
+    setUser(updated);
+    setIsEditing(false);
   };
 
   const submitChangePassword = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      throw new Error('Mật khẩu xác nhận không khớp');
-    }
+  if (
+    passwordData.newPassword !==
+    passwordData.confirmPassword
+  ) {
+    throw new Error('Mật khẩu xác nhận không khớp');
+  }
 
-    await changeMyPassword({
-      currentPassword: passwordData.currentPassword,
-      newPassword: passwordData.newPassword,
-    });
+  await changeMyPassword({
+    currentPassword: passwordData.currentPassword,
+    newPassword: passwordData.newPassword,
+    confirmNewPassword: passwordData.confirmPassword, // ✅ BẮT BUỘC
+  });
 
-    setShowChangePassword(false);
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    });
-  };
+  setShowChangePassword(false);
+  setPasswordData({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+};
+
 
   return {
     user,
-    loading,
+    reviews,
     isEditing,
     setIsEditing,
     showChangePassword,

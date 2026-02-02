@@ -1,11 +1,43 @@
-import { Bus, User, Globe, Menu, Sun, Moon, ChevronDown, LogOut, Ticket, UserCircle, Phone, Shield } from 'lucide-react';
+import {
+  Bus,
+  User,
+  Globe,
+  Menu,
+  Sun,
+  Moon,
+  ChevronDown,
+  LogOut,
+  Ticket,
+  UserCircle,
+  Phone,
+  Shield,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { HeaderProps } from '../../../hooks/Props/layout/HeaderProps';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
-export function Header({ 
-  isLoggedIn = false, 
+/* ================= AUTH UTILS ================= */
+function getCurrentUser() {
+  const raw = localStorage.getItem('user');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function checkAdmin(user: any) {
+  return (
+    user?.roles?.includes('admin') ||
+    user?.roles?.includes('company_admin')
+  );
+}
+/* ============================================== */
+
+export function Header({
+  isLoggedIn = false,
   isAdmin = false,
   onLoginClick,
   onMyTripsClick,
@@ -16,163 +48,132 @@ export function Header({
   onTicketLookupClick,
   onHotlineClick,
   onHomeClick,
-  onAdminAccess
+  onAdminAccess,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const user = getCurrentUser();
+  const isUserAdmin = checkAdmin(user);
 
   const toggleLanguage = () => {
     setLanguage(language === 'vi' ? 'en' : 'vi');
   };
 
   return (
-    <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-sm sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800 transition-colors duration-300">
+    <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-sm sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <button 
+
+          {/* LOGO */}
+          <button
             onClick={onHomeClick}
-            className="flex items-center space-x-3 group cursor-pointer"
+            className="flex items-center space-x-3"
           >
-            <Bus className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent whitespace-nowrap">
+            <Bus className="w-8 h-8 text-blue-600" />
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
               Online Bus Ticket Platform
             </span>
           </button>
 
-          {/* Navigation */}
+          {/* NAV */}
           <nav className="hidden lg:flex items-center space-x-8">
-            <button
-              onClick={onHomeClick}
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all relative group"
-            >
-              {t('home')}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-teal-500 group-hover:w-full transition-all duration-300"></span>
-            </button>
-            <button
-              onClick={onRoutesClick}
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all relative group"
-            >
-              {t('routes')}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-teal-500 group-hover:w-full transition-all duration-300"></span>
-            </button>
-            <button
-              onClick={onTicketLookupClick}
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all relative group"
-            >
+            <button onClick={onHomeClick}>{t('home')}</button>
+            <button onClick={onTicketLookupClick}>
               {t('ticketLookup')}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-teal-500 group-hover:w-full transition-all duration-300"></span>
             </button>
-            <button
-              onClick={onContactClick}
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all relative group"
-            >
-              {t('contact')}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-teal-500 group-hover:w-full transition-all duration-300"></span>
-            </button>
+            <button onClick={onContactClick}>{t('contact')}</button>
           </nav>
 
-          {/* Right side actions */}
+          {/* RIGHT */}
           <div className="flex items-center space-x-3">
+
             <button
               onClick={onHotlineClick}
-              className="hidden md:flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all px-4 py-2 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-800 group"
+              className="hidden md:flex items-center space-x-2"
             >
-              <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+              <Phone className="w-4 h-4" />
               <span>{t('hotline')}</span>
             </button>
-            
+
             <button
               onClick={toggleLanguage}
-              className="hidden md:flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all px-4 py-2 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-800 group"
+              className="hidden md:flex items-center space-x-2"
             >
-              <Globe className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+              <Globe className="w-4 h-4" />
               <span className="uppercase">{language}</span>
             </button>
-            
-            {/* Admin access button (chỉ hiển thị khi là admin) */}
-            {isAdmin && onAdminAccess && (
-              <button
-                onClick={onAdminAccess}
-                className="hidden md:flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all px-4 py-2 rounded-xl hover:bg-purple-50 dark:hover:bg-gray-800 group"
-              >
-                <Shield className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                <span>{t('admin') || 'Admin'}</span>
-              </button>
-            )}
-            
+
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all hover:scale-110"
-              aria-label="Toggle theme"
+              className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800"
             >
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              {theme === 'light' ? <Moon /> : <Sun />}
             </button>
-            
-            {isLoggedIn ? (
+
+            {/* ================= AUTH ================= */}
+            {isLoggedIn && user ? (
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-teal-500 text-white px-4 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 transition-all hover:scale-105"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-teal-500 text-white px-4 py-2 rounded-xl"
                 >
                   <User className="w-4 h-4" />
-                  <span>{t('account')}</span>
+                  <span>{user.name}</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
-                
+
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden animate-scale-in">
-                    <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-blue-600/10 to-teal-500/10">
-                      <div className="text-gray-900 dark:text-white">Nguyễn Văn A</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">nguyenvana@example.com</div>
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border">
+                    {/* USER INFO */}
+                    <div className="p-4 border-b">
+                      <div className="font-semibold">
+                        {user.name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {user.email}
+                      </div>
                     </div>
+
+                    {/* ACTIONS */}
                     <div className="py-2">
                       <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          onMyTripsClick?.();
-                        }}
-                        className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left group"
+                        onClick={onMyTripsClick}
+                        className="w-full px-4 py-3 flex items-center space-x-3"
                       >
-                        <Ticket className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" />
-                        <span className="text-gray-900 dark:text-white">{t('myTrips')}</span>
+                        <Ticket className="w-5 h-5" />
+                        <span>{t('myTrips')}</span>
                       </button>
+
                       <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          onProfileClick?.();
-                        }}
-                        className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left group"
+                        onClick={onProfileClick}
+                        className="w-full px-4 py-3 flex items-center space-x-3"
                       >
-                        <UserCircle className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" />
-                        <span className="text-gray-900 dark:text-white">{t('profile')}</span>
+                        <UserCircle className="w-5 h-5" />
+                        <span>{t('profile')}</span>
                       </button>
-                      
-                      {/* Admin access trong dropdown (nếu là admin) */}
-                      {isAdmin && onAdminAccess && (
+
+                      {isUserAdmin && (
                         <button
-                          onClick={() => {
-                            setShowUserMenu(false);
-                            onAdminAccess();
-                          }}
-                          className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors text-left group"
+                          onClick={onAdminAccess}
+                          className="w-full px-4 py-3 flex items-center space-x-3 text-purple-600"
                         >
-                          <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                          <span className="text-purple-600 dark:text-purple-400">{t('admin') || 'Admin'}</span>
+                          <Shield className="w-5 h-5" />
+                          <span>Admin</span>
                         </button>
                       )}
-                      
-                      <div className="border-t border-gray-100 dark:border-gray-700 my-2"></div>
+
                       <button
                         onClick={() => {
-                          setShowUserMenu(false);
+                          localStorage.removeItem('token');
+                          localStorage.removeItem('user');
                           onLogout?.();
                         }}
-                        className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left group"
+                        className="w-full px-4 py-3 flex items-center space-x-3 text-red-600"
                       >
-                        <LogOut className="w-5 h-5 text-red-600 dark:text-red-400" />
-                        <span className="text-red-600 dark:text-red-400">{t('logout')}</span>
+                        <LogOut className="w-5 h-5" />
+                        <span>{t('logout')}</span>
                       </button>
                     </div>
                   </div>
@@ -181,15 +182,14 @@ export function Header({
             ) : (
               <button
                 onClick={onLoginClick}
-                className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-teal-500 text-white px-6 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 transition-all hover:scale-105"
+                className="bg-gradient-to-r from-blue-600 to-teal-500 text-white px-6 py-2 rounded-xl"
               >
-                <User className="w-4 h-4" />
-                <span>{t('login')}</span>
+                {t('login')}
               </button>
             )}
-            
-            <button className="lg:hidden p-2 text-gray-700 dark:text-gray-300">
-              <Menu className="w-6 h-6" />
+
+            <button className="lg:hidden p-2">
+              <Menu />
             </button>
           </div>
         </div>
