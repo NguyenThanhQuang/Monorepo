@@ -72,7 +72,14 @@ export class AuthController {
   @Post('resend-verification-email')
   @UsePipes(new ZodValidationPipe(ResendVerificationSchema))
   async resendEmail(@Body() payload: ResendVerificationEmailPayload) {
-    await this.authService.register({ ...payload } as any);
+    const registerInput: RegisterPayload = {
+      email: payload.email,
+      name: 'ResendAction',
+      phone: `000_${Date.now()}`,
+      password: 'PlaceholderPass1!',
+    };
+
+    await this.authService.register(registerInput);
     return { message: 'Yêu cầu gửi lại đã được tiếp nhận.' };
   }
 

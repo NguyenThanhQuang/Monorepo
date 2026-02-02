@@ -1,6 +1,6 @@
+import { UserDocument } from '@/users/schemas/user.schema';
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { UserDocument } from 'src/users/schemas/user.schema';
 
 @Injectable()
 export class OptionalJwtAuthGuard extends AuthGuard('jwt') {

@@ -6,7 +6,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from '@obtp/shared-types';
+import { AuthUserResponse, UserRole } from '@obtp/shared-types';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -23,11 +23,14 @@ export class RolesGuard implements CanActivate {
     }
 
     const { user } = context.switchToHttp().getRequest();
+
     if (!user || !user.roles) {
       throw new ForbiddenException('User context invalid.');
     }
 
-    const hasRole = requiredRoles.some((role) => user.roles.includes(role));
+    const authUser = user as AuthUserResponse;
+
+    const hasRole = requiredRoles.some((role) => authUser.roles.includes(role));
     if (!hasRole) {
       throw new ForbiddenException('Không đủ quyền hạn truy cập.');
     }

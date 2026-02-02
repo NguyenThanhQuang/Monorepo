@@ -6,7 +6,11 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { ApiErrorResponse } from '@obtp/shared-types';
+import {
+  ApiErrorResponse,
+  ErrorResponseObject,
+  ValidationErrorDetail,
+} from '@obtp/shared-types';
 import { Request, Response } from 'express';
 
 @Catch()
@@ -28,18 +32,29 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getResponse()
         : { message: 'Internal server error' };
 
-    let errorMessage =
-      typeof exceptionResponse === 'object' &&
-      exceptionResponse !== null &&
-      'message' in exceptionResponse
-        ? (exceptionResponse as any).message
-        : exceptionResponse;
+    let errorMessage: string | object | ValidationErrorDetail[] =
+      'Unknown error';
+    let errorDetail: string | object | ValidationErrorDetail[] | undefined;
 
-    const errorDetail =
+    if (typeof exceptionResponse === 'string') {
+      errorMessage = exceptionResponse;
+      errorDetail = exceptionResponse;
+    } else if (
       typeof exceptionResponse === 'object' &&
-      'errors' in (exceptionResponse as any)
-        ? (exceptionResponse as any).errors
-        : errorMessage;
+      exceptionResponse !== null
+    ) {
+      const resObj = exceptionResponse as unknown as ErrorResponseObject;
+
+      if ('message' in resObj) {
+        errorMessage = resObj.message;
+      }
+
+      if ('errors' in resObj && resObj.errors) {
+        errorDetail = resObj.errors;
+      } else {
+        errorDetail = errorMessage;
+      }
+    }
 
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(
@@ -56,7 +71,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      message: errorDetail,
+      message: errorDetail || errorMessage,
     };
 
     response.status(status).json(apiError);

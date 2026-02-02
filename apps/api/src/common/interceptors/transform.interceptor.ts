@@ -10,6 +10,11 @@ import { ApiResponse } from '@obtp/shared-types';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+interface MessageResponse {
+  message: string;
+  data?: unknown;
+}
+
 @Injectable()
 export class TransformInterceptor<T> implements NestInterceptor<
   T,
@@ -34,10 +39,12 @@ export class TransformInterceptor<T> implements NestInterceptor<
 
         if (data && typeof data === 'object' && !Array.isArray(data)) {
           if ('message' in data && 'data' in data) {
-            message = data.message;
-            finalData = data.data;
+            const explicitRes = data as MessageResponse;
+            message = explicitRes.message;
+            finalData = explicitRes.data as T;
           } else if ('message' in data && Object.keys(data).length === 1) {
-            message = data.message;
+            const explicitRes = data as MessageResponse;
+            message = explicitRes.message;
             finalData = null;
           }
         }

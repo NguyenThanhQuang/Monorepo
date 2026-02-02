@@ -29,3 +29,10 @@ export interface ValidationErrorDetail {
   message: string;
   code?: string;
 }
+
+export interface ErrorResponseObject {
+  statusCode: number;
+  message: string | string[];
+  error: string;
+  errors?: ValidationErrorDetail[];
+}
