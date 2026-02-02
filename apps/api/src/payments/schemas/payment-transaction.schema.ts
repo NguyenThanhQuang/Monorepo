@@ -7,10 +7,10 @@ export type PaymentTransactionDocument = HydratedDocument<PaymentTransaction>;
 @Schema({ timestamps: true })
 export class PaymentTransaction {
   @Prop({ type: Number, required: true, unique: true, index: true })
-  orderCode: number; // PayOS int64 order code
+  orderCode: number;
 
   @Prop({ type: Types.ObjectId, required: true, index: true })
-  bookingId: Types.ObjectId; // Link thủ công (không ref cứng để tránh lỗi query khi booking xóa)
+  bookingId: Types.ObjectId;
 
   @Prop({ type: Number, required: true })
   amount: number;
@@ -26,17 +26,16 @@ export class PaymentTransaction {
   })
   status: PaymentStatus;
 
-  // Audit Logs
   @Prop({ type: String })
   description?: string;
 
-  @Prop({ type: String }) // Transaction date from gateway
+  @Prop({ type: String })
   transactionDateTime?: string;
 
-  @Prop({ type: String }) // Account info mask
+  @Prop({ type: String })
   accountNumber?: string;
 
-  @Prop({ type: Object }) // Lưu full webhook data để debug
+  @Prop({ type: Object })
   rawWebhookData?: Record<string, any>;
 }
 

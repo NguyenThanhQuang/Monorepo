@@ -14,7 +14,9 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { HealthModule } from './health/health.module';
 import { LocationsModule } from './locations/locations.module';
 import { MailModule } from './mail/mail.module';
+import { MapsModule } from './maps/maps.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { PaymentsModule } from './payments/payments.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { TripsModule } from './trips/trips.module';
 import { UsersModule } from './users/users.module';
@@ -71,7 +73,8 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     LocationsModule,
     NotificationsModule,
     DashboardModule,
-    // PaymentsModule,
+    PaymentsModule,
+    MapsModule,
     ReviewsModule,
     HealthModule,
   ],

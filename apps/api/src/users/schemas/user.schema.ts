@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { UserRole } from '@obtp/shared-types';
 import { HydratedDocument, Types } from 'mongoose';
-
 export type UserDocument = HydratedDocument<UserDefinition>;
 
 @Schema({ timestamps: true, collection: 'users' })

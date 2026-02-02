@@ -18,7 +18,7 @@ export class ReviewsRepository {
   async findById(id: string | Types.ObjectId): Promise<ReviewDocument | null> {
     return this.reviewModel.findById(id).exec();
   }
- findByUserId(userId: Types.ObjectId) {
+  findByUserId(userId: Types.ObjectId) {
     return this.reviewModel
       .find({ userId })
       .populate('tripId')
@@ -39,18 +39,16 @@ export class ReviewsRepository {
     return !!exists;
   }
 
-  // Query cho Public (Client) - Ẩn bớt userId nếu cần hoặc populated nhẹ
   async findAllPublic(
     filter: QueryFilter<ReviewDocument>,
   ): Promise<ReviewDocument[]> {
     return this.reviewModel
       .find(filter)
-      .select('-userId') // Public view không cần biết ID cụ thể của user gốc nếu muốn bảo mật
+      .select('-userId')
       .sort({ createdAt: -1 })
       .exec();
   }
 
-  // Query cho Admin (Full info)
   async findAllWithDetails(
     filter: QueryFilter<ReviewDocument>,
   ): Promise<ReviewDocument[]> {

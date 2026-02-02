@@ -87,7 +87,6 @@ export class CompaniesRepository {
       },
       {
         $project: {
-          // Fields từ Company
           name: 1,
           code: 1,
           logoUrl: 1,
@@ -98,8 +97,6 @@ export class CompaniesRepository {
           description: 1,
           createdAt: 1,
           updatedAt: 1,
-
-          // Fields tính toán
           totalTrips: { $size: '$trips' },
           totalRevenue: { $sum: '$bookings.totalAmount' },
           averageRating: { $avg: '$reviews.rating' },
@@ -107,7 +104,6 @@ export class CompaniesRepository {
       },
     ]);
 
-    // Mapping thủ công để khớp interface id string
     return rawResult.map((item) => ({
       ...item,
       id: item._id.toString(),

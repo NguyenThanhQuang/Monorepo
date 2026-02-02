@@ -25,7 +25,6 @@ import { UrlBuilderService } from './services/url-builder.service';
 })
 export class CommonModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // Chỉ log middleware nếu cần thiết (optional migration)
     consumer.apply(AdminLoginLoggerMiddleware).forRoutes('*');
   }
 }

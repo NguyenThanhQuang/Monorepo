@@ -13,11 +13,11 @@ import {
 } from '@nestjs/common';
 import * as sharedTypes from '@obtp/shared-types';
 import { createCompanySchema, updateCompanySchema } from '@obtp/validation';
-import { CompaniesService } from './companies.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { CompaniesService } from './companies.service';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -63,7 +63,6 @@ export class CompaniesController {
   async findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     const { roles, companyId } = req.user;
 
-    // Nếu là CompanyAdmin, check xem id có khớp công ty mình ko
     if (roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
       if (!companyId || companyId !== id) {
         throw new ForbiddenException('Bạn chỉ xem được công ty của mình.');

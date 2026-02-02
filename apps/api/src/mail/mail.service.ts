@@ -4,9 +4,13 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
-import { Transporter } from 'nodemailer';
-
+import {
+  generateBookingSuccessEmail,
+  generateCompanyAdminActivationEmail,
+  generateCompanyAdminPromotionEmail,
+  generatePasswordResetEmail,
+  generateVerificationEmail,
+} from '@obtp/business-logic';
 import {
   BookingConfirmationEmailPayload,
   EmailContext,
@@ -15,26 +19,17 @@ import {
   SendForgotPasswordPayload,
   SendVerificationEmailPayload,
 } from '@obtp/shared-types';
-
-import {
-  generateBookingSuccessEmail,
-  generateCompanyAdminActivationEmail,
-  generateCompanyAdminPromotionEmail,
-  generatePasswordResetEmail,
-  generateVerificationEmail,
-} from '@obtp/business-logic';
+import * as nodemailer from 'nodemailer';
+import { Transporter } from 'nodemailer';
 
 @Injectable()
 export class MailService {
   private transporter: Transporter;
   private readonly logger = new Logger(MailService.name);
-
-  // Cache config values để tránh gọi get nhiều lần
   private readonly mailFromName: string;
   private readonly mailFromAddress: string;
 
   constructor(private readonly configService: ConfigService) {
-    // 1. Validate & Init Config
     const mailHost = this.configService.get<string>('MAIL_HOST');
     const mailPort = this.configService.get<number>('MAIL_PORT');
     const mailUser = this.configService.get<string>('MAIL_USER');
@@ -54,7 +49,6 @@ export class MailService {
       );
     }
 
-    // 2. Init Transporter
     this.transporter = nodemailer.createTransport({
       host: mailHost,
       port: mailPort,
@@ -62,7 +56,6 @@ export class MailService {
       auth: { user: mailUser, pass: mailPass },
     });
 
-    // 3. Verify connection (Non-blocking)
     this.transporter.verify((err) => {
       if (err) this.logger.error('Mail transporter verification failed:', err);
       else this.logger.log('Mail transporter ready.');
@@ -90,8 +83,6 @@ export class MailService {
       // Không throw error để tránh crash luồng chính của user (VD: Đăng ký thành công nhưng gửi mail lỗi)
     }
   }
-
-  // --- PUBLIC METHODS ---
 
   async sendVerificationEmail(
     payload: SendVerificationEmailPayload,
@@ -156,12 +147,11 @@ export class MailService {
       'CLIENT_URL',
       'http://localhost:3000',
     );
-    // Token kích hoạt cho admin (dùng để set password lần đầu)
     const activationUrl = `${clientUrl}/activate-account?token=${payload.token}`;
 
     const context: EmailContext = {
       appName: this.mailFromName,
-      verifyTokenUrl: activationUrl, // Tái sử dụng field này cho URL activation
+      verifyTokenUrl: activationUrl,
     };
 
     const { subject, html } = generateCompanyAdminActivationEmail(

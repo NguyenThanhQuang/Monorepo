@@ -11,7 +11,6 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import * as sharedTypes from '@obtp/shared-types';
-
 import {
   CreateGuestReviewSchema,
   CreateReviewSchema,
@@ -19,7 +18,6 @@ import {
   UpdateUserReviewSchema,
   UpdateVisibilitySchema,
 } from '@obtp/validation';
-
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -31,7 +29,6 @@ import { ReviewsService } from './reviews.service';
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
-  // PUBLIC LIST
   @Get()
   @UsePipes(new ZodValidationPipe(ReviewQuerySchema))
   findAll(@Query() query: sharedTypes.ReviewQuery) {
@@ -39,12 +36,10 @@ export class ReviewsController {
   }
   @Get('my')
   @UseGuards(JwtAuthGuard)
-  getMyReviews(
-    @CurrentUser() user: sharedTypes.AuthUserResponse,
-  ) {
+  getMyReviews(@CurrentUser() user: sharedTypes.AuthUserResponse) {
     return this.reviewsService.findByUserId(user.id);
   }
-  // AUTH USER CREATE
+
   @Post()
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(CreateReviewSchema))
@@ -55,14 +50,12 @@ export class ReviewsController {
     return this.reviewsService.create(payload, user);
   }
 
-  // GUEST CREATE
   @Post('guest')
   @UsePipes(new ZodValidationPipe(CreateGuestReviewSchema))
   createAsGuest(@Body() payload: sharedTypes.CreateGuestReviewPayload) {
     return this.reviewsService.createAsGuest(payload);
   }
 
-  // USER UPDATE SELF
   @Patch(':id/my-review')
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(UpdateUserReviewSchema))
@@ -74,7 +67,6 @@ export class ReviewsController {
     return this.reviewsService.updateReview(id, user, payload);
   }
 
-  // ADMIN SECTION
   @Get('admin/all')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(sharedTypes.UserRole.ADMIN)

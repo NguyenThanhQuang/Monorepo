@@ -50,7 +50,6 @@ export class VehiclesController {
   ) {
     let targetCompanyId = filterCompanyId;
 
-    // Company Admin chỉ xem được xe của mình
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
       if (!user.companyId)
         throw new ForbiddenException('User chưa liên kết công ty.');
@@ -67,7 +66,6 @@ export class VehiclesController {
   ) {
     const vehicle = await this.vehiclesService.findOne(id);
 
-    // Check Ownership
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
       if (
         vehicle.companyId?._id?.toString() !== user.companyId &&
@@ -90,7 +88,6 @@ export class VehiclesController {
     const vehicle = await this.vehiclesService.findOne(id);
 
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      // Ownership Check
       const ownerId = vehicle.companyId._id
         ? vehicle.companyId._id.toString()
         : vehicle.companyId.toString();
@@ -109,7 +106,10 @@ export class VehiclesController {
 
   @Delete(':id')
   @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
-  async remove(@CurrentUser() user: sharedTypes.AuthUserResponse, @Param('id') id: string) {
+  async remove(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Param('id') id: string,
+  ) {
     const vehicle = await this.vehiclesService.findOne(id);
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
       const ownerId = vehicle.companyId._id

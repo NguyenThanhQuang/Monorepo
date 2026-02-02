@@ -29,7 +29,6 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // 1. Get Me
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMyProfile(
@@ -43,7 +42,6 @@ export class UsersController {
     return this.usersService.sanitizeUser(fullUser);
   }
 
-  // 2. Update Profile
   @UseGuards(JwtAuthGuard)
   @Patch('me')
   @UsePipes(new ZodValidationPipe(UpdateUserSchema))
@@ -54,7 +52,6 @@ export class UsersController {
     return this.usersService.updateProfile(user.id, payload);
   }
 
-  // 3. Change Password
   @UseGuards(JwtAuthGuard)
   @Patch('me/change-password')
   @HttpCode(HttpStatus.OK)
@@ -66,7 +63,6 @@ export class UsersController {
     return this.usersService.changePassword(user.id, payload);
   }
 
-  // 4. Admin - Get All
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(sharedTypes.UserRole.ADMIN)
   @Get('admin/all')
@@ -74,7 +70,6 @@ export class UsersController {
     return this.usersService.findAllForAdmin();
   }
 
-  // 5. Admin - Ban User
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(sharedTypes.UserRole.ADMIN)
   @Patch('admin/:userId/status')

@@ -11,7 +11,7 @@ import { DashboardService } from './dashboard.service';
 
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(sharedTypes.UserRole.ADMIN) // Hiện tại chỉ Admin xem được
+@Roles(sharedTypes.UserRole.ADMIN)
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 

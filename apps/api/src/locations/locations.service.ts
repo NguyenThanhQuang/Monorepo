@@ -13,7 +13,6 @@ import {
   SearchLocationQuery,
   UpdateLocationPayload,
 } from '@obtp/shared-types';
-
 import { LocationsRepository } from './locations.repository';
 
 @Injectable()
@@ -21,7 +20,6 @@ export class LocationsService {
   constructor(private readonly repo: LocationsRepository) {}
 
   async create(payload: CreateLocationPayload): Promise<Location> {
-    // Logic check trùng
     const exists = await this.repo.findByNameAndProvince(
       payload.name,
       payload.province,
@@ -32,10 +30,8 @@ export class LocationsService {
       );
     }
 
-    // Logic Generate Slug (dùng Logic Package)
     const slug = generateLocationSlug(payload.name);
 
-    //Delegate to Repo
     return this.repo.create({ ...payload, slug });
   }
 
@@ -43,14 +39,12 @@ export class LocationsService {
     const filter: any = {};
     if (queryData.type) filter.type = queryData.type;
     if (queryData.province) {
-      // Search regex province không phân biệt hoa thường
       filter.province = new RegExp(queryData.province, 'i');
     }
     return this.repo.findAll(filter);
   }
 
   async search(keyword: string): Promise<Location[]> {
-    // Logic tạo Regex an toàn nằm trong business-logic package
     const searchRegex = createSafeSearchRegex(keyword);
 
     if (!searchRegex) {
@@ -80,7 +74,6 @@ export class LocationsService {
   async update(id: string, payload: UpdateLocationPayload): Promise<Location> {
     const updateData: any = { ...payload };
 
-    // Nếu đổi tên -> đổi Slug
     if (payload.name) {
       updateData.slug = generateLocationSlug(payload.name);
     }

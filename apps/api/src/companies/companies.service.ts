@@ -102,7 +102,6 @@ export class CompaniesService {
   async update(id: string, payload: UpdateCompanyPayload): Promise<Company> {
     const existing = await this.findOne(id);
 
-    // Validation update Name
     if (payload.name && payload.name !== existing.name) {
       const duplicateName = await this.repo.findOne({ name: payload.name });
       // Cần check duplicate._id != id, nhưng repository findOne trả về doc
@@ -110,11 +109,6 @@ export class CompaniesService {
       if (duplicateName && duplicateName.id.toString() !== id) {
         throw new ConflictException(`Tên nhà xe "${payload.name}" đã tồn tại.`);
       }
-    }
-
-    // Validation update Code (Dù updateDto schema đã chặn, nhưng double-check business)
-    if (payload.code && payload.code !== existing.code) {
-      // Logic tương tự... thường thì ít cho đổi code
     }
 
     const updated = await this.repo.update(id, payload);

@@ -16,8 +16,6 @@ export class TripsRepository {
     @InjectModel(Trip.name) private readonly tripModel: Model<TripDocument>,
   ) {}
 
-  // --- STANDARD CRUD ---
-
   async create(
     doc: Partial<Trip>,
     session?: ClientSession,
@@ -53,26 +51,19 @@ export class TripsRepository {
     return this.tripModel.findByIdAndDelete(id).exec();
   }
 
-  // --- ADVANCED QUERIES ---
-
-  // Load đầy đủ thông tin để hiển thị chi tiết
   async findByIdWithDetails(
     id: string | Types.ObjectId,
   ): Promise<TripDocument | null> {
-    return (
-      this.tripModel
-        .findById(id)
-        .populate('companyId')
-        // Populate nested object vehicle -> description, seatMap (nếu cần xem sơ đồ gốc)
-        .populate('vehicleId', 'type vehicleNumber totalSeats')
-        .populate('route.fromLocationId')
-        .populate('route.toLocationId')
-        .populate({ path: 'route.stops.locationId', model: 'Location' })
-        .exec()
-    );
+    return this.tripModel
+      .findById(id)
+      .populate('companyId')
+      .populate('vehicleId', 'type vehicleNumber totalSeats')
+      .populate('route.fromLocationId')
+      .populate('route.toLocationId')
+      .populate({ path: 'route.stops.locationId', model: 'Location' })
+      .exec();
   }
 
-  // Dành cho Management List (Admin)
   async findManagementTrips(
     filter: QueryFilter<TripDocument>,
   ): Promise<TripDocument[]> {
@@ -86,15 +77,14 @@ export class TripsRepository {
       .exec();
   }
 
-  // Tìm Templates để Cronjob chạy (Generate Daily Trips)
   async findActiveRecurrenceTemplates(): Promise<TripDocument[]> {
     return this.tripModel
       .find({
         isRecurrenceTemplate: true,
         isRecurrenceActive: true,
       })
-      .populate('companyId') // Để check status company active không
-      .populate('vehicleId') // Để check status vehicle active không
+      .populate('companyId')
+      .populate('vehicleId')
       .exec();
   }
 
@@ -113,15 +103,13 @@ export class TripsRepository {
 
     return this.tripModel
       .aggregate([
-        // 1. Filter cơ bản: Thời gian + Status
         {
           $match: {
             departureTime: { $gte: startOfDay, $lte: endOfDay },
             status: TripStatus.SCHEDULED,
-            isRecurrenceTemplate: false, // Không hiện template
+            isRecurrenceTemplate: false,
           },
         },
-        // 2. Lookup & Match Location (Đây là phần nặng nhất, index giúp một phần ở step 1)
         {
           $lookup: {
             from: 'locations',
@@ -138,7 +126,6 @@ export class TripsRepository {
             as: 'toLoc',
           },
         },
-        // Unwind để filter (lưu ý preserveNullAndEmptyArrays nếu data lỏng lẻo, nhưng Trip bắt buộc location nên OK)
         { $unwind: '$fromLoc' },
         { $unwind: '$toLoc' },
         {
@@ -147,7 +134,6 @@ export class TripsRepository {
             'toLoc.province': { $regex: toRegex },
           },
         },
-        // 3. Lookup Company (Chỉ lấy xe của cty Active)
         {
           $lookup: {
             from: 'companies',
@@ -160,7 +146,6 @@ export class TripsRepository {
         {
           $match: { 'company.status': 'active' },
         },
-        // 4. Lookup Vehicle (Lấy thông tin loại xe)
         {
           $lookup: {
             from: 'vehicles',
@@ -170,16 +155,13 @@ export class TripsRepository {
           },
         },
         { $unwind: '$vehicle' },
-        // 5. Project Output gọn gàng
         {
           $project: {
             _id: 1,
             departureTime: 1,
             expectedArrivalTime: 1,
             price: 1,
-            seats: 1, // Trả về ghế để client đếm số lượng available (hoặc logic đếm sẵn ở backend service)
-
-            // Nested Info Flattening for Frontend Convenience
+            seats: 1,
             'company._id': 1,
             'company.name': 1,
             'company.logoUrl': 1,
@@ -192,7 +174,6 @@ export class TripsRepository {
       .exec();
   }
 
-  // Helper tìm trip con trong ngày (dùng cho Cronjob check duplicate)
   async findDailyTrip(
     parentId: string | Types.ObjectId,
     date: Date,

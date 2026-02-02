@@ -11,7 +11,9 @@ import { UserDefinition, UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UsersRepository {
-  constructor(@InjectModel(UserDefinition.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(UserDefinition.name) private userModel: Model<UserDocument>,
+  ) {}
 
   async create(
     userData: Partial<UserDefinition>,
@@ -26,7 +28,6 @@ export class UsersRepository {
     return this.userModel.findById(id).exec();
   }
 
-  // Helper chuyên biệt để login/đổi pass (cần lấy passHash)
   async findByIdWithPassword(id: string): Promise<UserDocument | null> {
     return this.userModel.findById(id).select('+passwordHash').exec();
   }
@@ -35,7 +36,6 @@ export class UsersRepository {
     return this.userModel.findOne({ email }).exec();
   }
 
-  // Dành cho auth strategy check pass
   async findOneByEmailWithPassword(
     email: string,
   ): Promise<UserDocument | null> {
@@ -54,7 +54,6 @@ export class UsersRepository {
     return this.userModel.findOne(filter).exec();
   }
 
-  // Hỗ trợ update linh hoạt
   async update(
     id: string,
     updateData: UpdateQuery<UserDocument>,
@@ -65,7 +64,6 @@ export class UsersRepository {
       .exec();
   }
 
-  // Save document (cho trường hợp find -> modify -> save logic phức tạp)
   async save(
     user: UserDocument,
     session?: ClientSession,

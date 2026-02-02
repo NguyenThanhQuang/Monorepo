@@ -10,7 +10,6 @@ export class BookingsRepository {
     private readonly bookingModel: Model<BookingDocument>,
   ) {}
 
-  // TRANSACTION SUPPORT: session là Optional
   async create(
     doc: Partial<BookingDefinition>,
     session?: ClientSession,
@@ -35,15 +34,12 @@ export class BookingsRepository {
     return this.bookingModel.findOne(filter).exec();
   }
 
-  // Update object và trả về bản mới
   async save(
     booking: BookingDocument,
     session?: ClientSession,
   ): Promise<BookingDocument> {
     return booking.save({ session });
   }
-
-  // --- QUERY FOR FEATURES ---
 
   /**
    * Dùng cho Lookup Vé: Populate sâu thông tin Trip -> Location
@@ -62,7 +58,7 @@ export class BookingsRepository {
           { path: 'route.toLocationId', select: 'name fullAddress province' },
         ],
       })
-      .select('-paymentGatewayTransactionId -paymentOrderCode') // Ẩn info nhạy cảm
+      .select('-paymentGatewayTransactionId -paymentOrderCode')
       .exec();
   }
 
@@ -94,7 +90,6 @@ export class BookingsRepository {
    * Helper tìm theo code vé hoặc ID (cho endpoint lookup)
    */
   async findByCodeOrId(identifier: string): Promise<BookingDocument | null> {
-    // Check valid ObjectID first
     const isId = Types.ObjectId.isValid(identifier);
     const query: QueryFilter<BookingDocument> = isId
       ? {
@@ -108,7 +103,6 @@ export class BookingsRepository {
     return this.findForLookup(query);
   }
 
-  // Soft Delete wrapper (dùng nếu không muốn TTL xóa vật lý ngay)
   async deleteById(id: string | Types.ObjectId): Promise<void> {
     await this.bookingModel.findByIdAndDelete(id).exec();
   }

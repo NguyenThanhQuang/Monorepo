@@ -17,7 +17,6 @@ import {
   PayOSCode,
   PayOSWebhookPayload,
 } from '@obtp/shared-types';
-import PayOS from '@payos/node';
 
 import {
   formatPaymentDescription,
@@ -43,13 +42,27 @@ export class PaymentsService implements OnModuleInit {
   }
 
   onModuleInit() {
-    const PayOSClass = PayOS as any;
+    const PayOSLib = require('@payos/node');
+    let PayOSConstructor: new (arg0: string, arg1: string, arg2: string) => any;
 
-    this.payOS = new PayOSClass(
+    if (typeof PayOSLib === 'function') {
+      PayOSConstructor = PayOSLib;
+    } else if (PayOSLib.default && typeof PayOSLib.default === 'function') {
+      PayOSConstructor = PayOSLib.default;
+    } else if (PayOSLib.PayOS && typeof PayOSLib.PayOS === 'function') {
+      PayOSConstructor = PayOSLib.PayOS;
+    } else {
+      this.logger.error('CRITICAL: Cannot verify PayOS Constructor', PayOSLib);
+      throw new InternalServerErrorException('PayOS Library Load Failed');
+    }
+
+    this.payOS = new PayOSConstructor(
       this.configService.getOrThrow<string>('PAYOS_CLIENT_ID'),
       this.configService.getOrThrow<string>('PAYOS_API_KEY'),
       this.configService.getOrThrow<string>('PAYOS_CHECKSUM_KEY'),
     );
+
+    this.logger.log('PayOS Initialized Successfully');
   }
 
   async createPaymentLink(

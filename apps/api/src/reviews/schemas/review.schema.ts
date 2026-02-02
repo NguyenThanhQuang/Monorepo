@@ -35,14 +35,12 @@ export class ReviewDefinition {
   @Prop({ type: Boolean, default: false })
   isAnonymous: boolean;
 
-  // Audit Fields for Edits
   @Prop({ type: Number, default: 0 })
   editCount: number;
 
   @Prop({ type: Date })
   lastEditedAt?: Date;
 
-  // Moderation
   @Prop({ type: Boolean, default: true, index: true })
   isVisible: boolean;
 
@@ -54,6 +52,5 @@ export class ReviewDefinition {
 }
 export const ReviewSchema = SchemaFactory.createForClass(ReviewDefinition);
 
-// Indexes cho query phổ biến
 ReviewSchema.index({ companyId: 1, createdAt: -1 }); // Lấy review mới nhất của nhà xe
 ReviewSchema.index({ tripId: 1, createdAt: -1 }); // Lấy review của chuyến đi

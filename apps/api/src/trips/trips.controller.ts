@@ -11,9 +11,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import * as sharedTypes from '@obtp/shared-types';
-
-import { CreateTripSchema, SearchTripQuerySchema } from '@obtp/validation'; // Giả sử Update schema cũng đã viết hoặc dùng Partial
-
+import { CreateTripSchema, SearchTripQuerySchema } from '@obtp/validation';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -25,7 +23,6 @@ import { TripsService } from './trips.service';
 export class TripsController {
   constructor(private readonly tripsService: TripsService) {}
 
-  // 1. PUBLIC SEARCH
   @Get()
   @UsePipes(new ZodValidationPipe(SearchTripQuerySchema))
   async findPublicTrips(@Query() query: sharedTypes.SearchTripQuery) {
@@ -49,11 +46,9 @@ export class TripsController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    // Public info, anyone can view detail
     return this.tripsService.findOne(id);
   }
 
-  // 2. CREATE TRIP (Management)
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
@@ -68,16 +63,15 @@ export class TripsController {
     return this.tripsService.create(payload);
   }
 
-  // 3. CANCEL TRIP
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
-  async cancel(@CurrentUser() user: sharedTypes.AuthUserResponse, @Param('id') id: string) {
-    // Logic verify ownership
+  async cancel(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Param('id') id: string,
+  ) {
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
       const trip = await this.tripsService.findOne(id);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - Handle populate structure difference in checking logic
       const tripCompanyId = trip.companyId._id
         ? trip.companyId._id.toString()
         : trip.companyId.toString();

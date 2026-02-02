@@ -1,22 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import dayjs from 'dayjs';
-import { Types } from 'mongoose';
-
-// TYPES
+import {
+  calculateDateRange,
+  fillMissingChartDates,
+} from '@obtp/business-logic';
 import {
   BookingStatus,
   FinanceReportQuery,
   FinancialReportResponse,
 } from '@obtp/shared-types';
-
-// LOGIC LIB
-import {
-  calculateDateRange,
-  fillMissingChartDates,
-} from '@obtp/business-logic';
-
-// REPO
+import dayjs from 'dayjs';
+import { Types } from 'mongoose';
 import { DashboardRepository } from './dashboard.repository';
 
 @Injectable()
@@ -33,7 +27,6 @@ export class DashboardService {
   async getFinancialReport(
     query: FinanceReportQuery,
   ): Promise<FinancialReportResponse> {
-    // 1. Calculate Date Range
     let startDate: Date;
     let endDate: Date = new Date();
 
@@ -41,11 +34,9 @@ export class DashboardService {
       startDate = dayjs(query.startDate).startOf('day').toDate();
       endDate = dayjs(query.endDate).endOf('day').toDate();
     } else {
-      // Default period logic
       startDate = calculateDateRange(query.period || '30d');
     }
 
-    // 2. Build Filter
     const baseFilter: any = {
       createdAt: { $gte: startDate, $lte: endDate },
       status: { $in: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED] },
@@ -55,13 +46,11 @@ export class DashboardService {
       baseFilter.companyId = new Types.ObjectId(query.companyId);
     }
 
-    // 3. Execute Repo Queries
     const [allTimeRevenue, facetData] = await Promise.all([
       this.dashboardRepository.getTotalRevenueAllTime(),
       this.dashboardRepository.getFinancialReportData(baseFilter),
     ]);
 
-    // 4. Process Aggregation Results
     const confirmedStats = facetData.statsByStatus.find(
       (s: any) => s._id === BookingStatus.CONFIRMED,
     );
@@ -76,18 +65,14 @@ export class DashboardService {
     const commissionRate = this.configService.get<number>(
       'COMMISSION_RATE',
       0.15,
-    ); // 15%
+    );
 
-    // 5. Fill Missing Chart Data (Business Logic reuse)
     const filledChartData = fillMissingChartDates(
       facetData.revenueChart || [],
       startDate,
       endDate,
     );
 
-    // 6. Recent Transactions Fetch & Format
-    // Reuse baseFilter but remove specific status filter if want all types,
-    // but usually report focuses on relevant ones.
     const recentDocs = await this.dashboardRepository.findRecentTransactions(
       baseFilter,
       20,
@@ -110,7 +95,6 @@ export class DashboardService {
           amount: doc.totalAmount,
           status: 'completed',
         });
-        // Simulate Commission Record
         trans.push({
           id: `${doc._id}-comm`,
           date: base.date,
@@ -124,8 +108,7 @@ export class DashboardService {
         trans.push({
           ...base,
           type: 'refund',
-          amount: -doc.totalAmount, // Refund is negative flow for revenue report? Or positive flow out?
-          // Depends on UI perspective. Here we assume (-) is outflow from wallet.
+          amount: -doc.totalAmount,
           status: 'completed',
         });
       }

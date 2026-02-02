@@ -17,8 +17,6 @@ import {
       { name: PaymentTransaction.name, schema: PaymentTransactionSchema },
     ]),
     ConfigModule,
-
-    // Payments gọi Bookings để confirm
     forwardRef(() => BookingsModule),
   ],
   controllers: [PaymentsController],

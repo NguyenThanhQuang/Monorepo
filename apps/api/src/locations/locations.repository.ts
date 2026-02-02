@@ -36,7 +36,7 @@ export class LocationsRepository {
     return this.locationModel
       .findOne({ name, province })
       .exec() as unknown as Location | null;
-  } 
+  }
 
   async findAll(
     filter: QueryFilter<LocationDocument> = {},
@@ -58,19 +58,17 @@ export class LocationsRepository {
       .exec() as unknown as Location[];
   }
 
-async findPopular(limit = 10): Promise<Location[]> {
-
-  return this.locationModel
-    .find({
-      type: { $in: [LocationType.BUS_STATION, LocationType.CITY] },
-      popular: true,
-      isActive: true,
-    })
-    .sort({ routes: -1 }) // ưu tiên bến xe nhiều tuyến
-    .limit(limit)
-    .exec() as unknown as Location[];
-    
-}
+  async findPopular(limit = 10): Promise<Location[]> {
+    return this.locationModel
+      .find({
+        type: { $in: [LocationType.BUS_STATION, LocationType.CITY] },
+        popular: true,
+        isActive: true,
+      })
+      .sort({ routes: -1 })
+      .limit(limit)
+      .exec() as unknown as Location[];
+  }
   async update(
     id: string,
     updateData: Partial<Location>,

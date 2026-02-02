@@ -15,7 +15,6 @@ export class NotificationsService {
 
   async handleUserRegistered(payload: UserEventPayload) {
     try {
-      // FIX: Chuyển 3 params lẻ thành 1 Object Payload chuẩn Interface mới
       await this.mailService.sendVerificationEmail({
         email: payload.email,
         name: payload.name,
@@ -27,14 +26,13 @@ export class NotificationsService {
     } catch (error) {
       this.logger.error(
         `Failed to send verification email to ${payload.email}`,
-        (error instanceof Error ? error.stack : undefined),
+        error instanceof Error ? error.stack : undefined,
       );
     }
   }
 
   async handleUserForgotPassword(payload: UserEventPayload) {
     try {
-      // FIX: Chuyển thành Object Payload
       await this.mailService.sendPasswordResetEmail({
         email: payload.email,
         name: payload.name,
@@ -46,7 +44,7 @@ export class NotificationsService {
     } catch (error) {
       this.logger.error(
         `Failed to send password reset email to ${payload.email}`,
-        (error instanceof Error ? error.stack : undefined),
+        error instanceof Error ? error.stack : undefined,
       );
     }
   }

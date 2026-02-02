@@ -1,4 +1,7 @@
-import { BookingDefinition, BookingDocument } from '@/bookings/schemas/booking.schema';
+import {
+  BookingDefinition,
+  BookingDocument,
+} from '@/bookings/schemas/booking.schema';
 import {
   CompanyDefinition,
   CompanyDocument,
@@ -21,16 +24,14 @@ export class DashboardRepository {
   constructor(
     @InjectModel(CompanyDefinition.name)
     private readonly companyModel: Model<CompanyDocument>,
-    @InjectModel(UserDefinition.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(UserDefinition.name)
+    private readonly userModel: Model<UserDocument>,
     @InjectModel(BookingDefinition.name)
     private readonly bookingModel: Model<BookingDocument>,
     @InjectModel(Trip.name) private readonly tripModel: Model<TripDocument>,
   ) {}
 
-  // --- STATS OVERVIEW ---
-
   async getAdminQuickStats(): Promise<AdminDashboardStats> {
-    // Parallel execution for performance
     const [
       totalCompanies,
       totalUsers,
@@ -79,14 +80,11 @@ export class DashboardRepository {
     return res[0]?.total || 0;
   }
 
-  // --- HEAVY REPORT AGGREGATION ---
-
   async getFinancialReportData(matchFilter: any) {
     const result = await this.bookingModel.aggregate([
       { $match: matchFilter },
       {
         $facet: {
-          // 1. Group by Status (Confirmed/Cancelled revenue)
           statsByStatus: [
             {
               $group: {
@@ -96,7 +94,6 @@ export class DashboardRepository {
               },
             },
           ],
-          // 2. Revenue Chart by Date
           revenueChart: [
             { $match: { status: BookingStatus.CONFIRMED } },
             {
@@ -108,7 +105,7 @@ export class DashboardRepository {
                 bookings: { $sum: 1 },
               },
             },
-            { $sort: { _id: 1 } }, // Sort by Date ASC
+            { $sort: { _id: 1 } },
             {
               $project: {
                 _id: 0,
@@ -118,7 +115,6 @@ export class DashboardRepository {
               },
             },
           ],
-          // 3. Top Companies
           topCompanies: [
             { $match: { status: BookingStatus.CONFIRMED } },
             {
@@ -155,9 +151,7 @@ export class DashboardRepository {
     return result[0];
   }
 
-  // Lấy danh sách giao dịch gần nhất
   async findRecentTransactions(matchFilter: any, limit = 20): Promise<any[]> {
-    // Reuse logic query + populate
     return this.bookingModel
       .find(matchFilter)
       .select('createdAt status totalAmount ticketCode companyId')

@@ -39,11 +39,7 @@ export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
     @InjectConnection() private readonly connection: Connection,
-    // @Inject(forwardRef(() => BookingsRepository))
-    // private readonly bookingsRepository: BookingsRepository,
   ) {}
-
-  // --- PUBLIC HELPERS (Used by Auth Module) ---
 
   async findById(id: string): Promise<UserDocument | null> {
     if (!Types.ObjectId.isValid(id)) return null;
@@ -66,8 +62,6 @@ export class UsersService {
       userId: sanitizedData.id,
     } as unknown as AuthUserResponse;
   }
-
-  // --- CORE FEATURES ---
 
   async create(payload: CreateInternalUserParams): Promise<UserDocument> {
     let finalHash = payload.passwordHash;
@@ -110,18 +104,15 @@ export class UsersService {
     userId: string,
     payload: ChangePasswordPayload,
   ): Promise<{ message: string }> {
-    // 1. Fetch User (kèm pass cũ để so sánh)
     const user = await this.usersRepository.findByIdWithPassword(userId);
     if (!user) throw new NotFoundException('User not found');
 
-    // 2. Validate pass cũ (Logic Lib)
     const isValid = await comparePassword(
       payload.currentPassword,
       user.passwordHash,
     );
     if (!isValid) throw new BadRequestException('Mật khẩu hiện tại không đúng');
 
-    // 3. Hash pass mới & Save
     user.passwordHash = await hashPassword(payload.newPassword);
     await this.usersRepository.save(user);
 
@@ -129,11 +120,9 @@ export class UsersService {
   }
 
   async updateLastLogin(id: string): Promise<void> {
-    // Repository nhận string ID và tự xử lý logic DB
     await this.usersRepository.update(id, { lastLoginDate: new Date() });
   }
 
-  // Input 'data' được typed chặt chẽ
   async updateVerificationInfo(
     userId: string,
     data: { token: string; expires: Date },
@@ -143,8 +132,6 @@ export class UsersService {
       emailVerificationExpires: data.expires,
     });
   }
-
-  // --- ADMIN FEATURES ---
 
   async findAllForAdmin(): Promise<SanitizedUserResponse[]> {
     const users = await this.usersRepository.findAll();
@@ -160,7 +147,6 @@ export class UsersService {
     return sanitizeUser(updated);
   }
 
-  // Helper for Auth Module Password Reset
   async setResetToken(
     userId: string,
     token: string,
@@ -176,10 +162,9 @@ export class UsersService {
     token: string,
     passwordHash: string,
   ): Promise<boolean> {
-    // Find user with valid token
     const user = await this.usersRepository.findOne({
       passwordResetToken: token,
-      passwordResetExpires: { $gt: new Date() }, // MongoDB query logic
+      passwordResetExpires: { $gt: new Date() },
     });
 
     if (!user) return false;
@@ -218,13 +203,10 @@ export class UsersService {
         if (!user.roles.includes(UserRole.COMPANY_ADMIN)) {
           user.roles.push(UserRole.COMPANY_ADMIN);
         }
-        // Ép kiểu vì Repository wrapper đang dùng String id hoặc ObjectId.
-        // User schema yêu cầu ObjectId cho field ref
         user.companyId = new Types.ObjectId(payload.companyId);
         await this.usersRepository.save(user, session);
       } else {
         isNew = true;
-        // Dùng pure function logic, không cần inject TokenService
         const activationToken = generateRandomToken();
 
         user = await this.usersRepository.create(
@@ -240,7 +222,7 @@ export class UsersService {
             accountActivationExpires: new Date(
               Date.now() +
                 AUTH_CONSTANTS.DEFAULTS.EMAIL_VERIFICATION_EXPIRATION_MS,
-            ), // 24h
+            ),
           },
           session,
         );

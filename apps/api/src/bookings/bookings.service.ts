@@ -11,6 +11,12 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectConnection } from '@nestjs/mongoose';
 import {
+  BUSINESS_CONSTANTS,
+  calculateHoldExpiration,
+  calculateTotalAmount,
+  generateTicketCode,
+} from '@obtp/business-logic';
+import {
   AuthUserResponse,
   BookingStatus,
   ConfirmBookingPayload,
@@ -21,13 +27,6 @@ import {
   TripStatus,
 } from '@obtp/shared-types';
 import { Connection, Types } from 'mongoose';
-
-import {
-  BUSINESS_CONSTANTS,
-  calculateHoldExpiration,
-  calculateTotalAmount,
-  generateTicketCode,
-} from '@obtp/business-logic';
 import { TripsService } from '../trips/trips.service';
 import { UsersService } from '../users/users.service';
 import { BookingsRepository } from './bookings.repository';
@@ -39,13 +38,9 @@ export class BookingsService {
 
   constructor(
     private readonly bookingsRepository: BookingsRepository,
-
-    // Dependencies
     private readonly tripsService: TripsService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
-
-    // Core infrastructure
     private readonly eventEmitter: EventEmitter2,
     @InjectConnection() private readonly connection: Connection,
   ) {}
@@ -69,20 +64,16 @@ export class BookingsService {
       const { tripId, passengers } = payload;
       const trip = await this.tripsService.findOne(tripId);
 
-      // 1. Validations logic nhanh (Fast fail)
       if (!trip) throw new NotFoundException('Chuyến đi không tồn tại.');
       if (trip.status !== TripStatus.SCHEDULED) {
         throw new BadRequestException('Chuyến đi không khả dụng để đặt.');
       }
 
       const seatNumbers = passengers.map((p) => p.seatNumber);
-      // Validate Duplicate Seats in Request
       if (new Set(seatNumbers).size !== seatNumbers.length) {
         throw new BadRequestException('Trùng lặp số ghế trong yêu cầu đặt vé.');
       }
 
-      // 2. Deep Validate Status (Check xem ghế có Available trong Trip DB không)
-      // Logic này TripService sẽ thực hiện sâu hơn, nhưng ta check nhanh tại đây
       const unavailableSeats = trip.seats.filter(
         (s) =>
           seatNumbers.includes(s.seatNumber) &&
@@ -95,8 +86,6 @@ export class BookingsService {
         );
       }
 
-      // 3. Logic giá & User (Snapshot Pattern)
-      // Link user nếu có (Logged in hoặc guest match email)
       let linkUserId: string | undefined = user ? user.id : undefined;
 
       if (!linkUserId && payload.contactEmail) {
@@ -115,20 +104,17 @@ export class BookingsService {
       );
       const heldUntil = calculateHoldExpiration(holdMinutes);
 
-      // Map Passengers with Snapshot Price
       const snapshotPassengers = passengers.map((p) => ({
         ...p,
-        price: unitPrice, // Snapshot giá tại thời điểm đặt
+        price: unitPrice,
       }));
 
-      // 4. Create Booking Document
-      // Tạo BookingId trước để truyền cho Seat lock
       const bookingObjectId = new Types.ObjectId();
 
       const newBooking = await this.bookingsRepository.create(
         {
           tripId: new Types.ObjectId(tripId),
-          companyId: new Types.ObjectId(trip.companyId._id), // Populate structure assumed
+          companyId: new Types.ObjectId(trip.companyId._id),
           userId: linkUserId ? new Types.ObjectId(linkUserId) : undefined,
 
           contactName: payload.contactName,

@@ -22,7 +22,13 @@ export class LocationDefinition implements Omit<sharedTypes.Location, 'id'> {
   routes: number;
   popular: boolean;
   description?: string;
-  popularRoutes?: { from: string; to: string; duration: string; price: string; trips: number; }[];
+  popularRoutes?: {
+    from: string;
+    to: string;
+    duration: string;
+    price: string;
+    trips: number;
+  }[];
   _id: string;
   @Prop({ type: String, required: true, trim: true, index: 'text' })
   name: string;
@@ -39,7 +45,6 @@ export class LocationDefinition implements Omit<sharedTypes.Location, 'id'> {
   @Prop({ type: String, required: true, trim: true })
   fullAddress: string;
 
-  // Cấu trúc Raw của Mongoose cho GeoJSON
   @Prop(
     raw({
       type: { type: String, enum: ['Point'], default: 'Point', required: true },
@@ -63,6 +68,5 @@ export class LocationDefinition implements Omit<sharedTypes.Location, 'id'> {
 
 export const LocationSchema = SchemaFactory.createForClass(LocationDefinition);
 
-// INDEX BẮT BUỘC CHO GEO SEARCH
 LocationSchema.index({ location: '2dsphere' });
 LocationSchema.index({ province: 1, name: 1 });

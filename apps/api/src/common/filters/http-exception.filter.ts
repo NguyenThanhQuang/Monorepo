@@ -23,7 +23,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    // Lấy message gốc hoặc Zod validation array
     const exceptionResponse =
       exception instanceof HttpException
         ? exception.getResponse()
@@ -36,14 +35,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? (exceptionResponse as any).message
         : exceptionResponse;
 
-    // Mapping for specific error detail from Zod pipe
     const errorDetail =
       typeof exceptionResponse === 'object' &&
       'errors' in (exceptionResponse as any)
         ? (exceptionResponse as any).errors
         : errorMessage;
 
-    // Logging Strategy
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(
         `[500] ${request.method} ${request.url}`,
