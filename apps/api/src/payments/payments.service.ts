@@ -18,7 +18,6 @@ import {
   PayOSWebhookPayload,
 } from '@obtp/shared-types';
 import PayOS from '@payos/node';
-import * as crypto from 'crypto';
 
 import {
   formatPaymentDescription,
@@ -31,7 +30,6 @@ import { PaymentsRepository } from './payments.repository';
 @Injectable()
 export class PaymentsService implements OnModuleInit {
   private readonly logger = new Logger(PaymentsService.name);
-
   private payOS: any;
   private readonly clientBaseUrl: string;
 
@@ -76,7 +74,8 @@ export class PaymentsService implements OnModuleInit {
       }
     }
 
-    if (!booking.heldUntil || booking.heldUntil.getTime() < Date.now()) {
+    const now = Date.now();
+    if (!booking.heldUntil || new Date(booking.heldUntil).getTime() < now) {
       throw new BadRequestException('Đơn hàng đã hết hạn giữ chỗ.');
     }
 
@@ -86,7 +85,7 @@ export class PaymentsService implements OnModuleInit {
     booking.paymentOrderCode = orderCode;
     await this.bookingsRepository.save(booking);
 
-    const expiredAt = Math.floor(booking.heldUntil.getTime() / 1000);
+    const expiredAt = Math.floor(new Date(booking.heldUntil).getTime() / 1000);
 
     const paymentData = {
       orderCode: orderCode,
@@ -107,14 +106,17 @@ export class PaymentsService implements OnModuleInit {
 
     try {
       const paymentLink = await this.payOS.createPaymentLink(paymentData);
-      return paymentLink;
+
+      return {
+        checkoutUrl: paymentLink.checkoutUrl,
+        orderCode: paymentLink.orderCode,
+        qrCode: paymentLink.qrCode,
+      };
     } catch (error) {
       this.logger.error('Failed to create PayOS link:', error);
-      throw new InternalServerErrorException('Lỗi khởi tạo thanh toán.');
+      throw new InternalServerErrorException('Lỗi khởi tạo cổng thanh toán.');
     }
   }
-
-  // --- 2. HANDLE WEBHOOK ---
 
   async handleWebhook(payload: PayOSWebhookPayload): Promise<void> {
     if (!payload || !payload.data || !payload.signature) {
@@ -131,6 +133,10 @@ export class PaymentsService implements OnModuleInit {
       return;
     }
 
+    this.logger.log(
+      `Webhook Signature OK. OrderCode: ${data.orderCode} Code: ${payload.code}`,
+    );
+
     if (payload.code !== PayOSCode.SUCCESS) {
       await this.updateTransactionStatus(
         data.orderCode,
@@ -140,46 +146,40 @@ export class PaymentsService implements OnModuleInit {
       return;
     }
 
-    this.logger.log(
-      `Webhook Validated. Processing success for Order: ${data.orderCode}`,
-    );
-
     const transaction = await this.paymentsRepository.findByOrderCode(
       data.orderCode,
     );
+    let bookingIdString = '';
+
+    if (transaction) {
+      bookingIdString = transaction.bookingId.toString();
+
+      await this.updateTransactionStatus(
+        data.orderCode,
+        PaymentStatus.PAID,
+        data,
+      );
+    } else {
+      this.logger.warn(
+        `Transaction not found for OrderCode: ${data.orderCode}`,
+      );
+      return;
+    }
 
     try {
-      let bookingId = '';
-      if (transaction) {
-        bookingId = transaction.bookingId.toString();
-      } else {
-        const b = await (this.bookingsRepository as any).bookingModel.findOne({
-          paymentOrderCode: data.orderCode,
-        });
-        if (b) bookingId = b._id.toString();
-      }
-
-      if (bookingId) {
-        await this.bookingsService.confirmBooking(bookingId, {
+      if (bookingIdString) {
+        await this.bookingsService.confirmBooking(bookingIdString, {
           paidAmount: data.amount,
           paymentMethod: 'PayOS',
-          transactionDateTime: data.transactionDateTime,
+          transactionDateTime:
+            data.transactionDateTime || new Date().toISOString(),
         });
-
-        await this.updateTransactionStatus(
-          data.orderCode,
-          PaymentStatus.PAID,
-          data,
-        );
-      } else {
-        this.logger.error(`Booking not found for orderCode: ${data.orderCode}`);
       }
     } catch (error) {
-      // [FIX 3]: Handle 'unknown' type error explicitly
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Failed to confirm booking from Webhook: ${errorMessage}`,
+        `Failed to confirm booking logic via Webhook: ${errorMessage}`,
       );
     }
   }
@@ -205,24 +205,11 @@ export class PaymentsService implements OnModuleInit {
   ): boolean {
     const checksumKey = this.configService.get<string>('PAYOS_CHECKSUM_KEY');
     if (!checksumKey) return false;
-
-    const sortedKeys = Object.keys(data).sort();
-    const dataParts: string[] = [];
-    for (const key of sortedKeys) {
-      const val = data[key];
-      if (val === undefined || val === null) {
-        continue;
-      }
-      const valStr = String(val);
-      dataParts.push(`${key}=${valStr}`);
+    try {
+      return this.payOS.verifyPaymentWebhookData(data);
+    } catch (e) {
+      this.logger.warn(`PayOS Library verify failed, fallback? ${e}`);
+      return false;
     }
-
-    const dataToSign = dataParts.join('&');
-    const generatedSignature = crypto
-      .createHmac('sha256', checksumKey)
-      .update(dataToSign)
-      .digest('hex');
-
-    return generatedSignature === incomingSignature;
   }
 }

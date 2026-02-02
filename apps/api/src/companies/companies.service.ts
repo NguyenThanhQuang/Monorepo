@@ -66,7 +66,6 @@ export class CompaniesService {
           token: adminAccount.accountActivationToken,
         });
       } else {
-        // FIX: Wrap thành 1 object
         await this.mailService.sendCompanyAdminPromotionEmail({
           email: adminAccount.email,
           name: adminAccount.name,
@@ -85,11 +84,11 @@ export class CompaniesService {
   }
 
   async findAll() {
-    return this.repo.findAll(); // Simple find (Internal Use)
+    return this.repo.findAll();
   }
 
   async findAllWithStats() {
-    return this.repo.getCompanyStats(); // For Admin Dashboard
+    return this.repo.getCompanyStats();
   }
 
   async findOne(id: string): Promise<Company> {
