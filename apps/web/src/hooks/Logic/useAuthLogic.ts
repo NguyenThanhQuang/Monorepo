@@ -1,22 +1,21 @@
 import { useState } from 'react';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { forgotPasswordApi, loginApi, registerApi } from '../../api/service/auth/auth.api';
-// import {
-//   forgotPasswordApi,
-//   loginApi,
-//   registerApi,
-// } from '../../api/service/auth/auth.api';
-export type AuthMode = 'login' | 'register' | 'forgot-password';
+import {
+  forgotPasswordApi,
+  loginApi,
+  registerApi,
+} from '../../api/service/auth/auth.api';
 
-interface UseAuthLogicProps {
+/**
+ * Custom hook xử lý logic Login / Register / Forgot password
+ */
+export function useAuthLogic({
+  onLoginSuccess,
+}: {
   onLoginSuccess: () => void;
-}
-
-export function useAuthLogic({ onLoginSuccess }: UseAuthLogicProps) {
-  const { t } = useLanguage();
-
-  /* ================= STATE ================= */
-  const [mode, setMode] = useState<AuthMode>('login');
+}) {
+  const [mode, setMode] = useState<
+    'login' | 'register' | 'forgot-password'
+  >('login');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,33 +24,51 @@ export function useAuthLogic({ onLoginSuccess }: UseAuthLogicProps) {
   const [phone, setPhone] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
 
-  /* ================= SUBMIT ================= */
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Submit form
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
     try {
       setLoading(true);
+      setError(null);
 
+      // ================= LOGIN =================
       if (mode === 'login') {
         const res = await loginApi({
           identifier: email,
           password,
         });
 
-        localStorage.setItem('accessToken', res.accessToken);
-        localStorage.setItem('user', JSON.stringify(res.user));
+        /**
+         * ✅ LƯU TOKEN & USER
+         * PHẢI dùng đúng key access_token
+         */
+        localStorage.setItem(
+          'access_token',
+          res.accessToken,
+        );
+        localStorage.setItem(
+          'user',
+          JSON.stringify(res.user),
+        );
 
         onLoginSuccess();
         return;
       }
 
+      // ================= REGISTER =================
       if (mode === 'register') {
         if (password !== confirmPassword) {
-          alert(t('passwordNotMatch'));
+          setError('Mật khẩu xác nhận không khớp');
           return;
         }
 
@@ -62,39 +79,34 @@ export function useAuthLogic({ onLoginSuccess }: UseAuthLogicProps) {
           phone,
         });
 
-        alert(t('registerSuccess'));
+        // Sau khi đăng ký → quay lại login
         setMode('login');
         return;
       }
 
+      // ================= FORGOT PASSWORD =================
       if (mode === 'forgot-password') {
         await forgotPasswordApi({ email });
-
-        alert(t('resetPasswordSuccess'));
-        setMode('login');
+        return;
       }
-    } catch (error: any) {
+    } catch (err: unknown) {
       const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        'Có lỗi xảy ra';
+        err instanceof Error
+          ? err.message
+          : 'Có lỗi xảy ra, vui lòng thử lại';
 
-      alert(
-        Array.isArray(message)
-          ? message.map((m) => m.message).join('\n')
-          : message,
-      );
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
   return {
-    t,
-
-    // state
+    // mode
     mode,
     setMode,
+
+    // fields
     email,
     setEmail,
     password,
@@ -106,14 +118,17 @@ export function useAuthLogic({ onLoginSuccess }: UseAuthLogicProps) {
     phone,
     setPhone,
 
+    // ui state
     showPassword,
     setShowPassword,
     showConfirmPassword,
     setShowConfirmPassword,
 
+    // status
     loading,
+    error,
 
-    // handlers
+    // action
     handleSubmit,
   };
 }

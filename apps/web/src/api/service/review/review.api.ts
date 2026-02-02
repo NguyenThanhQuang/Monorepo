@@ -1,4 +1,4 @@
-import type { ReviewDTO } from "../../../features/Review/types";
+import type { ReviewDTO } from "@obtp/shared-types";
 import api from "../../api";
 
 export const reviewApi = {
@@ -10,4 +10,7 @@ export const reviewApi = {
 
   remove: (id: string) =>
     api.delete(`/reviews/${id}`)
+  
+};export const getMyReviewsApi = () => {
+  return api.get('/reviews/my').then(res => res.data);
 };

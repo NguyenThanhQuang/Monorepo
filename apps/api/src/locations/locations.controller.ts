@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import type {
   CreateLocationPayload,
+  Location,
   UpdateLocationPayload,
 } from '@obtp/shared-types';
 import { UserRole } from '@obtp/shared-types';
@@ -28,10 +29,13 @@ import { LocationsService } from './locations.service';
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
 
-  @Get('popular')
-  findPopular() {
-    return this.locationsService.findPopular();
-  }
+@Get('popular')
+async findPopular() {
+  const data = await this.locationsService.findPopular();
+  return data;
+}
+
+
 
   @Get('search')
   search(@Query('q') keyword: string) {
@@ -66,7 +70,6 @@ export class LocationsController {
   update(@Param('id') id: string, @Body() payload: UpdateLocationPayload) {
     return this.locationsService.update(id, payload);
   }
-
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -74,4 +77,5 @@ export class LocationsController {
   async remove(@Param('id') id: string) {
     await this.locationsService.remove(id);
   }
+  
 }

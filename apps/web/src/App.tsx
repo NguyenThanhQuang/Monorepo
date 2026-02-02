@@ -13,7 +13,6 @@ import { Footer } from './components/layout/Footer/Footer';
 import { Auth } from './pages/auth/auth';
 
 /* ================= PLACEHOLDER PAGES ================= */
-const RoutesPage = () => <div className="p-6">Trang Tuyến Xe</div>;
 const TicketLookupPage = () => <div className="p-6">Tra Cứu Vé</div>;
 const ProfilePage = () => <div className="p-6">Hồ Sơ Cá Nhân</div>;
 const MyTripsPage = () => <div className="p-6">Chuyến Đi Của Tôi</div>;
@@ -123,8 +122,7 @@ const App = () => {
   /* ================= RENDER PAGE ================= */
   const renderPage = () => {
     switch (page) {
-      case 'routes':
-        return <RoutesPage />;
+
 
       case 'ticketLookup':
         return <TicketLookupPage />;

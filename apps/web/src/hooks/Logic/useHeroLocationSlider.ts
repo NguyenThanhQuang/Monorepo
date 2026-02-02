@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
-import type { Location } from '@obtp/shared-types';
-import { locationApi } from '../../api/service/location/apiLocation';
+import { useEffect, useState } from "react";
+import { locationApi } from "../../api/service/location/apiLocation";
+import type { Location as AppLocation } from '@obtp/shared-types'; // Thêm alias
 
 export function useHeroLocationSlider() {
-  const [locations, setLocations] = useState<Location[]>([]);
+  // Sửa: thay Location bằng AppLocation
+  const [locations, setLocations] = useState<AppLocation[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<AppLocation | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<{ from: string; to: string } | null>(null);
 
   /* =====================
@@ -14,8 +15,16 @@ export function useHeroLocationSlider() {
   useEffect(() => {
     locationApi
       .getPopular()
-      .then(res => setLocations(res.data))
-      .catch(console.error);
+      .then(res => {
+        // res.data có type ApiResponse<Location[]>
+        const locationsData = res.data?.data || [];
+        console.log('Locations loaded:', locationsData);
+        setLocations(locationsData);
+      })
+      .catch(error => {
+        console.error('Failed to fetch locations:', error);
+        setLocations([]);
+      });
   }, []);
 
   /* =====================
@@ -52,10 +61,13 @@ export function useHeroLocationSlider() {
     setSelectedRoute(null);
   }, [selectedRoute]);
 
-  const displayLocations = [...locations, ...locations, ...locations];
+  // Bảo vệ: đảm bảo locations là mảng
+  const displayLocations = Array.isArray(locations) && locations.length > 0
+    ? [...locations, ...locations, ...locations]
+    : [];
 
   return {
-    locations,
+    locations: Array.isArray(locations) ? locations : [],
     displayLocations,
     currentIndex,
     setCurrentIndex,

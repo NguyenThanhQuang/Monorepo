@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { BookingStatus, CompanyStatus, TripStatus, UserAccountStatus, UserRole } from "./enums";
+import { User } from "./models";
 
 
 export interface CompanyDashboardStat {
@@ -143,7 +144,28 @@ export interface UserRow {
   status: UserAccountStatus;
   role: UserRoleUI;
 }
-
+interface BookedTrip {
+  id: string;
+  ticketCode: string;
+  status: 'upcoming' | 'completed' | 'cancelled';
+  companyName: string;
+  from: string;
+  to: string;
+  departureTime: string;
+  date: string;
+  seatNumber: string;
+  price: number;
+  busType: string;
+  passengerName: string;
+  boardingPoint: string;
+}
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  status: "idle" | "loading" | "succeeded" | "failed";
+  error: string | null;
+  successMessage: string | null;
+}
 /* ---------- Company Summary ---------- */
 export interface CompanyDashboardCompany {
   id: string;

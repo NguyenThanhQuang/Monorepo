@@ -57,7 +57,11 @@ export class ReviewsService {
 
     return { booking, trip };
   }
-
+  async findByUserId(userId: string) {
+    return this.reviewsRepository.findByUserId(
+      new Types.ObjectId(userId),
+    );
+  }
   async create(
     payload: CreateReviewPayload,
     user: AuthUserResponse,
