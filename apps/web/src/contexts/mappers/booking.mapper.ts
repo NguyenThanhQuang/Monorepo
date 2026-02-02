@@ -1,4 +1,4 @@
-import type { BookingUI } from "../../features/BookingManagement/types";
+import type { BookingUI } from "@obtp/shared-types";
 
 export function mapBookingFromApi(raw: any): BookingUI {
   return {

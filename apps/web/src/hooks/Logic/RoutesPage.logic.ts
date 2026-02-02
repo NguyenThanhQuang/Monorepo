@@ -1,6 +1,5 @@
-import type { SearchTripQuery } from '@obtp/shared-types';
+import type { RouteCardVM, SearchTripQuery } from '@obtp/shared-types';
 import { useEffect, useState } from 'react';
-import type { RouteCardVM } from '../../features/RoutesPage/types';
 import { fetchTrips } from '../../api/routes.api';
 import { mapTripsToRoutes } from '../../contexts/mappers/routes.mapper';
 

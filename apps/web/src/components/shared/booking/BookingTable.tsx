@@ -1,5 +1,5 @@
+import type { BookingUI } from '@obtp/shared-types';
 import { Eye } from 'lucide-react';
-import type { BookingUI } from '../../../features/BookingManagement/types';
 
 export function BookingTable({
   data,

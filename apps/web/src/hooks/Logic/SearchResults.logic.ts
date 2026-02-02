@@ -1,6 +1,5 @@
-import type { SearchTripQuery } from '@obtp/shared-types';
+import type { SearchTripQuery, TripCardVM } from '@obtp/shared-types';
 import { useEffect, useState } from 'react';
-import type { TripCardVM } from '../../features/SearchResults/types';
 import { searchTrips } from '../../api/searchResults.api';
 import { mapTripToCardVM } from '../../contexts/mappers/searchResults.mapper';
 

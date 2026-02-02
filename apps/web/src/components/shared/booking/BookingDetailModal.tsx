@@ -1,5 +1,5 @@
+import type { BookingStatus, BookingUI } from '@obtp/shared-types';
 import { X } from 'lucide-react';
-import type { BookingUI } from '../../../features/BookingManagement/types';
 
 interface BookingDetailModalProps {
   booking: BookingUI;
@@ -89,20 +89,26 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatusBadge({ status }: { status: BookingUI['status'] }) {
-  const map: Record<BookingUI['status'], string> = {
-    HELD: 'bg-yellow-100 text-yellow-700',
-    CONFIRMED: 'bg-green-100 text-green-700',
-    CANCELLED: 'bg-red-100 text-red-700',
-    COMPLETED: 'bg-blue-100 text-blue-700',
+function StatusBadge({ status }: { status: BookingStatus }) {
+  const map: Record<BookingStatus, string> = {
+    pending: 'bg-gray-100 text-gray-700',
+    held: 'bg-yellow-100 text-yellow-700',
+    confirmed: 'bg-green-100 text-green-700',
+    cancelled: 'bg-red-100 text-red-700',
+    expired: 'bg-orange-100 text-orange-700',
   };
 
-  const label: Record<BookingUI['status'], string> = {
-    HELD: 'Giữ chỗ',
-    CONFIRMED: 'Đã xác nhận',
-    CANCELLED: 'Đã huỷ',
-    COMPLETED: 'Hoàn tất',
+  const label: Record<BookingStatus, string> = {
+    pending: 'Đang khởi tạo',
+    held: 'Giữ chỗ',
+    confirmed: 'Đã xác nhận',
+    cancelled: 'Đã huỷ',
+    expired: 'Hết hạn',
   };
+
+
+
+
 
   return (
     <div>

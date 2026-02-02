@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ReviewDTO, ReviewUI } from '../../features/Review/types';
 import { reviewApi } from '../../api/service/review/review.api';
+import type { ReviewDTO, ReviewUI } from '@obtp/shared-types';
 
 
 

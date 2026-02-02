@@ -1,9 +1,9 @@
 
 import { useState } from "react";
-import { api } from "@obtp/api-client";
 
 import {   type LoginResponse } from "@obtp/shared-types";
 import { AdminLogin } from "../../pages/admin/AdminLogin";
+import { loginApi } from "../../api/service/auth/auth.api";
 export declare enum UserRole {
     ADMIN = "admin",
     USER = "user",
@@ -27,7 +27,7 @@ export function AdminLoginContainer({
 
     setLoading(true);
     try {
-      const result = await LogIn({ identifier, password });
+      const result = await loginApi({ identifier, password });
 
       const roles = result.user.roles;
 

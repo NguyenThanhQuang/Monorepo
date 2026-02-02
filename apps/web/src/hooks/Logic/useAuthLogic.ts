@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import {
-  forgotPasswordApi,
-  loginApi,
-  registerApi,
-} from '../../api/service/auth/auth.api';
-
+import { forgotPasswordApi, loginApi, registerApi } from '../../api/service/auth/auth.api';
+// import {
+//   forgotPasswordApi,
+//   loginApi,
+//   registerApi,
+// } from '../../api/service/auth/auth.api';
 export type AuthMode = 'login' | 'register' | 'forgot-password';
 
 interface UseAuthLogicProps {

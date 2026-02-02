@@ -1,15 +1,22 @@
-import type { CompanyStatus } from '@obtp/shared-types';
-
+export declare enum CompanyStatus {
+    ACTIVE = "active",
+    INACTIVE = "inactive",
+    PENDING = "pending",
+    SUSPENDED = "suspended"
+}
 export function mapCompanyStatusToUI(
   status: CompanyStatus
 ): 'active' | 'pending' | 'suspended' {
   switch (status) {
-    case 'active':
+    case CompanyStatus.ACTIVE:
       return 'active';
-    case 'pending':
+
+    case CompanyStatus.PENDING:
       return 'pending';
-    case 'suspended':
+
+    case CompanyStatus.SUSPENDED:
       return 'suspended';
+
     default:
       return 'pending';
   }

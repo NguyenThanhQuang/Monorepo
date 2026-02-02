@@ -4,7 +4,7 @@
       "@/*": ["./src/*"],
       "@obtp/shared-types": ["../../packages/shared-types/src/index.ts"],
       "@obtp/validation": ["../../packages/validation/src/index.ts"],
-      "@obtp/api-client": ["../../packages/api-client/src/index.ts"]
+      "@obtp/api-client": ["../../packages/api-client/src/modules/index.ts"]
     }
   },
   "files": [],

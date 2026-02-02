@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import type { SettingsTab,CompanySettings,
-  PricingSettings,
-  PaymentSettings,
-  NotificationSettings,
-  SecuritySettings, } from '../../features/settings/types';
+
 import { useLanguage } from '../../contexts/LanguageContext';
+import type { CompanySettings, NotificationSettings, PaymentSettings, PricingSettings, SecuritySettings, SettingsTab } from '@obtp/shared-types';
 
 export function useSettingsPageLogic() {
   const { language, setLanguage, t } = useLanguage();

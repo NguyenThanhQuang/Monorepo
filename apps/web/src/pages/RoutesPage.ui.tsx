@@ -1,7 +1,7 @@
 import { MapPin, Clock, DollarSign } from 'lucide-react';
-import type { RouteCardVM } from '../features/RoutesPage/types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
+import type { RouteCardVM } from '@obtp/shared-types';
 
 interface Props {
   routes: RouteCardVM[];

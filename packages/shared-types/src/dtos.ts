@@ -28,9 +28,16 @@ export interface AuthUserResponse {
   lastLoginDate?: Date;
 }
 
+
 export interface LoginResponse {
   accessToken: string;
-  user: AuthUserResponse;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    roles: UserRole[];
+    companyId?: string;
+  };
 }
 
 // --- AUTH REQUEST PAYLOADS ---

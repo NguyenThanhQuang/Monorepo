@@ -1,8 +1,8 @@
 // src/features/system-dashboard/SystemDashboard.container.tsx
 import { useEffect, useState } from "react";
-import type { CompanyRow, SystemDashboardStats } from "../../features/system-dashboard/types";
 import { adminApi } from "../../api/service/admin/admin.api";
 import { SystemDashboard } from "../../pages/admin/SystemDashboard";
+import type { CompanyRow, SystemDashboardStats } from "@obtp/shared-types";
 
 export function SystemDashboardContainer() {
   const [stats, setStats] = useState<SystemDashboardStats | null>(null);

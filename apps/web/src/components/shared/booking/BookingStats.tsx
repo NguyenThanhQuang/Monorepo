@@ -1,15 +1,15 @@
-import type { BookingUI } from "../../../features/BookingManagement/types";
+import type { BookingUI } from "@obtp/shared-types";
 
 export function BookingStats({ bookings }: { bookings: BookingUI[] }) {
   const revenue = bookings
-    .filter((b) => b.status !== 'CANCELLED')
+    .filter((b) => b.status !== 'cancelled')
     .reduce((s, b) => s + b.price, 0);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Stat title="Tổng vé" value={bookings.length} />
-      <Stat title="Đã xác nhận" value={bookings.filter(b => b.status === 'CONFIRMED').length} />
-      <Stat title="Đã huỷ" value={bookings.filter(b => b.status === 'CANCELLED').length} />
+      <Stat title="Đã xác nhận" value={bookings.filter(b => b.status === 'confirmed').length} />
+      <Stat title="Đã huỷ" value={bookings.filter(b => b.status === 'cancelled').length} />
       <Stat title="Doanh thu" value={revenue.toLocaleString('vi-VN') + 'đ'} />
     </div>
   );

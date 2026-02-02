@@ -1,7 +1,7 @@
 import { Search, Ban, CheckCircle, Eye, Mail, Phone } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { UserAccountStatus, UserRole } from "@obtp/shared-types";
-import type { UserRoleUI, UserRow } from "../../features/user-management/types";
+import type {    UserRoleUI,  UserRow } from "@obtp/shared-types";
+import {  UserRole ,UserAccountStatus } from "@obtp/shared-types";
 
 interface Props {
   users: UserRow[];

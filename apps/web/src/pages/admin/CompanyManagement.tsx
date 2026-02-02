@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Plus,
-  Search,
-  Edit2,
+
   Ban,
   CheckCircle,
   Eye,
@@ -10,9 +8,9 @@ import {
   Clock,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import type { CompanyUI } from '../../features/companyManagement/types';
 import { mapCompanyStatsToUI } from '../../contexts/mappers/company.mapper';
 import { companyApi } from '../../api/service/company.api.ts/company.api';
+import type { CompanyStatus, CompanyUI } from '@obtp/shared-types';
 
 export function CompanyManagement() {
   const { t } = useLanguage();
@@ -40,15 +38,32 @@ export function CompanyManagement() {
     }
   }
 
-  const statusConfig = {
-    active: { label: t('activeLabel'), color: 'bg-green-500', icon: CheckCircle },
-    pending: { label: t('pendingLabel'), color: 'bg-yellow-500', icon: Clock },
-    suspended: {
-      label: t('suspendedLabel'),
-      color: 'bg-red-500',
-      icon: Ban,
-    },
-  };
+const statusConfig: Record<
+  CompanyStatus,
+  { label: string; color: string; icon: any }
+> = {
+  active: {
+    label: t('activeLabel'),
+    color: 'bg-green-500',
+    icon: CheckCircle,
+  },
+  inactive: {
+    label: t('inactiveLabel'),
+    color: 'bg-gray-400',
+    icon: Clock,
+  },
+  pending: {
+    label: t('pendingLabel'),
+    color: 'bg-yellow-500',
+    icon: Clock,
+  },
+  suspended: {
+    label: t('suspendedLabel'),
+    color: 'bg-red-500',
+    icon: Ban,
+  },
+};
+
 
   const filteredCompanies = companies.filter((c) => {
     const matchesSearch =

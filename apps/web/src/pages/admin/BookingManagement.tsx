@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useBookings } from '../../hooks/Logic/useBookings';
-import type { BookingUI } from '../../features/BookingManagement/types';
 import { BookingStats } from '../../components/shared/booking/BookingStats';
 import { BookingTable } from '../../components/shared/booking/BookingTable';
 import { BookingDetailModal } from '../../components/shared/booking/BookingDetailModal';
+import type { BookingUI } from '@obtp/shared-types';
 
 
 export function BookingManagement() {

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {  UserRole } from "@obtp/shared-types";
-import type { UserRow } from "../../features/user-management/types";
+import {  UserRole, type UserRow } from "@obtp/shared-types";
 import { UserManagementView } from "../../pages/admin/UserManagement";
 export declare enum UserAccountStatus {
     ACTIVE = "active",

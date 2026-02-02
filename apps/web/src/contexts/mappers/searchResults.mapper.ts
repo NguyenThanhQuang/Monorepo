@@ -1,5 +1,4 @@
-import type { TripPublicResponse } from '@obtp/shared-types';
-import type { TripCardVM } from '../../features/SearchResults/types';
+import type { TripCardVM, TripPublicResponse } from '@obtp/shared-types';
 
 export function mapTripToCardVM(trip: TripPublicResponse): TripCardVM {
   return {

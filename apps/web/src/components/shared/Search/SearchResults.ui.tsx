@@ -1,5 +1,5 @@
+import type { TripCardVM } from '@obtp/shared-types';
 import { ArrowLeft } from 'lucide-react';
-import type { TripCardVM } from '../../../features/SearchResults/types';
 
 interface Props {
   trips: TripCardVM[];

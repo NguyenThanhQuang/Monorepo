@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { BookingUI } from '../../features/BookingManagement/types';
 import { mapBookingFromApi } from '../../contexts/mappers/booking.mapper';
 import { fetchBookings } from '../../api/service/booking/booking.api';
+import type { BookingUI } from '@obtp/shared-types';
 
 export function useBookings() {
   const [data, setData] = useState<BookingUI[]>([]);

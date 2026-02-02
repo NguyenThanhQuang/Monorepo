@@ -1,6 +1,4 @@
-import type { CompanyStatsResponse } from '@obtp/shared-types';
-import type { CompanyUI } from '../../features/companyManagement/types';
-import { mapCompanyStatusToUI } from './mapCompanyStatusToUI';
+import type { CompanyStatsResponse, CompanyUI } from '@obtp/shared-types';
 
 export function mapCompanyStatsToUI(
   api: CompanyStatsResponse
@@ -17,7 +15,7 @@ export function mapCompanyStatsToUI(
     rating: api.averageRating ?? 0,
     revenue: api.totalRevenue ?? 0,
 
-    status: mapCompanyStatusToUI(api.status),
+    status: (api.status),
     joinDate: new Date(api.createdAt).toLocaleDateString('vi-VN'),
   };
 }

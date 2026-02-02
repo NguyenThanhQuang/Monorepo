@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Bus, Route, Users, Wallet } from 'lucide-react';
 import { CompanyDashboardApi } from '../../api/service/admin/CompanyDashboard.api';
-import type { CompanyDashboardStat } from '../../features/CompanyDashboard/CompanyDashboard.types';
-import type { CompanyDashboardTrip } from '../../features/companyDasshboard/types';
+import type { CompanyDashboardStat, CompanyDashboardTrip } from '@obtp/shared-types';
+
 
 
 export function useCompanyDashboardLogic() {

@@ -9,8 +9,8 @@ import {
   AlertCircle,
   XCircle,
 } from "lucide-react";
-import type { CompanyRow, SystemDashboardStats } from "../../features/system-dashboard/types";
 import { useLanguage } from "../../contexts/LanguageContext";
+import type { CompanyRow, SystemDashboardStats } from "@obtp/shared-types";
 
 interface Props {
   stats: SystemDashboardStats | null;
