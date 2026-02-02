@@ -38,33 +38,28 @@ export function useHeroSearchLogic({
   /* =====================
      EFFECTS – AUTOCOMPLETE
   ===================== */
-    useEffect(() => {
-    if (!fromText || fromLocation) return;
+useEffect(() => {
+  if (!fromText || fromLocation) return;
 
-    const timer = setTimeout(async () => {
-      try {
-        const res = await locationApi.search(fromText);
-        // res.data có type ApiResponse<Location[]>
-        // Lấy mảng locations từ res.data.data
-        const locations = res.data?.data || [];
-        setFromSuggestions(locations);
-      } catch (error) {
-        console.error('Error fetching from suggestions:', error);
-        setFromSuggestions([]);
-      }
-    }, 300);
+  const timer = setTimeout(async () => {
+    try {
+      const locations = await locationApi.search(fromText);
+      setFromSuggestions(locations);
+    } catch (error) {
+      console.error(error);
+      setFromSuggestions([]);
+    }
+  }, 300);
 
-    return () => clearTimeout(timer);
-  }, [fromText, fromLocation]);
+  return () => clearTimeout(timer);
+}, [fromText, fromLocation]);
 
   useEffect(() => {
     if (!toText || toLocation) return;
 
     const timer = setTimeout(async () => {
       try {
-        const res = await locationApi.search(toText);
-        // res.data có type ApiResponse<Location[]>
-        const locations = res.data?.data || [];
+        const locations = await locationApi.search(toText);
         setToSuggestions(locations);
       } catch (error) {
         console.error('Error fetching to suggestions:', error);
@@ -84,10 +79,9 @@ export function useHeroSearchLogic({
       return;
     }
 
-    const finalDate =
-      date || new Date().toISOString().split('T')[0];
-
+    const finalDate = date || new Date().toISOString().split('T')[0];
     setDate(finalDate);
+
     onSearch?.(fromLocation.id, toLocation.id, finalDate);
   };
 

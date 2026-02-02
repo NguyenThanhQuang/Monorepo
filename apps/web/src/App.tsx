@@ -11,10 +11,10 @@ import { Features } from './components/layout/Features';
 import { Header } from './components/layout/Header/Header';
 import { Footer } from './components/layout/Footer/Footer';
 import { Auth } from './pages/auth/auth';
+import { UserProfilePage } from './pages/UserProfile';
 
 /* ================= PLACEHOLDER PAGES ================= */
 const TicketLookupPage = () => <div className="p-6">Tra Cứu Vé</div>;
-const ProfilePage = () => <div className="p-6">Hồ Sơ Cá Nhân</div>;
 const MyTripsPage = () => <div className="p-6">Chuyến Đi Của Tôi</div>;
 
 export type Page =
@@ -31,58 +31,69 @@ export type Page =
   | 'system-dashboard'
   | 'user-management';
 
+/* ================= SAFE JSON PARSE ================= */
+function safeParse<T>(value: string | null): T | null {
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
 const App = () => {
   const [page, setPage] = useState<Page>('home');
   const [showAuth, setShowAuth] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminType, setAdminType] = useState<'company' | 'system'>('system');
+  const [adminType, setAdminType] =
+    useState<'company' | 'system'>('system');
   const [adminUser, setAdminUser] = useState<any>(null);
 
   /* ================= CHECK LOGIN ON LOAD ================= */
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const token = localStorage.getItem('access_token');
     const adminToken = localStorage.getItem('adminToken');
-    const adminUserData = JSON.parse(localStorage.getItem('adminUser') || '{}');
 
-    if (adminToken) {
+    const user = safeParse<any>(localStorage.getItem('user'));
+    const adminUserData = safeParse<any>(
+      localStorage.getItem('adminUser'),
+    );
+
+    if (adminToken && adminUserData) {
       setIsLoggedIn(true);
       setIsAdmin(true);
       setAdminUser(adminUserData);
 
-      if (adminUserData.roles?.includes('system-admin')) {
-        setPage('system-dashboard');
-      } else if (adminUserData.roles?.includes('company-admin')) {
-        setPage('company-management');
-      }
-    } else if (token) {
+      setPage(
+        adminUserData.roles?.includes('system-admin')
+          ? 'system-dashboard'
+          : 'company-management',
+      );
+      return;
+    }
+
+    if (token && user) {
       setIsLoggedIn(true);
-      if (user?.roles?.some((r: string) => r.includes('admin'))) {
+
+      if (user.roles?.some((r: string) => r.includes('admin'))) {
         setIsAdmin(true);
         setAdminUser(user);
+
+        setPage(
+          user.roles.includes('system-admin') ||
+            user.roles.includes('ADMIN')
+            ? 'system-dashboard'
+            : 'company-management',
+        );
       }
     }
   }, []);
 
   /* ================= AUTH ================= */
-  const handleLoginSuccess = (userData?: any) => {
-    const user = userData || JSON.parse(localStorage.getItem('user') || '{}');
+  const handleLoginSuccess = () => {
     setIsLoggedIn(true);
     setShowAuth(false);
-
-    if (user?.roles?.some((r: string) => r.includes('admin'))) {
-      setIsAdmin(true);
-      setAdminUser(user);
-
-      if (user.roles.includes('system-admin') || user.roles.includes('ADMIN')) {
-        setPage('system-dashboard');
-        setAdminType('system');
-      } else {
-        setPage('company-management');
-        setAdminType('company');
-      }
-    }
   };
 
   const handleLogout = () => {
@@ -98,10 +109,16 @@ const App = () => {
     setIsLoggedIn(true);
     setIsAdmin(true);
     setAdminUser(userData);
-    setPage(adminType === 'system' ? 'system-dashboard' : 'company-management');
+    setPage(
+      adminType === 'system'
+        ? 'system-dashboard'
+        : 'company-management',
+    );
   };
 
-  const handleAdminLoginClick = (type: 'company' | 'system') => {
+  const handleAdminLoginClick = (
+    type: 'company' | 'system',
+  ) => {
     setAdminType(type);
     setPage('admin-login');
   };
@@ -112,23 +129,24 @@ const App = () => {
       return;
     }
 
-    if (adminUser?.roles?.includes('system-admin') || adminUser?.roles?.includes('ADMIN')) {
-      setPage('system-dashboard');
-    } else {
-      setPage('company-management');
-    }
+    setPage(
+      adminUser?.roles?.includes('system-admin') ||
+        adminUser?.roles?.includes('ADMIN')
+        ? 'system-dashboard'
+        : 'company-management',
+    );
   };
 
   /* ================= RENDER PAGE ================= */
   const renderPage = () => {
     switch (page) {
-
-
       case 'ticketLookup':
         return <TicketLookupPage />;
 
       case 'profile':
-        return <ProfilePage />;
+        return (
+          <UserProfilePage onBack={() => setPage('home')} />
+        );
 
       case 'myTrips':
         return <MyTripsPage />;
@@ -146,7 +164,9 @@ const App = () => {
             onMyTripsClick={() => setPage('myTrips')}
             onProfileClick={() => setPage('profile')}
             onRoutesClick={() => setPage('routes')}
-            onTicketLookupClick={() => setPage('ticketLookup')}
+            onTicketLookupClick={() =>
+              setPage('ticketLookup')
+            }
             onHotlineClick={() => console.log('Hotline')}
           />
         );
@@ -191,7 +211,9 @@ const App = () => {
         onLogout={handleLogout}
         onHomeClick={() => setPage('home')}
         onRoutesClick={() => setPage('routes')}
-        onTicketLookupClick={() => setPage('ticketLookup')}
+        onTicketLookupClick={() =>
+          setPage('ticketLookup')
+        }
         onContactClick={() => setPage('contact')}
         onHotlineClick={() => console.log('Hotline')}
         onMyTripsClick={() => setPage('myTrips')}
@@ -211,7 +233,7 @@ const App = () => {
       {showAuth && (
         <Auth
           onClose={() => setShowAuth(false)}
-          onLoginSuccess={() => handleLoginSuccess()}
+          onLoginSuccess={handleLoginSuccess}
         />
       )}
     </div>

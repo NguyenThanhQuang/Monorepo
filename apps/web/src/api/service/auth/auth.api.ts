@@ -4,6 +4,7 @@ import type {
   RegisterPayload,
   LoginResponse,
   ForgotPasswordPayload,
+  ApiResponse,
 } from '@obtp/shared-types';
 
 const api = axios.create({
@@ -12,11 +13,15 @@ const api = axios.create({
 });
 
 /* ================= LOGIN ================= */
-export async function loginApi(payload: LoginPayload): Promise<LoginResponse> {
-  const { data } = await api.post('/auth/login', payload);
-  return data;
-}
-
+export const loginApi = (payload: {
+  identifier: string;
+  password: string;
+}) => {
+  return api.post<ApiResponse<LoginResponse>>(
+    '/auth/login',
+    payload,
+  );
+};
 /* ================= REGISTER ================= */
 export async function registerApi(payload: RegisterPayload) {
   const { data } = await api.post('/auth/register', payload);

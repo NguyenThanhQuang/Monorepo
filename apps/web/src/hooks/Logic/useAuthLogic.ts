@@ -5,13 +5,10 @@ import {
   registerApi,
 } from '../../api/service/auth/auth.api';
 
-/**
- * Custom hook xử lý logic Login / Register / Forgot password
- */
 export function useAuthLogic({
   onLoginSuccess,
 }: {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (user: any) => void;
 }) {
   const [mode, setMode] = useState<
     'login' | 'register' | 'forgot-password'
@@ -30,9 +27,6 @@ export function useAuthLogic({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Submit form
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
@@ -41,31 +35,30 @@ export function useAuthLogic({
       setLoading(true);
       setError(null);
 
-      // ================= LOGIN =================
+      // ===== LOGIN =====
       if (mode === 'login') {
-        const res = await loginApi({
-          identifier: email,
-          password,
-        });
+     const res = await loginApi({
+  identifier: email,
+  password,
+});
 
-        /**
-         * ✅ LƯU TOKEN & USER
-         * PHẢI dùng đúng key access_token
-         */
-        localStorage.setItem(
-          'access_token',
-          res.accessToken,
-        );
-        localStorage.setItem(
-          'user',
-          JSON.stringify(res.user),
-        );
+const loginData = res.data?.data;
 
-        onLoginSuccess();
+if (!loginData) {
+  throw new Error('Login response is empty');
+}
+
+const { accessToken, user } = loginData;
+
+localStorage.setItem('access_token', accessToken);
+localStorage.setItem('user', JSON.stringify(user));
+
+onLoginSuccess(user);
+
         return;
       }
 
-      // ================= REGISTER =================
+      // ===== REGISTER =====
       if (mode === 'register') {
         if (password !== confirmPassword) {
           setError('Mật khẩu xác nhận không khớp');
@@ -79,34 +72,26 @@ export function useAuthLogic({
           phone,
         });
 
-        // Sau khi đăng ký → quay lại login
         setMode('login');
         return;
       }
 
-      // ================= FORGOT PASSWORD =================
+      // ===== FORGOT PASSWORD =====
       if (mode === 'forgot-password') {
         await forgotPasswordApi({ email });
         return;
       }
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : 'Có lỗi xảy ra, vui lòng thử lại';
-
-      setError(message);
+    } catch (err: any) {
+      setError(err?.message || 'Có lỗi xảy ra');
     } finally {
       setLoading(false);
     }
   };
 
   return {
-    // mode
     mode,
     setMode,
 
-    // fields
     email,
     setEmail,
     password,
@@ -118,17 +103,14 @@ export function useAuthLogic({
     phone,
     setPhone,
 
-    // ui state
     showPassword,
     setShowPassword,
     showConfirmPassword,
     setShowConfirmPassword,
 
-    // status
     loading,
     error,
 
-    // action
     handleSubmit,
   };
 }

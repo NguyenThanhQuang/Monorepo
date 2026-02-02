@@ -17,7 +17,7 @@ import { LocationsModule } from './locations/locations.module';
 // import { MapsModule } from './maps/maps.module';
 import { NotificationsModule } from './notifications/notifications.module';
 // import { PaymentsModule } from './payments/payments.module';
-// import { ReviewsModule } from './reviews/reviews.module';
+import { ReviewsModule } from './reviews/reviews.module';
 // import { TripsModule } from './trips/trips.module';
 // import { VehiclesModule } from './vehicles/vehicles.module';
 // import { HealthModule } from './health/health.module';
@@ -75,7 +75,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     NotificationsModule,
     // DashboardModule,
     // PaymentsModule,
-    // ReviewsModule,
+    ReviewsModule,
     // HealthModule,
   ],
   controllers: [AppController],
