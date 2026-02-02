@@ -256,6 +256,14 @@ export class UsersService {
     }
   }
 
-  // TODO: Refactor Bookings Logic later when Booking Module is migrated
-  // async findUserBookings(userId: string) { ... }
+  async findOneByActivationToken(token: string): Promise<UserDocument | null> {
+    return this.usersRepository.findOne({
+      accountActivationToken: token,
+      accountActivationExpires: { $gt: new Date() },
+    });
+  }
+
+  async save(user: UserDocument): Promise<UserDocument> {
+    return this.usersRepository.save(user);
+  }
 }

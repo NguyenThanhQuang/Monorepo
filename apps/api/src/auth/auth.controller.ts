@@ -10,6 +10,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import type {
+  ActivateAccountPayload,
   ForgotPasswordPayload,
   LoginPayload,
   RegisterPayload,
@@ -17,6 +18,7 @@ import type {
   ResetPasswordPayload,
 } from '@obtp/shared-types';
 import {
+  ActivateAccountSchema,
   ForgotPasswordSchema,
   LoginSchema,
   RegisterSchema,
@@ -86,5 +88,11 @@ export class AuthController {
   async resetPassword(@Body() payload: ResetPasswordPayload) {
     await this.authService.resetPassword(payload);
     return { message: 'Mật khẩu đã được đặt lại thành công.' };
+  }
+
+  @Post('activate-account')
+  @UsePipes(new ZodValidationPipe(ActivateAccountSchema))
+  async activateAccount(@Body() payload: ActivateAccountPayload) {
+    return this.authService.activateAccount(payload);
   }
 }

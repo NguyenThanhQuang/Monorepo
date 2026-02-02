@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import {
+  ActivateAccountPayload,
   ForgotPasswordPayload,
   LoginPayload,
   LoginResponse,
@@ -194,5 +195,32 @@ export class AuthService {
     );
     if (!result)
       throw new BadRequestException('Token không hợp lệ hoặc hết hạn.');
+  }
+
+  async activateAccount(
+    payload: ActivateAccountPayload,
+  ): Promise<LoginResponse> {
+    const user = await this.usersService.findOneByActivationToken(
+      payload.token,
+    );
+    if (!user) {
+      throw new BadRequestException(
+        'Token kích hoạt không hợp lệ hoặc đã hết hạn.',
+      );
+    }
+
+    const hashedPassword = await hashPassword(payload.newPassword);
+
+    user.passwordHash = hashedPassword;
+    user.isEmailVerified = true;
+    user.accountActivationToken = undefined;
+    user.accountActivationExpires = undefined;
+
+    await this.usersService.save(user);
+
+    return {
+      accessToken: this.tokenService.generateAccessToken(user),
+      user: this.usersService.sanitizeUser(user),
+    };
   }
 }
