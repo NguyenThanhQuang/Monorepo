@@ -1,3 +1,4 @@
+import { LocationDefinition } from '@/locations/schemas/location.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { SeatStatus, TripStatus, TripStopStatus } from '@obtp/shared-types';
 import { HydratedDocument, Types } from 'mongoose';
@@ -28,7 +29,7 @@ export const TripSeatSchema = SchemaFactory.createForClass(TripSeat);
 // 2. STOP SCHEMA (Embedded)
 @Schema({ _id: false })
 export class TripStopInfo {
-  @Prop({ type: Types.ObjectId, ref: Location.name, required: true })
+  @Prop({ type: Types.ObjectId, ref: LocationDefinition.name, required: true })
   locationId: Types.ObjectId;
 
   @Prop({ type: Date, required: true })
@@ -51,7 +52,7 @@ export const TripStopInfoSchema = SchemaFactory.createForClass(TripStopInfo);
 export class RouteInfo {
   @Prop({
     type: Types.ObjectId,
-    ref: Location.name,
+    ref: LocationDefinition.name,
     required: true,
     index: true,
   })
@@ -59,7 +60,7 @@ export class RouteInfo {
 
   @Prop({
     type: Types.ObjectId,
-    ref: Location.name,
+    ref: LocationDefinition.name,
     required: true,
     index: true,
   })
