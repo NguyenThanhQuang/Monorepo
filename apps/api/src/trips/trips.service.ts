@@ -21,6 +21,7 @@ import {
 import { Types } from 'mongoose';
 import { CompaniesService } from '../companies/companies.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
+import { TripDocument } from './schemas/trip.schema';
 import { TripsRepository } from './trips.repository';
 
 @Injectable()
@@ -34,13 +35,10 @@ export class TripsService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  // --- CORE LOGIC ---
-
-  async create(payload: CreateTripPayload): Promise<any> {
+  async create(payload: CreateTripPayload): Promise<TripDocument> {
     const { companyId, vehicleId, route, departureTime, expectedArrivalTime } =
       payload;
 
-    // 1. Validate Time Logic
     const depart = new Date(departureTime);
     const arrive = new Date(expectedArrivalTime);
     if (!isValidTripTime(depart, arrive)) {
@@ -49,17 +47,14 @@ export class TripsService {
       );
     }
 
-    // 2. Fetch Resources & Validate Status
     const [company, vehicle] = await Promise.all([
       this.companiesService.findOne(companyId),
       this.vehiclesService.findOne(vehicleId),
     ]);
 
-    // Check Company Status
     if (company.status !== 'active')
       throw new BadRequestException('Nhà xe đang ngừng hoạt động.');
 
-    // Check Vehicle Status & Ownership
     if (vehicle.status !== VehicleStatus.ACTIVE)
       throw new BadRequestException(
         `Xe ${vehicle.vehicleNumber} không khả dụng.`,
@@ -69,8 +64,6 @@ export class TripsService {
 
     const mapInfo = { polyline: '', duration: 0, distance: 0 };
 
-    // 🔥 FIX LỖI TS2345 (Dòng ~72):
-    // Convert Document -> Plain Object -> Cast type safely
     const vehicleParam: Partial<Vehicle> = {
       ...vehicle.toObject(),
       _id: vehicle._id.toString(),
@@ -78,7 +71,6 @@ export class TripsService {
 
     const rawSeats = initializeTripSeats(vehicleParam);
 
-    // Chuyển đổi bookingId từ string sang ObjectId để khớp với Schema
     const initialSeats = rawSeats.map((seat) => ({
       ...seat,
       bookingId: seat.bookingId
@@ -86,7 +78,6 @@ export class TripsService {
         : undefined,
     }));
 
-    // 5. Create in DB
     return this.tripsRepository.create({
       ...payload,
       route: {
@@ -98,7 +89,7 @@ export class TripsService {
       },
       departureTime: depart,
       expectedArrivalTime: arrive,
-      seats: initialSeats, // <--- Đã được map đúng Type
+      seats: initialSeats,
       status: TripStatus.SCHEDULED,
       availableSeatsCount: initialSeats.length,
     });
@@ -106,12 +97,9 @@ export class TripsService {
 
   async findPublicTrips(query: SearchTripQuery): Promise<any[]> {
     const date = new Date(query.date);
-    // Logic start/end day in Local Time (VN) handled via dayjs inside Repository or here.
-    // Simplifying using UTC dates for now:
     const startOfDay = new Date(date.setHours(0, 0, 0, 0));
     const endOfDay = new Date(date.setHours(23, 59, 59, 999));
 
-    // Delegate Search logic to Repository (Optimization)
     const rawTrips = await this.tripsRepository.findPublicTripsByCondition(
       startOfDay,
       endOfDay,
@@ -119,36 +107,35 @@ export class TripsService {
       query.to,
     );
 
-    // Lightweight Transformation (Reviews mapping could be added here if ReviewsService exists)
     return rawTrips.map((trip) => {
-      // Tính toán availableSeats runtime nếu cần (dù đã có field cached)
       const availableCount = trip.seats.filter(
         (s: any) => s.status === SeatStatus.AVAILABLE,
       ).length;
 
       return {
         ...trip,
-        seats: undefined, // Hide detailed seat map for list view
-        availableSeatsCount: availableCount, // Ensure correct number
+        seats: undefined,
+        availableSeatsCount: availableCount,
       };
     });
   }
 
-  async findOne(id: string): Promise<any> {
+  async findOne(id: string): Promise<TripDocument> {
     const trip = await this.tripsRepository.findByIdWithDetails(id);
     if (!trip) throw new NotFoundException('Chuyến đi không tồn tại.');
     return trip;
   }
 
-  async update(id: string, payload: UpdateTripPayload): Promise<any> {
+  async update(
+    id: string,
+    payload: UpdateTripPayload,
+  ): Promise<TripDocument | null> {
     const trip = await this.findOne(id);
 
-    // 1. Check restriction
     const hasBookings = trip.seats.some(
       (s) => s.status === SeatStatus.BOOKED || s.status === SeatStatus.HELD,
     );
 
-    // Core fields restrictions
     if (hasBookings) {
       if (payload.price !== undefined || payload.departureTime) {
         throw new ConflictException(
@@ -172,34 +159,26 @@ export class TripsService {
     return this.tripsRepository.update(id, updateData);
   }
 
-  async cancel(id: string): Promise<any> {
+  async cancel(id: string): Promise<TripDocument> {
     const trip = await this.tripsRepository.findById(id);
     if (!trip) throw new NotFoundException('Trip not found');
     if (trip.status === TripStatus.ARRIVED)
       throw new BadRequestException('Cannot cancel arrived trip');
 
-    // 1. Update Trip Status
     trip.status = TripStatus.CANCELLED;
 
-    // Reset seats
     trip.seats.forEach((s) => {
       s.status = SeatStatus.AVAILABLE;
       s.bookingId = undefined;
     });
 
-    // 2. Save
     await this.tripsRepository.save(trip);
 
-    // 3. Emit Event for Booking Module (Decoupling)
-    // Booking Service sẽ nghe 'trip.cancelled' để hoàn tiền/đổi trạng thái vé
     this.eventEmitter.emit('trip.cancelled', { tripId: id });
 
     return trip;
   }
 
-  // --- INTERNAL / SEAT MANAGEMENT ---
-
-  // Hàm này sẽ được gọi bởi Booking Service (thông qua Module Import)
   async updateSeatStatus(
     tripId: string,
     payload: UpdateTripSeatStatusPayload,
@@ -210,7 +189,6 @@ export class TripsService {
     payload.seatNumbers.forEach((seatNum) => {
       const seat = trip.seats.find((s) => s.seatNumber === seatNum);
       if (seat) {
-        // Validate State Transitions (Optional)
         seat.status = payload.status;
         seat.bookingId = payload.bookingId
           ? (payload.bookingId as any)
@@ -218,7 +196,6 @@ export class TripsService {
       }
     });
 
-    // Re-calc available cache
     trip.availableSeatsCount = trip.seats.filter(
       (s) => s.status === SeatStatus.AVAILABLE,
     ).length;
@@ -226,14 +203,16 @@ export class TripsService {
     await this.tripsRepository.save(trip);
   }
 
-  // Support Admin/Management search
-  async findAllForManagement(companyId?: string): Promise<any> {
+  async findAllForManagement(companyId?: string): Promise<TripDocument[]> {
     const filter: any = {};
-    if (companyId) filter.companyId = companyId; // Repository handles Type casting
+    if (companyId) filter.companyId = companyId;
     return this.tripsRepository.findManagementTrips(filter);
   }
 
-  async toggleRecurrence(id: string, isActive: boolean): Promise<any> {
+  async toggleRecurrence(
+    id: string,
+    isActive: boolean,
+  ): Promise<TripDocument | null> {
     const trip = await this.tripsRepository.findById(id);
     if (!trip || !trip.isRecurrenceTemplate)
       throw new BadRequestException('Không phải chuyến đi mẫu.');

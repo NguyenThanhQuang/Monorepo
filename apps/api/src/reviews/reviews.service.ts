@@ -150,7 +150,7 @@ export class ReviewsService {
     id: string,
     user: AuthUserResponse,
     payload: UpdateUserReviewPayload,
-  ): Promise<any> {
+  ): Promise<ReviewDocument> {
     const review = await this.reviewsRepository.findById(id);
     if (!review) throw new NotFoundException('Đánh giá không tồn tại');
 
@@ -192,14 +192,17 @@ export class ReviewsService {
     return this.reviewsRepository.findAllPublic(filter);
   }
 
-  async findAllForAdmin(query: ReviewQuery): Promise<any[]> {
+  async findAllForAdmin(query: ReviewQuery): Promise<ReviewDocument[]> {
     const filter: any = {};
     if (query.companyId) filter.companyId = new Types.ObjectId(query.companyId);
 
     return this.reviewsRepository.findAllWithDetails(filter);
   }
 
-  async toggleVisibility(id: string, isVisible: boolean): Promise<any> {
+  async toggleVisibility(
+    id: string,
+    isVisible: boolean,
+  ): Promise<ReviewDocument | null> {
     return this.reviewsRepository.update(id, { isVisible });
   }
 

@@ -26,7 +26,7 @@ export class VehiclesService {
     private readonly tripsService: TripsService,
   ) {}
 
-  async create(payload: CreateVehiclePayload): Promise<any> {
+  async create(payload: CreateVehiclePayload): Promise<VehicleDocument> {
     const configResult = calculateVehicleConfig(
       payload.seatRows,
       payload.seatColumns,
@@ -60,7 +60,10 @@ export class VehiclesService {
     return vehicle;
   }
 
-  async update(id: string, payload: UpdateVehiclePayload): Promise<any> {
+  async update(
+    id: string,
+    payload: UpdateVehiclePayload,
+  ): Promise<VehicleDocument | null> {
     const existingVehicle = await this.findOne(id);
 
     if (
@@ -134,7 +137,7 @@ export class VehiclesService {
     return this.vehiclesRepository.update(id, updateData);
   }
 
-  async remove(id: string): Promise<any> {
+  async remove(id: string): Promise<VehicleDocument | null> {
     const hasTrips = await this.tripsService.checkVehicleHasActiveTrips(id);
 
     if (hasTrips) {

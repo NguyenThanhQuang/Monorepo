@@ -1,30 +1,28 @@
-// import { Module, forwardRef } from '@nestjs/common';
-// import { ConfigModule } from '@nestjs/config';
-// import { MongooseModule } from '@nestjs/mongoose';
+import { Module, forwardRef } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 
-// import { PaymentsController } from './payments.controller';
-// import { PaymentsRepository } from './payments.repository';
-// import { PaymentsService } from './payments.service';
-// import {
-//   PaymentTransaction,
-//   PaymentTransactionSchema,
-// } from './schemas/payment-transaction.schema';
+import { BookingsModule } from '../bookings/bookings.module';
+import { PaymentsController } from './payments.controller';
+import { PaymentsRepository } from './payments.repository';
+import { PaymentsService } from './payments.service';
+import {
+  PaymentTransaction,
+  PaymentTransactionSchema,
+} from './schemas/payment-transaction.schema';
 
-// // DEPENDENCIES
-// import { BookingsModule } from '../bookings/bookings.module';
+@Module({
+  imports: [
+    MongooseModule.forFeature([
+      { name: PaymentTransaction.name, schema: PaymentTransactionSchema },
+    ]),
+    ConfigModule,
 
-// @Module({
-//   imports: [
-//     MongooseModule.forFeature([
-//       { name: PaymentTransaction.name, schema: PaymentTransactionSchema },
-//     ]),
-//     ConfigModule,
-
-//     // Payments gọi Bookings để confirm
-//     forwardRef(() => BookingsModule),
-//   ],
-//   controllers: [PaymentsController],
-//   providers: [PaymentsService, PaymentsRepository],
-//   exports: [PaymentsService],
-// })
-// export class PaymentsModule {}
+    // Payments gọi Bookings để confirm
+    forwardRef(() => BookingsModule),
+  ],
+  controllers: [PaymentsController],
+  providers: [PaymentsService, PaymentsRepository],
+  exports: [PaymentsService],
+})
+export class PaymentsModule {}
