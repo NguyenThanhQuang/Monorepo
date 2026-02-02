@@ -17,7 +17,7 @@ export function useHeroLocationSlider() {
       .getPopular()
       .then(res => {
         // res.data có type ApiResponse<Location[]>
-        const locationsData = res.data?.data || [];
+        const locationsData = res || [];
         console.log('Locations loaded:', locationsData);
         setLocations(locationsData);
       })

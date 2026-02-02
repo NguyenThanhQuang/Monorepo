@@ -25,7 +25,7 @@ export class TripSeat {
   bookingId?: Types.ObjectId;
 }
 export const TripSeatSchema = SchemaFactory.createForClass(TripSeat);
-
+ 
 // 2. STOP SCHEMA (Embedded)
 @Schema({ _id: false })
 export class TripStopInfo {
