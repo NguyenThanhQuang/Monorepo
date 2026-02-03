@@ -5,7 +5,7 @@ import {
   Location,
   LocationType,
 } from '@obtp/shared-types';
-import { Model, FilterQuery } from 'mongoose';
+import { Model, QueryFilter } from 'mongoose';
 import {
   LocationDefinition,
   LocationDocument,
@@ -39,7 +39,7 @@ export class LocationsRepository {
   }
 
   async findAll(
-    filter: FilterQuery<LocationDocument> = {},
+    filter: QueryFilter<LocationDocument> = {},
   ): Promise<Location[]> {
     return this.locationModel
       .find(filter)
@@ -48,7 +48,7 @@ export class LocationsRepository {
   }
 
   async search(
-    filter: FilterQuery<LocationDocument>,
+    filter: QueryFilter<LocationDocument>,
     limit = 15,
   ): Promise<Location[]> {
     return this.locationModel

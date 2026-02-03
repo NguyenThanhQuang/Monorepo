@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ClientSession, FilterQuery, Model, Types } from 'mongoose';
+import { ClientSession, QueryFilter, Model, Types } from 'mongoose';
 import { VehicleDefinition, VehicleDocument } from './schemas/vehicle.schema';
 
 @Injectable()
@@ -28,7 +28,7 @@ export class VehiclesRepository {
   }
 
   async findOne(
-    filter: FilterQuery<VehicleDocument>,
+    filter: QueryFilter<VehicleDocument>,
   ): Promise<VehicleDocument | null> {
     return this.vehicleModel.findOne(filter).exec();
   }
@@ -42,7 +42,7 @@ export class VehiclesRepository {
   }
 
   async findAll(
-    filter: FilterQuery<VehicleDocument> = {},
+    filter: QueryFilter<VehicleDocument> = {},
   ): Promise<VehicleDocument[]> {
     return this.vehicleModel
       .find(filter)

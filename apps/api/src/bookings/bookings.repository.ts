@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ClientSession, Model, FilterQuery, Types } from 'mongoose';
+import { ClientSession, Model, QueryFilter, Types } from 'mongoose';
 import { BookingDefinition, BookingDocument } from './schemas/booking.schema';
 
 @Injectable()
@@ -29,7 +29,7 @@ export class BookingsRepository {
   }
 
   async findOne(
-    filter: FilterQuery<BookingDocument>,
+    filter: QueryFilter<BookingDocument>,
   ): Promise<BookingDocument | null> {
     return this.bookingModel.findOne(filter).exec();
   }
@@ -45,7 +45,7 @@ export class BookingsRepository {
    * Dùng cho Lookup Vé: Populate sâu thông tin Trip -> Location
    */
   async findForLookup(
-    filter: FilterQuery<BookingDocument>,
+    filter: QueryFilter<BookingDocument>,
   ): Promise<BookingDocument | null> {
     return this.bookingModel
       .findOne(filter)
@@ -91,7 +91,7 @@ export class BookingsRepository {
    */
   async findByCodeOrId(identifier: string): Promise<BookingDocument | null> {
     const isId = Types.ObjectId.isValid(identifier);
-    const query: FilterQuery<BookingDocument> = isId
+    const query: QueryFilter<BookingDocument> = isId
       ? {
           $or: [
             { _id: new Types.ObjectId(identifier) },

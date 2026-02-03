@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, FilterQuery, Types, UpdateQuery } from 'mongoose';
+import { Model, QueryFilter, Types, UpdateQuery } from 'mongoose';
 import { ReviewDefinition, ReviewDocument } from './schemas/review.schema';
 
 @Injectable()
@@ -27,7 +27,7 @@ export class ReviewsRepository {
       .lean();
   }
   async findOne(
-    filter: FilterQuery<ReviewDocument>,
+    filter: QueryFilter<ReviewDocument>,
   ): Promise<ReviewDocument | null> {
     return this.reviewModel.findOne(filter).exec();
   }
@@ -40,7 +40,7 @@ export class ReviewsRepository {
   }
 
   async findAllPublic(
-    filter: FilterQuery<ReviewDocument>,
+    filter: QueryFilter<ReviewDocument>,
   ): Promise<ReviewDocument[]> {
     return this.reviewModel
       .find(filter)
@@ -50,7 +50,7 @@ export class ReviewsRepository {
   }
 
   async findAllWithDetails(
-    filter: FilterQuery<ReviewDocument>,
+    filter: QueryFilter<ReviewDocument>,
   ): Promise<ReviewDocument[]> {
     return this.reviewModel
       .find(filter)
