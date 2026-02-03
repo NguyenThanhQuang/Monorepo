@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -72,15 +73,8 @@ export class AuthController {
   @Post('resend-verification-email')
   @UsePipes(new ZodValidationPipe(ResendVerificationSchema))
   async resendEmail(@Body() payload: ResendVerificationEmailPayload) {
-    const registerInput: RegisterPayload = {
-      email: payload.email,
-      name: 'ResendAction',
-      phone: `000_${Date.now()}`,
-      password: 'PlaceholderPass1!',
-    };
-
-    await this.authService.register(registerInput);
-    return { message: 'Yêu cầu gửi lại đã được tiếp nhận.' };
+    await this.authService.requestResendVerificationEmail(payload.email);
+    return { message: 'Nếu email hợp lệ, mã xác thực mới đã được gửi đi.' };
   }
 
   @Post('forgot-password')
@@ -90,11 +84,31 @@ export class AuthController {
     return { message: 'Nếu email tồn tại, hướng dẫn reset sẽ được gửi đi.' };
   }
 
+  @Get('validate-reset-token')
+  async validateResetToken(@Query('token') token: string) {
+    if (!token) throw new BadRequestException('Token không được cung cấp.');
+    const result = await this.authService.validatePasswordResetToken(token);
+    if (!result.isValid) {
+      throw new BadRequestException(result.message || 'Token không hợp lệ.');
+    }
+    return result;
+  }
+
   @Post('reset-password')
   @UsePipes(new ZodValidationPipe(ResetPasswordSchema))
   async resetPassword(@Body() payload: ResetPasswordPayload) {
     await this.authService.resetPassword(payload);
     return { message: 'Mật khẩu đã được đặt lại thành công.' };
+  }
+
+  @Get('validate-activation-token')
+  async validateActivationToken(@Query('token') token: string) {
+    if (!token) throw new BadRequestException('Token không được cung cấp.');
+    const result = await this.authService.validateActivationToken(token);
+    if (!result.isValid) {
+      throw new BadRequestException(result.message || 'Token không hợp lệ.');
+    }
+    return result;
   }
 
   @Post('activate-account')

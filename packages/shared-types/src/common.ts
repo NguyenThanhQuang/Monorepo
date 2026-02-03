@@ -36,3 +36,11 @@ export interface ErrorResponseObject {
   error: string;
   errors?: ValidationErrorDetail[];
 }
+
+export interface TokenValidationResult {
+  isValid: boolean;
+  message?: string;
+  email?: string;
+  userName?: string;
+  companyName?: string;
+}
