@@ -5,7 +5,7 @@ import {
   CompanyStatsResponse,
   UpdateCompanyPayload,
 } from '@obtp/shared-types';
-import { ClientSession, Model, QueryFilter } from 'mongoose';
+import { ClientSession, Model, FilterQuery } from 'mongoose';
 import { CompanyDefinition, CompanyDocument } from './schemas/company.schema';
 
 @Injectable()
@@ -23,7 +23,7 @@ export class CompaniesRepository {
     return (await newCompany.save({ session })) as unknown as Company;
   }
 
-  async findOne(filter: QueryFilter<CompanyDocument>): Promise<Company | null> {
+  async findOne(filter: FilterQuery<CompanyDocument>): Promise<Company | null> {
     return this.companyModel
       .findOne(filter)
       .exec() as unknown as Company | null;

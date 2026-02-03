@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import {
   ClientSession,
   Model,
-  QueryFilter,
+  FilterQuery,
   Types,
   UpdateQuery,
 } from 'mongoose';
@@ -49,7 +49,7 @@ export class UsersRepository {
   }
 
   async findOne(
-    filter: QueryFilter<UserDocument>,
+    filter: FilterQuery<UserDocument>,
   ): Promise<UserDocument | null> {
     return this.userModel.findOne(filter).exec();
   }
