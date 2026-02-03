@@ -15,14 +15,12 @@ export function HeroSearch(props: HeroSearchProps) {
 
   return (
     <section className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-teal-500 py-24 overflow-hidden">
-      {/* Background blur */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-300/10 rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4">
-        {/* SEARCH CARD */}
         <div className="max-w-5xl mx-auto">
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
 
@@ -36,6 +34,7 @@ export function HeroSearch(props: HeroSearchProps) {
 
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
+
                   <input
                     ref={logic.fromInputRef}
                     value={logic.fromText}
@@ -45,18 +44,16 @@ export function HeroSearch(props: HeroSearchProps) {
                       logic.setFromLocation(null);
                       logic.setShowFromSuggestions(true);
                     }}
-                    onFocus={() => logic.setShowFromSuggestions(true)}
+                    onFocus={() => {
+                      logic.setShowFromSuggestions(true);
+                      if (!logic.fromText) {
+                        logic.loadAllFromLocations();
+                      }
+                    }}
                     onBlur={() =>
                       setTimeout(() => logic.setShowFromSuggestions(false), 150)
                     }
-                    className="
-                      w-full h-[52px]
-                      pl-10 pr-10
-                      bg-gray-50
-                      border-2 border-gray-200
-                      rounded-xl
-                      focus:outline-none focus:ring-2 focus:ring-blue-500
-                    "
+                    className="w-full h-[52px] pl-10 pr-10 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
 
                   {logic.fromText && (
@@ -64,6 +61,7 @@ export function HeroSearch(props: HeroSearchProps) {
                       onClick={() => {
                         logic.setFromText('');
                         logic.setFromLocation(null);
+                        logic.loadAllFromLocations();
                       }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
@@ -72,7 +70,7 @@ export function HeroSearch(props: HeroSearchProps) {
                   )}
                 </div>
 
-                {logic.showFromSuggestions && logic.fromSuggestions.length > 0 && (
+                {logic.showFromSuggestions && (
                   <div className="absolute z-30 w-full mt-2 bg-white rounded-xl shadow-2xl border max-h-64 overflow-y-auto">
                     {logic.fromSuggestions.map((loc) => (
                       <button
@@ -97,15 +95,7 @@ export function HeroSearch(props: HeroSearchProps) {
               <div className="md:col-span-1 flex items-end justify-center pb-3">
                 <button
                   onClick={logic.handleSwap}
-                  className="
-                    p-3
-                    bg-blue-100
-                    text-blue-600
-                    rounded-xl
-                    hover:bg-blue-200
-                    transition
-                    hover:rotate-180
-                  "
+                  className="p-3 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 transition hover:rotate-180"
                 >
                   <ArrowRightLeft className="w-5 h-5" />
                 </button>
@@ -119,6 +109,7 @@ export function HeroSearch(props: HeroSearchProps) {
 
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
+
                   <input
                     ref={logic.toInputRef}
                     value={logic.toText}
@@ -128,18 +119,16 @@ export function HeroSearch(props: HeroSearchProps) {
                       logic.setToLocation(null);
                       logic.setShowToSuggestions(true);
                     }}
-                    onFocus={() => logic.setShowToSuggestions(true)}
+                    onFocus={() => {
+                      logic.setShowToSuggestions(true);
+                      if (!logic.toText) {
+                        logic.loadAllToLocations();
+                      }
+                    }}
                     onBlur={() =>
                       setTimeout(() => logic.setShowToSuggestions(false), 150)
                     }
-                    className="
-                      w-full h-[52px]
-                      pl-10 pr-10
-                      bg-gray-50
-                      border-2 border-gray-200
-                      rounded-xl
-                      focus:outline-none focus:ring-2 focus:ring-teal-500
-                    "
+                    className="w-full h-[52px] pl-10 pr-10 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
 
                   {logic.toText && (
@@ -147,6 +136,7 @@ export function HeroSearch(props: HeroSearchProps) {
                       onClick={() => {
                         logic.setToText('');
                         logic.setToLocation(null);
+                        logic.loadAllToLocations();
                       }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
@@ -155,7 +145,7 @@ export function HeroSearch(props: HeroSearchProps) {
                   )}
                 </div>
 
-                {logic.showToSuggestions && logic.toSuggestions.length > 0 && (
+                {logic.showToSuggestions && (
                   <div className="absolute z-30 w-full mt-2 bg-white rounded-xl shadow-2xl border max-h-64 overflow-y-auto">
                     {logic.toSuggestions.map((loc) => (
                       <button
@@ -188,19 +178,9 @@ export function HeroSearch(props: HeroSearchProps) {
               </div>
             </div>
 
-            {/* SEARCH BUTTON */}
             <button
               onClick={logic.handleSearch}
-              className="
-                w-full mt-6 h-[60px]
-                bg-gradient-to-r from-blue-600 to-teal-500
-                hover:from-blue-700 hover:to-teal-600
-                text-white text-lg font-semibold
-                rounded-xl
-                flex items-center justify-center gap-3
-                shadow-lg hover:shadow-xl
-                transition
-              "
+              className="w-full mt-6 h-[60px] bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white text-lg font-semibold rounded-xl flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition"
             >
               <Search className="w-5 h-5" />
               Tìm kiếm

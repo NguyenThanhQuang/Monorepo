@@ -1,31 +1,31 @@
-import { useEffect, useState } from "react";
-import { locationApi } from "../../api/service/location/apiLocation";
-import type { Location as AppLocation } from '@obtp/shared-types'; // Thêm alias
+import { useEffect, useState } from 'react';
+import { locationApi } from '../../api/service/location/apiLocation';
+import type { Location as AppLocation } from '@obtp/shared-types';
 
 export function useHeroLocationSlider() {
-  // Sửa: thay Location bằng AppLocation
   const [locations, setLocations] = useState<AppLocation[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedLocation, setSelectedLocation] = useState<AppLocation | null>(null);
-  const [selectedRoute, setSelectedRoute] = useState<{ from: string; to: string } | null>(null);
+  const [selectedLocation, setSelectedLocation] =
+    useState<AppLocation | null>(null);
+  const [selectedRoute, setSelectedRoute] =
+    useState<{ from: string; to: string } | null>(null);
 
   /* =====================
      LOAD POPULAR LOCATIONS
   ===================== */
-  useEffect(() => {
-    locationApi
-      .getPopular()
-      .then(res => {
-        // res.data có type ApiResponse<Location[]>
-        const locationsData = res || [];
-        console.log('Locations loaded:', locationsData);
-        setLocations(locationsData);
-      })
-      .catch(error => {
-        console.error('Failed to fetch locations:', error);
-        setLocations([]);
-      });
-  }, []);
+useEffect(() => {
+  locationApi
+    .getPopular()
+    .then(locationsData => {
+      console.log('Locations loaded:', locationsData);
+      setLocations(locationsData);
+    })
+    .catch(err => {
+      console.error(err);
+      setLocations([]);
+    });
+}, []);
+
 
   /* =====================
      AUTO SLIDE
@@ -41,7 +41,7 @@ export function useHeroLocationSlider() {
   }, [locations]);
 
   /* =====================
-     ROUTE SELECT → TRIGGER SEARCH
+     ROUTE SELECT → SEARCH
   ===================== */
   useEffect(() => {
     if (!selectedRoute) return;
@@ -61,13 +61,13 @@ export function useHeroLocationSlider() {
     setSelectedRoute(null);
   }, [selectedRoute]);
 
-  // Bảo vệ: đảm bảo locations là mảng
-  const displayLocations = Array.isArray(locations) && locations.length > 0
-    ? [...locations, ...locations, ...locations]
-    : [];
+  const displayLocations =
+    locations.length > 0
+      ? [...locations, ...locations, ...locations]
+      : [];
 
   return {
-    locations: Array.isArray(locations) ? locations : [],
+    locations,
     displayLocations,
     currentIndex,
     setCurrentIndex,

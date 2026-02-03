@@ -11,9 +11,6 @@ export function useHeroSearchLogic({
 }: UseHeroSearchLogicProps) {
   const { t } = useLanguage();
 
-  /* =====================
-     STATE
-  ===================== */
   const [fromText, setFromText] = useState(
     initialFrom ? `${initialFrom.name}, ${initialFrom.province}` : '',
   );
@@ -35,44 +32,42 @@ export function useHeroSearchLogic({
   const fromInputRef = useRef<HTMLInputElement>(null);
   const toInputRef = useRef<HTMLInputElement>(null);
 
-  /* =====================
-     EFFECTS – AUTOCOMPLETE
-  ===================== */
-useEffect(() => {
-  if (!fromText || fromLocation) return;
+  /* ===== LOAD ALL WHEN CLICK ===== */
+  const loadAllFromLocations = async () => {
+    const res = await locationApi.search('');
+    setFromSuggestions(res);
+  };
 
-  const timer = setTimeout(async () => {
-    try {
-      const locations = await locationApi.search(fromText);
-      setFromSuggestions(locations);
-    } catch (error) {
-      console.error(error);
-      setFromSuggestions([]);
-    }
-  }, 300);
+  const loadAllToLocations = async () => {
+    const res = await locationApi.search('');
+    setToSuggestions(res);
+  };
 
-  return () => clearTimeout(timer);
-}, [fromText, fromLocation]);
-
+  /* ===== AUTOCOMPLETE FROM ===== */
   useEffect(() => {
-    if (!toText || toLocation) return;
+    if (!fromText) return;
 
     const timer = setTimeout(async () => {
-      try {
-        const locations = await locationApi.search(toText);
-        setToSuggestions(locations);
-      } catch (error) {
-        console.error('Error fetching to suggestions:', error);
-        setToSuggestions([]);
-      }
+      const res = await locationApi.search(fromText);
+      setFromSuggestions(res);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [toText, toLocation]);
+  }, [fromText]);
 
-  /* =====================
-     HANDLERS
-  ===================== */
+  /* ===== AUTOCOMPLETE TO ===== */
+  useEffect(() => {
+    if (!toText) return;
+
+    const timer = setTimeout(async () => {
+      const res = await locationApi.search(toText);
+      setToSuggestions(res);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [toText]);
+
+  /* ===== SEARCH ===== */
   const handleSearch = () => {
     if (!fromLocation || !toLocation) {
       alert(t('selectBothLocations'));
@@ -80,8 +75,6 @@ useEffect(() => {
     }
 
     const finalDate = date || new Date().toISOString().split('T')[0];
-    setDate(finalDate);
-
     onSearch?.(fromLocation.id, toLocation.id, finalDate);
   };
 
@@ -98,25 +91,19 @@ useEffect(() => {
   };
 
   return {
-    t,
-
-    // text
     fromText,
     toText,
     setFromText,
     setToText,
 
-    // selected location
     fromLocation,
     toLocation,
     setFromLocation,
     setToLocation,
 
-    // date
     date,
     setDate,
 
-    // suggestions
     fromSuggestions,
     toSuggestions,
     showFromSuggestions,
@@ -124,11 +111,12 @@ useEffect(() => {
     setShowFromSuggestions,
     setShowToSuggestions,
 
-    // refs
     fromInputRef,
     toInputRef,
 
-    // handlers
+    loadAllFromLocations,
+    loadAllToLocations,
+
     handleSearch,
     handleSwap,
   };
