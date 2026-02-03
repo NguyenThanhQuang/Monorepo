@@ -4,7 +4,7 @@ import { TripStatus } from '@obtp/shared-types';
 import {
   ClientSession,
   Model,
-  QueryFilter,
+  FilterQuery,
   Types,
   UpdateQuery,
 } from 'mongoose';
@@ -35,7 +35,7 @@ export class TripsRepository {
   }
 
   async findOne(
-    filter: QueryFilter<TripDocument>,
+    filter: FilterQuery<TripDocument>,
   ): Promise<TripDocument | null> {
     return this.tripModel.findOne(filter).exec();
   }
@@ -65,7 +65,7 @@ export class TripsRepository {
   }
 
   async findManagementTrips(
-    filter: QueryFilter<TripDocument>,
+    filter: FilterQuery<TripDocument>,
   ): Promise<TripDocument[]> {
     return this.tripModel
       .find(filter)
