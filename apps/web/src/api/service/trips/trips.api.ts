@@ -26,7 +26,22 @@ export const tripApi = {
       params: { fromId },
     })
     .then(res => res.data);
+
 },
+
+  getManagementTrips(companyId?: string) {
+    return api.get('/trips/management/all', {
+      params: companyId ? { companyId } : {},
+    });
+  },
+
+  createTrip(payload: any) {
+    return api.post('/trips', payload);
+  },
+
+  cancelTrip(id: string) {
+    return api.patch(`/trips/${id}/cancel`);
+  },
 };
 
 

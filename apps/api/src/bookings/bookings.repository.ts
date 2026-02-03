@@ -17,6 +17,28 @@ export class BookingsRepository {
     const newBooking = new this.bookingModel(doc);
     return newBooking.save({ session });
   }
+async findByCompanyId(
+  companyId: string | Types.ObjectId,
+): Promise<BookingDocument[]> {
+  const companyObjectId =
+    typeof companyId === 'string'
+      ? new Types.ObjectId(companyId)
+      : companyId;
+
+  return this.bookingModel
+    .find({ companyId: companyObjectId })
+    .populate({
+      path: 'tripId',
+      select: 'departureTime route vehicleId',
+      populate: [
+        { path: 'route.fromLocationId', select: 'name fullAddress' },
+        { path: 'route.toLocationId', select: 'name fullAddress' },
+        { path: 'vehicleId', select: 'licensePlate' },
+      ],
+    })
+    .sort({ createdAt: -1 })
+    .exec();
+}
 
   async findById(
     id: string | Types.ObjectId,

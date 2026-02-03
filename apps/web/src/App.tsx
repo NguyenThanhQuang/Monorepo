@@ -1,20 +1,30 @@
 import { useEffect, useState } from 'react';
+
 import { FAQPage } from './components/layout/faq/FAQPage';
 import { ContactPage } from './components/layout/contact/ContactPage';
-import { AdminLoginContainer } from './hooks/Logic/AdminLogin.container';
-import { BookingManagement } from './pages/admin/BookingManagement';
-import { CompanyManagement } from './pages/admin/CompanyManagement';
-import { SystemDashboardContainer } from './hooks/Logic/SystemDashboard.container';
-import { UserManagementContainer } from './hooks/Logic/UserManagement.container';
-import { HeroSearch } from './components/shared/Search/HeroSearch';
 import { Features } from './components/layout/Features';
 import { Header } from './components/layout/Header/Header';
 import { Footer } from './components/layout/Footer/Footer';
-import { Auth } from './pages/auth/auth';
-import { UserProfilePage } from './pages/UserProfile';
+
+import { HeroSearch } from './components/shared/Search/HeroSearch';
 import { SearchResults } from './components/shared/Search/SearchResults.ui';
 
-/* ================= PLACEHOLDER PAGES ================= */
+import { Auth } from './pages/auth/auth';
+import { UserProfilePage } from './pages/UserProfile';
+
+/* ===== ADMIN ===== */
+import { AdminLoginContainer } from './hooks/Logic/AdminLogin.container';
+import { SystemDashboardContainer } from './hooks/Logic/SystemDashboard.container';
+import { UserManagementContainer } from './hooks/Logic/UserManagement.container';
+import { CompanyDashboard } from './pages/company-dashboard';
+import { BookingManagement } from './pages/admin/BookingManagement';
+import { RouteManagement } from './pages/admin/route-management';
+import VehicleManagementPage from './pages/admin/vehicle-management';
+
+/* ===== COMPANY DASHBOARD ===== */
+
+
+/* ================= PLACEHOLDER ================= */
 const TicketLookupPage = () => <div className="p-6">Tra Cứu Vé</div>;
 const MyTripsPage = () => <div className="p-6">Chuyến Đi Của Tôi</div>;
 
@@ -28,12 +38,18 @@ export type Page =
   | 'profile'
   | 'myTrips'
   | 'admin-login'
-  | 'booking-management'
-  | 'company-management'
-  | 'system-dashboard'
-  | 'user-management';
 
-/* ================= SAFE JSON PARSE ================= */
+  /* SYSTEM */
+  | 'system-dashboard'
+  | 'user-management'
+
+  /* COMPANY */
+  | 'company-dashboard'
+  | 'company-booking'
+  | 'company-route'
+  | 'company-vehicle';
+
+/* ================= SAFE JSON ================= */
 function safeParse<T>(value: string | null): T | null {
   if (!value) return null;
   try {
@@ -46,55 +62,49 @@ function safeParse<T>(value: string | null): T | null {
 const App = () => {
   const [page, setPage] = useState<Page>('home');
   const [showAuth, setShowAuth] = useState(false);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminType, setAdminType] =
     useState<'company' | 'system'>('system');
+
   const [adminUser, setAdminUser] = useState<any>(null);
 
-  /* ================= SEARCH STATE ================= */
+  /* ================= SEARCH ================= */
   const [searchParams, setSearchParams] = useState<{
     fromId: string;
     toId: string;
     date?: string;
   } | null>(null);
 
-  /* ================= CHECK LOGIN ON LOAD ================= */
+  /* ================= CHECK LOGIN ================= */
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     const adminToken = localStorage.getItem('adminToken');
 
     const user = safeParse<any>(localStorage.getItem('user'));
-    const adminUserData = safeParse<any>(
-      localStorage.getItem('adminUser'),
-    );
+    const adminUserData = safeParse<any>(localStorage.getItem('adminUser'));
 
-    if (adminToken && adminUserData) {
+    if ((adminToken || token) && (adminUserData || user)) {
+      const currentUser = adminUserData || user;
+
       setIsLoggedIn(true);
-      setIsAdmin(true);
-      setAdminUser(adminUserData);
+      setAdminUser(currentUser);
 
-      setPage(
-        adminUserData.roles?.includes('system-admin')
-          ? 'system-dashboard'
-          : 'company-management',
-      );
-      return;
-    }
+      const roles: string[] = currentUser.roles || [];
 
-    if (token && user) {
-      setIsLoggedIn(true);
-
-      if (user.roles?.some((r: string) => r.includes('admin'))) {
+      if (roles.includes('system-admin')) {
         setIsAdmin(true);
-        setAdminUser(user);
+        setAdminType('system');
+        setPage('system-dashboard');
+        return;
+      }
 
-        setPage(
-          user.roles.includes('system-admin') ||
-            user.roles.includes('ADMIN')
-            ? 'system-dashboard'
-            : 'company-management',
-        );
+      if (roles.includes('company-admin')) {
+        setIsAdmin(true);
+        setAdminType('company');
+        setPage('company-dashboard');
+        return;
       }
     }
   }, []);
@@ -118,48 +128,40 @@ const App = () => {
     setIsLoggedIn(true);
     setIsAdmin(true);
     setAdminUser(userData);
-    setPage(
-      adminType === 'system'
-        ? 'system-dashboard'
-        : 'company-management',
-    );
-  };
 
-  const handleAdminLoginClick = (
-    type: 'company' | 'system',
-  ) => {
-    setAdminType(type);
-    setPage('admin-login');
+    const roles: string[] = userData.roles || [];
+
+    if (roles.includes('system-admin')) {
+      setAdminType('system');
+      setPage('system-dashboard');
+    } else {
+      setAdminType('company');
+      setPage('company-dashboard');
+    }
   };
 
   const handleAdminAccess = () => {
-    if (!isAdmin) {
-      handleAdminLoginClick('system');
-      return;
-    }
+    if (!adminUser) return;
 
-    setPage(
-      adminUser?.roles?.includes('system-admin') ||
-        adminUser?.roles?.includes('ADMIN')
-        ? 'system-dashboard'
-        : 'company-management',
-    );
+    const roles: string[] = adminUser.roles || [];
+
+    if (roles.includes('system-admin')) {
+      setPage('system-dashboard');
+    } else if (roles.includes('company-admin')) {
+      setPage('company-dashboard');
+    }
   };
 
-  /* ================= RENDER PAGE ================= */
+  /* ================= RENDER ================= */
   const renderPage = () => {
     switch (page) {
       case 'search-results':
         if (!searchParams) return null;
         return (
           <SearchResults
-            fromId={searchParams.fromId}
-            toId={searchParams.toId}
-            date={searchParams.date}
+            {...searchParams}
             onBack={() => setPage('home')}
-            onTripSelect={(tripId) =>
-              console.log('Trip selected:', tripId)
-            }
+            onTripSelect={(id) => console.log(id)}
           />
         );
 
@@ -167,9 +169,7 @@ const App = () => {
         return <TicketLookupPage />;
 
       case 'profile':
-        return (
-          <UserProfilePage onBack={() => setPage('home')} />
-        );
+        return <UserProfilePage onBack={() => setPage('home')} />;
 
       case 'myTrips':
         return <MyTripsPage />;
@@ -186,11 +186,9 @@ const App = () => {
             onLogout={handleLogout}
             onMyTripsClick={() => setPage('myTrips')}
             onProfileClick={() => setPage('profile')}
+            onTicketLookupClick={() => setPage('ticketLookup')}
             onRoutesClick={() => {}}
-            onTicketLookupClick={() =>
-              setPage('ticketLookup')
-            }
-            onHotlineClick={() => console.log('Hotline')}
+            onHotlineClick={() => {}}
           />
         );
 
@@ -203,24 +201,33 @@ const App = () => {
           />
         );
 
-      case 'booking-management':
-        return <BookingManagement />;
-
-      case 'company-management':
-        return <CompanyManagement />;
-
+      /* ===== SYSTEM ===== */
       case 'system-dashboard':
         return <SystemDashboardContainer />;
 
       case 'user-management':
         return <UserManagementContainer />;
 
+      /* ===== COMPANY ===== */
+     case 'company-dashboard':
+  return <CompanyDashboard onNavigate={setPage} />;
+
+
+      case 'company-booking':
+        return <BookingManagement />;
+
+      case 'company-route':
+        return <RouteManagement />;
+
+      case 'company-vehicle':
+        return <VehicleManagementPage />;
+
       case 'home':
       default:
         return (
           <>
             <HeroSearch
-              onSearch={(params:any) => {
+              onSearch={(params: any) => {
                 setSearchParams(params);
                 setPage('search-results');
               }}
@@ -233,21 +240,24 @@ const App = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header
-        isLoggedIn={isLoggedIn}
-        onLoginClick={() => setShowAuth(true)}
-        onLogout={handleLogout}
-        onHomeClick={() => setPage('home')}
-        onRoutesClick={() => setPage('home')}
-        onTicketLookupClick={() =>
-          setPage('ticketLookup')
-        }
-        onContactClick={() => setPage('contact')}
-        onHotlineClick={() => console.log('Hotline')}
-        onMyTripsClick={() => setPage('myTrips')}
-        onProfileClick={() => setPage('profile')}
-        onAdminAccess={isAdmin ? handleAdminAccess : undefined}
-      />
+   <Header
+  isLoggedIn={isLoggedIn}
+  onLoginClick={() => setShowAuth(true)}
+  onLogout={handleLogout}
+  onHomeClick={() => setPage('home')}
+  onTicketLookupClick={() => setPage('ticketLookup')}
+  onContactClick={() => setPage('contact')}
+  onMyTripsClick={() => setPage('myTrips')}
+  onProfileClick={() => setPage('profile')}
+
+  /* 🔥 ADMIN */
+  onAdminAccess={handleAdminAccess}
+
+  /* 🔥 COMPANY */
+  onCompanyDashboard={() => setPage('company-dashboard')}
+  onCompanyTrips={() => setPage('company-booking')}
+/>
+
 
       <main className="flex-1">{renderPage()}</main>
 

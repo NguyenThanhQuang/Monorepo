@@ -44,6 +44,13 @@ export class BookingsService {
     private readonly eventEmitter: EventEmitter2,
     @InjectConnection() private readonly connection: Connection,
   ) {}
+async getBookingsByCompany(user: AuthUserResponse) {
+  if (!user.companyId) {
+    throw new ForbiddenException('User không thuộc company nào.');
+  }
+
+  return this.bookingsRepository.findByCompanyId(user.companyId);
+}
 
   /**
    * TRANSACTION FLOW: CREATE HOLD (GIỮ CHỖ)

@@ -1,15 +1,10 @@
-
 import { useState } from "react";
-
-import {   type LoginResponse } from "@obtp/shared-types";
+import { UserRole, type LoginResponse } from "@obtp/shared-types";
 import { AdminLogin } from "../../pages/admin/AdminLogin";
 import { loginApi } from "../../api/service/auth/auth.api";
-export declare enum UserRole {
-    ADMIN = "admin",
-    USER = "user",
-    STAFF = "staff",
-    COMPANY_ADMIN = "company_admin"
-}
+
+
+
 interface Props {
   adminType: "company" | "system";
   onLoginSuccess: (data: LoginResponse["user"]) => void;
@@ -24,18 +19,23 @@ export function AdminLoginContainer({
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (identifier: string, password: string) => {
-
     setLoading(true);
     try {
-      const result = await loginApi({ identifier, password });
+      // AxiosResponse<ApiResponse<LoginResponse>>
+      const response = await loginApi({ identifier, password });
 
-      const roles = result.user.roles;
+      const loginData = response.data.data;
+
+      // ✅ FIX TS2322: check null
+      if (!loginData) {
+        throw new Error("Dữ liệu đăng nhập không hợp lệ");
+      }
+
+      const { user, accessToken } = loginData;
+      const roles = user.roles;
 
       // 🔐 ROLE CHECK
-      if (
-        adminType === "system" &&
-        !roles.includes(UserRole.ADMIN)
-      ) {
+      if (adminType === "system" && !roles.includes(UserRole.ADMIN)) {
         throw new Error("Bạn không có quyền Admin hệ thống");
       }
 
@@ -46,10 +46,10 @@ export function AdminLoginContainer({
         throw new Error("Bạn không có quyền Quản lý nhà xe");
       }
 
-      localStorage.setItem("accessToken", result.accessToken);
-      onLoginSuccess(result.user);
+      localStorage.setItem("accessToken", accessToken);
+      onLoginSuccess(user);
     } catch (err: any) {
-      alert(err.message || "Đăng nhập thất bại");
+      alert(err?.message || "Đăng nhập thất bại");
     } finally {
       setLoading(false);
     }

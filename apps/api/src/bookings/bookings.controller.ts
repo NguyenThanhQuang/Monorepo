@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Post,
   UseGuards,
@@ -46,6 +47,13 @@ export class BookingsController {
     return this.bookingsService.confirmBooking(id, payload);
   }
 
+@Get('company')
+@UseGuards(JwtAuthGuard)
+async getCompanyBookings(
+  @CurrentUser() user: sharedTypes.AuthUserResponse,
+) {
+  return this.bookingsService.getBookingsByCompany(user);
+}
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async cancel(

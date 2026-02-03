@@ -47,7 +47,13 @@ export function Header({
   onTicketLookupClick,
   onHotlineClick,
   onHomeClick,
+
+  /* ADMIN */
   onAdminAccess,
+
+  /* COMPANY */
+  onCompanyDashboard,
+  onCompanyTrips,
 }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
@@ -120,7 +126,7 @@ export function Header({
             {isLoggedIn && user ? (
               <div className="relative">
                 <button
-                  onClick={() => setShowUserMenu((p) => !p)}
+                  onClick={() => setShowUserMenu(p => !p)}
                   className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-teal-500 text-white px-4 py-2 rounded-xl"
                 >
                   <User className="w-4 h-4" />
@@ -168,10 +174,11 @@ export function Header({
                       {isCompanyAdmin && (
                         <>
                           <div className="divider" />
+
                           <button
                             onClick={() => {
                               setShowUserMenu(false);
-                              onAdminAccess?.();
+                              onCompanyDashboard?.();
                             }}
                             className="menu-item text-blue-600"
                           >
@@ -179,7 +186,13 @@ export function Header({
                             <span>Quản lý nhà xe</span>
                           </button>
 
-                          <button className="menu-item text-blue-600">
+                          <button
+                            onClick={() => {
+                              setShowUserMenu(false);
+                              onCompanyTrips?.();
+                            }}
+                            className="menu-item text-blue-600"
+                          >
                             <BusFront className="w-5 h-5" />
                             <span>Quản lý chuyến xe</span>
                           </button>
