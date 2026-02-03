@@ -5,11 +5,15 @@ import {
   PipeTransform,
 } from '@nestjs/common';
 import { ValidationErrorDetail } from '@obtp/shared-types';
-import { ZodError, ZodType } from 'zod';
+import { ZodError } from 'zod';
+
+export interface ZodSchemaLike {
+  parse(data: unknown): any;
+}
 
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {
-  constructor(private schema: ZodType) {}
+  constructor(private schema: ZodSchemaLike) {}
 
   transform(value: unknown, metadata: ArgumentMetadata) {
     if (metadata.type !== 'body') {
@@ -19,18 +23,28 @@ export class ZodValidationPipe implements PipeTransform {
       return this.schema.parse(value);
     } catch (error) {
       if (error instanceof ZodError) {
-        const errors: ValidationErrorDetail[] = error.issues.map((err) => ({
-          field: err.path.join('.'),
-          message: err.message,
-          code: err.code,
-        }));
-
         throw new BadRequestException({
           message: 'Validation failed',
-          errors,
+          errors: this.mapErrors(error),
         });
       }
+
+      if (error && typeof error === 'object' && 'issues' in error) {
+        throw new BadRequestException({
+          message: 'Validation failed',
+          errors: this.mapErrors(error as ZodError),
+        });
+      }
+
       throw new BadRequestException('Validation failed');
     }
+  }
+
+  private mapErrors(error: ZodError): ValidationErrorDetail[] {
+    return error.issues.map((err) => ({
+      field: err.path.join('.'),
+      message: err.message,
+      code: err.code,
+    }));
   }
 }
