@@ -173,6 +173,7 @@ export function HeroSearch(props: HeroSearchProps) {
                 <CustomDatePicker
                   value={logic.date}
                   min={today}
+                  
                   onChange={logic.setDate}
                 />
               </div>

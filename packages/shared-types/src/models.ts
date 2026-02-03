@@ -170,13 +170,16 @@ export interface SeatMap {
 export interface Vehicle {
   id: string;
   _id: string;
-
+amenities?: string[]; // 
   companyId: string;
   vehicleNumber: string;
   type: string;
   description?: string;
   status: VehicleStatus;
-
+  vehicle?: Pick<
+    Vehicle,
+    'id' | '_id' | 'vehicleNumber' | 'amenities' | 'type'
+  >;
   floors: number;
   seatRows: number;
   seatColumns: number;

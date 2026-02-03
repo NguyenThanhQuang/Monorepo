@@ -12,14 +12,16 @@ import { Header } from './components/layout/Header/Header';
 import { Footer } from './components/layout/Footer/Footer';
 import { Auth } from './pages/auth/auth';
 import { UserProfilePage } from './pages/UserProfile';
+import { SearchResults } from './components/shared/Search/SearchResults.ui';
 
 /* ================= PLACEHOLDER PAGES ================= */
 const TicketLookupPage = () => <div className="p-6">Tra Cứu Vé</div>;
 const MyTripsPage = () => <div className="p-6">Chuyến Đi Của Tôi</div>;
 
+/* ================= PAGE TYPE ================= */
 export type Page =
   | 'home'
-  | 'routes'
+  | 'search-results'
   | 'faq'
   | 'contact'
   | 'ticketLookup'
@@ -49,6 +51,13 @@ const App = () => {
   const [adminType, setAdminType] =
     useState<'company' | 'system'>('system');
   const [adminUser, setAdminUser] = useState<any>(null);
+
+  /* ================= SEARCH STATE ================= */
+  const [searchParams, setSearchParams] = useState<{
+    fromId: string;
+    toId: string;
+    date?: string;
+  } | null>(null);
 
   /* ================= CHECK LOGIN ON LOAD ================= */
   useEffect(() => {
@@ -140,6 +149,20 @@ const App = () => {
   /* ================= RENDER PAGE ================= */
   const renderPage = () => {
     switch (page) {
+      case 'search-results':
+        if (!searchParams) return null;
+        return (
+          <SearchResults
+            fromId={searchParams.fromId}
+            toId={searchParams.toId}
+            date={searchParams.date}
+            onBack={() => setPage('home')}
+            onTripSelect={(tripId) =>
+              console.log('Trip selected:', tripId)
+            }
+          />
+        );
+
       case 'ticketLookup':
         return <TicketLookupPage />;
 
@@ -163,7 +186,7 @@ const App = () => {
             onLogout={handleLogout}
             onMyTripsClick={() => setPage('myTrips')}
             onProfileClick={() => setPage('profile')}
-            onRoutesClick={() => setPage('routes')}
+            onRoutesClick={() => {}}
             onTicketLookupClick={() =>
               setPage('ticketLookup')
             }
@@ -196,7 +219,12 @@ const App = () => {
       default:
         return (
           <>
-            <HeroSearch />
+            <HeroSearch
+              onSearch={(params:any) => {
+                setSearchParams(params);
+                setPage('search-results');
+              }}
+            />
             <Features />
           </>
         );
@@ -210,7 +238,7 @@ const App = () => {
         onLoginClick={() => setShowAuth(true)}
         onLogout={handleLogout}
         onHomeClick={() => setPage('home')}
-        onRoutesClick={() => setPage('routes')}
+        onRoutesClick={() => setPage('home')}
         onTicketLookupClick={() =>
           setPage('ticketLookup')
         }

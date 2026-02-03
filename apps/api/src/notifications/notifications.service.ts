@@ -13,13 +13,15 @@ export class NotificationsService {
 
   // --- AUTH NOTIFICATIONS (ACTIVE) ---
 
-  async handleUserRegistered(payload: UserEventPayload) {
+ async handleUserRegistered(payload: UserEventPayload) {
     try {
-      await this.mailService.sendVerificationEmail({
-        email: payload.email,
-        name: payload.name,
-        token: payload.token,
-      });
+      // SỬA: Truyền 3 tham số riêng biệt
+      await this.mailService.sendVerificationEmail(
+        payload.email,
+        payload.name,
+        payload.token
+      );
+      
       this.logger.log(
         `[Notification] Sent verification email to ${payload.email}`,
       );

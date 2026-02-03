@@ -219,6 +219,20 @@ async searchByRoute(fromId: string, toId: string) {
     .sort({ departureTime: 1 })
     .exec();
 }
+async searchByFrom(fromId: string) {
+  return this.tripModel
+    .find({
+      'route.fromLocationId': new Types.ObjectId(fromId),
+      status: { $ne: TripStatus.ARRIVED },
+      isRecurrenceTemplate: false,
+    })
+    .populate('companyId', 'name logoUrl')
+    .populate('vehicleId', 'type vehicleNumber totalSeats amenities')
+    .populate('route.fromLocationId', 'name province')
+    .populate('route.toLocationId', 'name province')
+    .sort({ departureTime: 1 })
+    .exec();
+}
 
   /**
    * Kiểm tra xem xe có đang được sử dụng trong các chuyến đi Sắp/Đang chạy hay không

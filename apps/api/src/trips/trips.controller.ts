@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   ForbiddenException,
@@ -62,21 +63,9 @@ export class TripsController {
     }
     return this.tripsService.create(payload);
   }
-
-   @Get('search')
-  search(
-    @Query('fromId') fromId: string,
-    @Query('toId') toId: string,
-    @Query('date') date: string,
-  ) {
-    return this.tripsService.search(fromId, toId, date);
-  }
-@Get('search/route')
-searchByRoute(
-  @Query('fromId') fromId: string,
-  @Query('toId') toId: string,
-) {
-  return this.tripsService.searchByRoute(fromId, toId);
+@Get('search/from')
+searchByFrom(@Query('fromId') fromId: string) {
+  return this.tripsService.searchByFrom(fromId);
 }
 
   @Patch(':id/cancel')
@@ -95,6 +84,20 @@ searchByRoute(
       if (tripCompanyId !== user.companyId) throw new ForbiddenException();
     }
     return this.tripsService.cancel(id);
+  }
+
+  @Get('search')
+  @UsePipes(new ZodValidationPipe(SearchTripQuerySchema))
+  async search(
+    @Query('fromId') fromId: string,
+    @Query('toId') toId: string,
+    @Query('date') date: string,
+  ): Promise<any> {
+    if (!fromId || !toId || !date) {
+      throw new BadRequestException('Missing required search parameters');
+    }
+
+    return this.tripsService.search(fromId, toId, date);
   }
 
   // 4. UPDATE TRIP (Manual Put/Patch handling)

@@ -21,7 +21,7 @@ export function useHeroSearchLogic({
   const [fromLocation, setFromLocation] = useState<Location | null>(initialFrom);
   const [toLocation, setToLocation] = useState<Location | null>(initialTo);
 
-  const [date, setDate] = useState('');
+const [date, setDate] = useState<string | undefined>(undefined);
 
   const [fromSuggestions, setFromSuggestions] = useState<Location[]>([]);
   const [toSuggestions, setToSuggestions] = useState<Location[]>([]);
