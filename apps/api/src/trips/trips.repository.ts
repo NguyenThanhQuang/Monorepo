@@ -195,6 +195,30 @@ export class TripsRepository {
       .findByIdAndUpdate(id, updateData, { new: true, session })
       .exec();
   }
+async search(filter: any) {
+  return this.tripModel
+    .find(filter)
+    .populate('from')
+    .populate('to')
+    .populate('company')
+    .sort({ departureTime: 1 })
+    .exec();
+}
+async searchByRoute(fromId: string, toId: string) {
+  return this.tripModel
+    .find({
+      'route.fromLocationId': new Types.ObjectId(fromId),
+      'route.toLocationId': new Types.ObjectId(toId),
+      status: { $ne: TripStatus.ARRIVED }, // 🚨 chưa hoàn thành
+      isRecurrenceTemplate: false,
+    })
+    .populate('companyId', 'name logoUrl')
+    .populate('vehicleId', 'type vehicleNumber totalSeats')
+    .populate('route.fromLocationId', 'name province')
+    .populate('route.toLocationId', 'name province')
+    .sort({ departureTime: 1 })
+    .exec();
+}
 
   /**
    * Kiểm tra xem xe có đang được sử dụng trong các chuyến đi Sắp/Đang chạy hay không

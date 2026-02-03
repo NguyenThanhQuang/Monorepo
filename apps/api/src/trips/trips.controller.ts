@@ -63,6 +63,22 @@ export class TripsController {
     return this.tripsService.create(payload);
   }
 
+   @Get('search')
+  search(
+    @Query('fromId') fromId: string,
+    @Query('toId') toId: string,
+    @Query('date') date: string,
+  ) {
+    return this.tripsService.search(fromId, toId, date);
+  }
+@Get('search/route')
+searchByRoute(
+  @Query('fromId') fromId: string,
+  @Query('toId') toId: string,
+) {
+  return this.tripsService.searchByRoute(fromId, toId);
+}
+
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)

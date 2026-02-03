@@ -208,7 +208,25 @@ export class TripsService {
     if (companyId) filter.companyId = companyId;
     return this.tripsRepository.findManagementTrips(filter);
   }
+ async search(fromId: string, toId: string, date: string) {
+    if (!fromId || !toId || !date) {
+      throw new BadRequestException('Missing search params');
+    }
 
+    return this.tripsRepository.search({
+      from: fromId,
+      to: toId,
+      date,
+      isActive: true,
+    });
+  }
+  async searchByRoute(fromId: string, toId: string) {
+  if (!fromId || !toId) {
+    throw new BadRequestException('Missing route params');
+  }
+
+  return this.tripsRepository.searchByRoute(fromId, toId);
+}
   async toggleRecurrence(
     id: string,
     isActive: boolean,
