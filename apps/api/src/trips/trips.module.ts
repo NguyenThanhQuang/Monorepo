@@ -3,7 +3,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CompaniesModule } from '../companies/companies.module';
 import { VehiclesModule } from '../vehicles/vehicles.module';
-import { Trip, TripSchema } from './schemas/trip.schema';
+import { TripDefinition, TripSchema } from './schemas/trip.schema';
 import { TripSchedulerService } from './trip.scheduler.service';
 import { TripsController } from './trips.controller';
 import { TripsRepository } from './trips.repository';
@@ -11,7 +11,7 @@ import { TripsService } from './trips.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Trip.name, schema: TripSchema }]),
+    MongooseModule.forFeature([{ name: TripDefinition.name, schema: TripSchema }]),
     EventEmitterModule.forRoot(),
     forwardRef(() => VehiclesModule),
     CompaniesModule,

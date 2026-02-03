@@ -5,7 +5,7 @@ import { HydratedDocument, Types } from 'mongoose';
 import { CompanyDefinition } from '../../companies/schemas/company.schema';
 import { VehicleDefinition } from '../../vehicles/schemas/vehicle.schema';
 
-export type TripDocument = HydratedDocument<Trip>;
+export type TripDocument = HydratedDocument<TripDefinition>;
 
 // 1. SEAT SCHEMA (Embedded)
 @Schema({ _id: false }) // Không cần _id riêng cho ghế để giảm tải
@@ -25,7 +25,7 @@ export class TripSeat {
   bookingId?: Types.ObjectId;
 }
 export const TripSeatSchema = SchemaFactory.createForClass(TripSeat);
- 
+
 // 2. STOP SCHEMA (Embedded)
 @Schema({ _id: false })
 export class TripStopInfo {
@@ -82,7 +82,7 @@ export const RouteInfoSchema = SchemaFactory.createForClass(RouteInfo);
 
 // 4. MAIN TRIP SCHEMA
 @Schema({ timestamps: true })
-export class Trip {
+export class TripDefinition {
   @Prop({
     type: Types.ObjectId,
     ref: CompanyDefinition.name,
@@ -139,7 +139,7 @@ export class Trip {
   isRecurrenceActive: boolean; // Bật/Tắt chế độ tự sinh từ mẫu này
 }
 
-export const TripSchema = SchemaFactory.createForClass(Trip);
+export const TripSchema = SchemaFactory.createForClass(TripDefinition);
 
 // COMPOUND INDEX: Tối ưu cho Search (Tìm chuyến từ A đến B sau ngày X)
 TripSchema.index({

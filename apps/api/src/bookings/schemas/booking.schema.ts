@@ -2,7 +2,7 @@ import { CompanyDefinition } from '@/companies/schemas/company.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { BookingStatus, PaymentStatus } from '@obtp/shared-types';
 import { HydratedDocument, Types } from 'mongoose';
-import { Trip } from '../../trips/schemas/trip.schema';
+import { TripDefinition } from '../../trips/schemas/trip.schema';
 import { UserDefinition } from '../../users/schemas/user.schema';
 
 export type BookingDocument = HydratedDocument<BookingDefinition>;
@@ -33,7 +33,7 @@ export class BookingDefinition {
   })
   userId?: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: Trip.name, required: true, index: true })
+  @Prop({ type: Types.ObjectId, ref: TripDefinition.name, required: true, index: true })
   tripId: Types.ObjectId;
 
   @Prop({

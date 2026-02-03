@@ -8,16 +8,16 @@ import {
   Types,
   UpdateQuery,
 } from 'mongoose';
-import { Trip, TripDocument } from './schemas/trip.schema';
+import { TripDefinition, TripDocument } from './schemas/trip.schema';
 
 @Injectable()
 export class TripsRepository {
   constructor(
-    @InjectModel(Trip.name) private readonly tripModel: Model<TripDocument>,
+    @InjectModel(TripDefinition.name) private readonly tripModel: Model<TripDocument>,
   ) {}
 
   async create(
-    doc: Partial<Trip>,
+    doc: Partial<TripDefinition>,
     session?: ClientSession,
   ): Promise<TripDocument> {
     const newTrip = new this.tripModel(doc);

@@ -14,7 +14,7 @@ import {
   CompanyDefinition,
   CompanySchema,
 } from '@/companies/schemas/company.schema';
-import { Trip, TripSchema } from '../trips/schemas/trip.schema';
+import { TripDefinition, TripSchema } from '../trips/schemas/trip.schema';
 import { UserDefinition, UserSchema } from '../users/schemas/user.schema';
 
 @Module({
@@ -24,7 +24,7 @@ import { UserDefinition, UserSchema } from '../users/schemas/user.schema';
       { name: CompanyDefinition.name, schema: CompanySchema },
       { name: UserDefinition.name, schema: UserSchema },
       { name: BookingDefinition.name, schema: BookingSchema },
-      { name: Trip.name, schema: TripSchema },
+      { name: TripDefinition.name, schema: TripSchema },
     ]),
   ],
   controllers: [DashboardController],

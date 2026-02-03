@@ -6,7 +6,7 @@ import {
   CompanyDefinition,
   CompanyDocument,
 } from '@/companies/schemas/company.schema';
-import { Trip, TripDocument } from '@/trips/schemas/trip.schema';
+import { TripDefinition, TripDocument } from '@/trips/schemas/trip.schema';
 import { UserDefinition, UserDocument } from '@/users/schemas/user.schema';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -28,7 +28,7 @@ export class DashboardRepository {
     private readonly userModel: Model<UserDocument>,
     @InjectModel(BookingDefinition.name)
     private readonly bookingModel: Model<BookingDocument>,
-    @InjectModel(Trip.name) private readonly tripModel: Model<TripDocument>,
+    @InjectModel(TripDefinition.name) private readonly tripModel: Model<TripDocument>,
   ) {}
 
   async getAdminQuickStats(): Promise<AdminDashboardStats> {
