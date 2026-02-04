@@ -10,16 +10,25 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.7",
+    "@mui/material": "^7.3.7",
+    "@mui/styled-engine": "^7.3.7",
+    "@mui/x-date-pickers": "^8.27.0",
     "@obtp/api-client": "workspace:*",
     "@obtp/business-logic": "workspace:*",
     "@obtp/shared-types": "workspace:*",
     "@obtp/validation": "workspace:*",
     "@reduxjs/toolkit": "^2.11.2",
     "axios": "^1.13.2",
+    "dayjs": "^1.11.19",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-redux": "^9.2.0"
+    "react-number-format": "^5.4.4",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.13.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

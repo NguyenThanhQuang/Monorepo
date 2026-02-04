@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
-import { BookingStatus, CompanyStatus, TripStatus, UserAccountStatus, UserRole } from "./enums";
+import { BookingStatus, CompanyStatus, LocationType, TripStatus, UserAccountStatus, UserRole, VehicleStatus } from "./enums";
 import { User } from "./models";
+import { Dayjs } from "dayjs";
 
 
 export interface CompanyDashboardStat {
@@ -279,4 +280,96 @@ export interface RouteCardVM {
   durationText: string;
   image: string;
   gradient: string;
+}
+
+export interface LocationData {
+  _id: string;
+  name: string;
+  slug: string;
+  province: string;
+  district?: string;
+  fullAddress: string;
+  location: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+  type: LocationType;
+  images?: string[];
+  isActive: boolean;
+}
+export interface AddTripFormState {
+  companyId: string;
+  vehicleId: string | null;
+  fromLocationId: string | null;
+  toLocationId: string | null;
+  departureTime: Dayjs | null; // 👈 VẪN CÓ THỂ NULL
+  expectedArrivalTime: Dayjs | null; // 👈 VẪN CÓ THỂ NULL
+  price: number;
+  stops: RouteStopFormState[];
+  isRecurrenceTemplate: boolean; // 👈 THÊM FIELD NÀY
+}
+export type VehicleStatusDisplay = {
+  [K in VehicleStatus]: string;
+};
+export const CompanyStatusDisplayMap: CompanyStatusDisplay = {
+  [CompanyStatus.ACTIVE]: '✅ Đang hoạt động',
+  [CompanyStatus.INACTIVE]: '⛔ Ngừng hoạt động',
+  [CompanyStatus.PENDING]: '⏳ Đang chờ',
+  [CompanyStatus.SUSPENDED]: '🚫 Tạm ngưng',
+};
+export type CompanyStatusDisplay = {
+  [K in CompanyStatus]: string;
+};
+
+export const VehicleStatusDisplayMap: VehicleStatusDisplay = {
+  [VehicleStatus.ACTIVE]: '✅ Sẵn sàng',
+  [VehicleStatus.MAINTENANCE]: '🔧 Bảo trì',
+  [VehicleStatus.INACTIVE]: '⛔ Không khả dụng',
+};
+
+export interface RouteStopFormState {
+  id: string;
+  locationId: string;
+  expectedArrivalTime: Dayjs | null;
+  expectedDepartureTime: Dayjs | null;
+}
+export interface TripUI {
+  id: string;
+  companyName: string;
+  companyLogo: string;
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  from: string;
+  to: string;
+  price: number;
+  availableSeats: number;
+  totalSeats: number;
+  busType: string;
+  rating: number;
+  reviewCount: number;
+  amenities: string[];
+}
+export interface TripResponse {
+  _id: string;
+  companyId: {
+    name: string;
+    logoUrl?: string;
+  };
+  vehicleId: {
+    type?: string;
+  };
+  departureTime: string;
+  expectedArrivalTime: string;
+  route: {
+    fromLocationId: {
+      name: string;
+    };
+    toLocationId: {
+      name: string;
+    };
+  };
+  price: number;
+  availableSeatsCount: number;
+  totalSeats?: number;
 }

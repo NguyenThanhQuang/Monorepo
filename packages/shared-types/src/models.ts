@@ -375,8 +375,23 @@ export interface CompanyStats {
   totalBookings: number;
   totalRevenue?: number;
 }
-
+// Trong shared-types.ts hoặc ngay trong component
+export interface SimpleVehicle {
+  _id: string;
+  id: string;
+  licensePlate: string;    // Biển số xe
+  vehicleNumber?: string;  // Có thể là biển số
+  name?: string;          // Tên xe (nếu có)
+  brand?: string;         // Hãng xe
+  model?: string;         // Dòng xe
+  type?: string;          // Loại xe: sleeper, seater, vip
+  capacity: number;       // Số ghế
+  totalSeats?: number;    // Cũng là số ghế
+  companyId: string;
+  status: string;
+}
 export interface Company {
+  _id:string;
   id: string;
   name: string;
   code: string;

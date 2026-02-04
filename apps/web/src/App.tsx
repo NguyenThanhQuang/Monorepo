@@ -20,6 +20,7 @@ import { CompanyDashboard } from './pages/company-dashboard';
 import { BookingManagement } from './pages/admin/BookingManagement';
 import { RouteManagement } from './pages/admin/route-management';
 import VehicleManagementPage from './pages/admin/vehicle-management';
+import AddTripContainer from './pages/company/add-trip/AddTripContainer';
 
 /* ===== COMPANY DASHBOARD ===== */
 
@@ -38,7 +39,12 @@ export type Page =
   | 'profile'
   | 'myTrips'
   | 'admin-login'
-
+ | 'company-dashboard' 
+  | 'add-trip'  // 👈 THÊM DÒNG NÀY
+  | 'trips-management' 
+  | 'vehicles-management'
+  | 'trip-detail'
+  | 'booking-management'
   /* SYSTEM */
   | 'system-dashboard'
   | 'user-management'
@@ -173,7 +179,8 @@ const App = () => {
 
       case 'myTrips':
         return <MyTripsPage />;
-
+    case 'add-trip': // 👈 THÊM CASE NÀY
+      return <AddTripContainer />;
       case 'faq':
         return <FAQPage onBack={() => setPage('home')} />;
 

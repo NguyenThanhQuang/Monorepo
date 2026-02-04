@@ -24,67 +24,9 @@ import { TripsService } from './trips.service';
 export class TripsController {
   constructor(private readonly tripsService: TripsService) {}
 
-  @Get()
-  @UsePipes(new ZodValidationPipe(SearchTripQuerySchema))
-  async findPublicTrips(@Query() query: sharedTypes.SearchTripQuery) {
-    return this.tripsService.findPublicTrips(query);
-  }
-
-  @Get('management/all')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
-  async findForManagement(
-    @CurrentUser() user: sharedTypes.AuthUserResponse,
-    @Query('companyId') filterCmpId: string,
-  ) {
-    let targetId = filterCmpId;
-    if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      if (!user.companyId) throw new ForbiddenException();
-      targetId = user.companyId;
-    }
-    return this.tripsService.findAllForManagement(targetId);
-  }
-
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.tripsService.findOne(id);
-  }
-
-  @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
-  @UsePipes(new ZodValidationPipe(CreateTripSchema))
-  async create(
-    @CurrentUser() user: sharedTypes.AuthUserResponse,
-    @Body() payload: sharedTypes.CreateTripPayload,
-  ) {
-    if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      if (payload.companyId !== user.companyId) throw new ForbiddenException();
-    }
-    return this.tripsService.create(payload);
-  }
-@Get('search/from')
-searchByFrom(@Query('fromId') fromId: string) {
-  return this.tripsService.searchByFrom(fromId);
-}
-
-  @Patch(':id/cancel')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
-  async cancel(
-    @CurrentUser() user: sharedTypes.AuthUserResponse,
-    @Param('id') id: string,
-  ) {
-    if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      const trip = await this.tripsService.findOne(id);
-      const tripCompanyId = trip.companyId._id
-        ? trip.companyId._id.toString()
-        : trip.companyId.toString();
-
-      if (tripCompanyId !== user.companyId) throw new ForbiddenException();
-    }
-    return this.tripsService.cancel(id);
-  }
+  // =====================================================
+  // PUBLIC SEARCH
+  // =====================================================
 
   @Get('search')
   @UsePipes(new ZodValidationPipe(SearchTripQuerySchema))
@@ -100,6 +42,99 @@ searchByFrom(@Query('fromId') fromId: string) {
     return this.tripsService.search(fromId, toId, date);
   }
 
-  // 4. UPDATE TRIP (Manual Put/Patch handling)
-  // ... Logic similar to create/cancel with ownership checks
+  @Get('search/from')
+  async searchByFrom(@Query('fromId') fromId: string) {
+    if (!fromId) {
+      throw new BadRequestException('Missing fromId');
+    }
+
+    return this.tripsService.searchByFrom(fromId);
+  }
+
+  // =====================================================
+  // PUBLIC LIST TRIPS
+  // =====================================================
+
+  @Get()
+  @UsePipes(new ZodValidationPipe(SearchTripQuerySchema))
+  async findPublicTrips(@Query() query: sharedTypes.SearchTripQuery) {
+    return this.tripsService.findPublicTrips(query);
+  }
+
+  // =====================================================
+  // MANAGEMENT
+  // =====================================================
+
+  @Get('management/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
+  async findForManagement(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Query('companyId') filterCmpId: string,
+  ) {
+    let targetId = filterCmpId;
+
+    if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
+      if (!user.companyId) throw new ForbiddenException();
+      targetId = user.companyId;
+    }
+
+    return this.tripsService.findAllForManagement(targetId);
+  }
+
+  // =====================================================
+  // CREATE TRIP
+  // =====================================================
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
+  @UsePipes(new ZodValidationPipe(CreateTripSchema))
+  async create(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Body() payload: sharedTypes.CreateTripPayload,
+  ) {
+    if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
+      if (payload.companyId !== user.companyId) {
+        throw new ForbiddenException();
+      }
+    }
+
+    return this.tripsService.create(payload);
+  }
+
+  // =====================================================
+  // CANCEL TRIP
+  // =====================================================
+
+  @Patch(':id/cancel')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
+  async cancel(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Param('id') id: string,
+  ) {
+    if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
+      const trip = await this.tripsService.findOne(id);
+
+      const tripCompanyId = trip.companyId._id
+        ? trip.companyId._id.toString()
+        : trip.companyId.toString();
+
+      if (tripCompanyId !== user.companyId) {
+        throw new ForbiddenException();
+      }
+    }
+
+    return this.tripsService.cancel(id);
+  }
+
+  // =====================================================
+  // FIND ONE (⚠️ LUÔN ĐỂ CUỐI)
+  // =====================================================
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.tripsService.findOne(id);
+  }
 }

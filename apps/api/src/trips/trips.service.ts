@@ -220,13 +220,13 @@ export class TripsService {
       isActive: true,
     });
   }
-  async searchByFrom(fromId: string) {
-  if (!fromId) {
-    throw new BadRequestException('Missing fromId');
-  }
+    async searchByFrom(fromId: string) {
+    if (!fromId) {
+      throw new BadRequestException('Missing fromId');
+    }
 
-  return this.tripsRepository.searchByFrom(fromId);
-}
+    return this.tripsRepository.searchByFrom(fromId);
+  }
 
   async searchByRoute(fromId: string, toId: string) {
   if (!fromId || !toId) {

@@ -6,4 +6,10 @@ export type Page =
   | 'contact'
   | 'ticketLookup'
   | 'profile'
-  | 'myTrips';
+  | 'myTrips'
+   | 'company-dashboard' 
+  | 'add-trip'  // 👈 THÊM DÒNG NÀY
+  | 'trips-management' 
+  | 'vehicles-management'
+  | 'trip-detail'
+  | 'booking-management'
