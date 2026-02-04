@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Company, CompanyStats, CompanyStatus } from '@obtp/shared-types';
+import { Company, CompanyStatus } from '@obtp/shared-types';
 import { HydratedDocument } from 'mongoose';
 
 export type CompanyDocument = HydratedDocument<CompanyDefinition>;
@@ -16,8 +16,6 @@ export type CompanyDocument = HydratedDocument<CompanyDefinition>;
   },
 })
 export class CompanyDefinition implements Omit<Company, 'id'> {
-  _id: string;
-  stats?: CompanyStats;
   @Prop({ type: String, required: true, unique: true, trim: true })
   name: string;
 

@@ -45,52 +45,15 @@ export class VehiclesService {
     });
   }
 
-async findAll(companyId?: string): Promise<VehicleDocument[]> {
-  console.log('🔍🔍🔍 VEHICLES SERVICE DEBUG 🔍🔍🔍');
-  console.log('Input companyId:', companyId);
-  console.log('Input length:', companyId?.length);
-  console.log('Expected ObjectId length: 24');
-  
-  const filter: any = {};
-  
-  if (companyId) {
-    // Kiểm tra ObjectId hợp lệ
-    console.log('Checking ObjectId validity...');
-    const isValid = Types.ObjectId.isValid(companyId);
-    console.log('Is valid ObjectId?', isValid);
-    
-    if (!isValid) {
-      console.log('❌ INVALID ObjectId format!');
-      console.log('Provided:', companyId);
-      console.log('Length:', companyId.length);
-      console.log('Should be 24 hex characters');
-      return [];
+  async findAll(companyId?: string): Promise<VehicleDocument[]> {
+    const filter: any = {};
+    if (companyId) {
+      if (!Types.ObjectId.isValid(companyId)) return [];
+      filter.companyId = new Types.ObjectId(companyId);
     }
-    
-    // Tạo ObjectId
-    const objectId = new Types.ObjectId(companyId);
-    console.log('Created ObjectId:', objectId);
-    console.log('ObjectId toString:', objectId.toString());
-    console.log('ObjectId toHexString:', objectId.toHexString());
-    
-    // So sánh
-    console.log('Comparison:');
-    console.log('- Input:', companyId);
-    console.log('- toHexString:', objectId.toHexString());
-    console.log('- Match?', companyId === objectId.toHexString());
-    
-    filter.companyId = objectId;
-    console.log('Filter to use:', filter);
-  } else {
-    console.log('No companyId provided - will return all vehicles');
+    return this.vehiclesRepository.findAll(filter);
   }
-  
-  console.log('Calling repository with filter:', JSON.stringify(filter));
-  const vehicles = await this.vehiclesRepository.findAll(filter);
-  console.log(`✅ Repository returned ${vehicles.length} vehicles`);
-  
-  return vehicles;
-}
+
   async findOne(id: string): Promise<VehicleDocument> {
     const vehicle = await this.vehiclesRepository.findById(id);
     if (!vehicle) throw new NotFoundException('Phương tiện không tồn tại.');
