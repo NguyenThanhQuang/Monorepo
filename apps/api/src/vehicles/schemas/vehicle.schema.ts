@@ -6,7 +6,12 @@ export type VehicleDocument = HydratedDocument<VehicleDefinition>;
 
 @Schema({ timestamps: true })
 export class VehicleDefinition {
-  @Prop({ type: Types.ObjectId, ref: 'Company', required: true, index: true })
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'CompanyDefinition',
+    required: true,
+    index: true,
+  })
   companyId: Types.ObjectId;
 
   @Prop({ type: String, required: true, trim: true, uppercase: true })
