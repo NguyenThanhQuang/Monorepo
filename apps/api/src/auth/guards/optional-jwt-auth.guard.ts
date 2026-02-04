@@ -5,18 +5,19 @@ import { AuthGuard } from '@nestjs/passport';
 @Injectable()
 export class OptionalJwtAuthGuard extends AuthGuard('jwt') {
   handleRequest<TUser = UserDocument | false>(
-    err: any,
+    err: unknown,
     user: TUser,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _info: any,
+    _info: unknown,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _context: ExecutionContext,
   ): TUser {
-    // Nếu có lỗi xác thực (ví dụ: token sai định dạng), Passport sẽ ném lỗi.
-    // Nếu token hết hạn hoặc không hợp lệ, `user` sẽ là `false`.
-    // Nếu không có token nào được cung cấp, `user` cũng sẽ là `false` hoặc `undefined`.
-    // Trong tất cả các trường hợp đó, chỉ cần trả về `user` (có thể là object user, false, hoặc undefined).
-    // Controller sẽ nhận được `req.user` là object user nếu xác thực thành công, và `undefined` nếu không.
+    if (err) {
+      // Nếu có lỗi thực sự, ném ra ngoài (ví dụ token malformed gây 500 nếu cần thiết)
+      // Nhưng Optional Guard thường lờ đi.
+      // Với Optional: có lỗi coi như guest
+      return false as TUser;
+    }
     return user;
   }
 }

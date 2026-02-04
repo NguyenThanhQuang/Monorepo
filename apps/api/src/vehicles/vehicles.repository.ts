@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ClientSession, QueryFilter, Model, Types } from 'mongoose';
+import { ClientSession, Model, QueryFilter, Types } from 'mongoose';
 import { VehicleDefinition, VehicleDocument } from './schemas/vehicle.schema';
 
 @Injectable()
@@ -18,7 +18,12 @@ export class VehiclesRepository {
       const newVehicle = new this.vehicleModel(doc);
       return await newVehicle.save({ session });
     } catch (error) {
-      if (typeof error === 'object' && error !== null && 'code' in error && (error as any).code === 11000) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        (error as Record<string, unknown>).code === 11000
+      ) {
         throw new ConflictException(
           'Biển số xe đã tồn tại trong hệ thống của nhà xe này.',
         );

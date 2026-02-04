@@ -1,8 +1,8 @@
+import { UserDocument } from '@/users/schemas/user.schema';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from '@obtp/shared-types';
 import { randomBytes } from 'crypto';
-import { UserDocument } from 'src/users/schemas/user.schema';
 
 @Injectable()
 export class TokenService {

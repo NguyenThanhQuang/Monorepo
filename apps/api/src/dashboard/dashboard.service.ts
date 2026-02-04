@@ -8,6 +8,7 @@ import {
   BookingStatus,
   FinanceReportQuery,
   FinancialReportResponse,
+  PaymentTransactionSummary,
 } from '@obtp/shared-types';
 import dayjs from 'dayjs';
 import { Types } from 'mongoose';
@@ -51,12 +52,14 @@ export class DashboardService {
       this.dashboardRepository.getFinancialReportData(baseFilter),
     ]);
 
-    const confirmedStats = facetData.statsByStatus.find(
-      (s: any) => s._id === BookingStatus.CONFIRMED,
-    );
-    const cancelledStats = facetData.statsByStatus.find(
-      (s: any) => s._id === BookingStatus.CANCELLED,
-    );
+    const confirmedStats =
+      facetData?.statsByStatus?.find(
+        (s: any) => s._id === BookingStatus.CONFIRMED,
+      ) || {};
+    const cancelledStats =
+      facetData?.statsByStatus?.find(
+        (s: any) => s._id === BookingStatus.CANCELLED,
+      ) || {};
 
     const periodRevenue = confirmedStats?.amount || 0;
     const periodBookings = confirmedStats?.count || 0;
@@ -68,7 +71,7 @@ export class DashboardService {
     );
 
     const filledChartData = fillMissingChartDates(
-      facetData.revenueChart || [],
+      facetData?.revenueChart || [],
       startDate,
       endDate,
     );
@@ -78,42 +81,40 @@ export class DashboardService {
       20,
     );
 
-    const formattedTransactions = recentDocs.flatMap((doc: any) => {
-      const trans = [];
-      const companyName = doc.companyId?.name || 'Unknown';
-      const base = {
-        id: doc._id.toString(),
-        date: doc.createdAt.toISOString(),
-        companyName,
-        description: `Booking #${doc.ticketCode}`,
-      };
+    const formattedTransactions: PaymentTransactionSummary[] =
+      recentDocs.flatMap((doc: any) => {
+        const trans: PaymentTransactionSummary[] = [];
+        const companyName = doc.companyId?.name || 'Unknown';
+        const base = {
+          id: doc._id.toString(),
+          date: doc.createdAt.toISOString(),
+          companyName,
+          description: `Booking #${doc.ticketCode}`,
+        };
 
-      if (doc.status === BookingStatus.CONFIRMED) {
-        trans.push({
-          ...base,
-          type: 'booking',
-          amount: doc.totalAmount,
-          status: 'completed',
-        });
-        trans.push({
-          id: `${doc._id}-comm`,
-          date: base.date,
-          companyName: 'Platform',
-          type: 'commission',
-          description: `Commission Fee`,
-          amount: -(doc.totalAmount * commissionRate),
-          status: 'completed',
-        });
-      } else if (doc.status === BookingStatus.CANCELLED) {
-        trans.push({
-          ...base,
-          type: 'refund',
-          amount: -doc.totalAmount,
-          status: 'completed',
-        });
-      }
-      return trans;
-    });
+        if (doc.status === BookingStatus.CONFIRMED) {
+          trans.push({
+            ...base,
+            type: 'booking',
+            amount: doc.totalAmount,
+          });
+          trans.push({
+            id: `${doc._id}-comm`,
+            date: base.date,
+            companyName: 'Platform',
+            type: 'commission',
+            description: `Commission Fee`,
+            amount: -(doc.totalAmount * commissionRate),
+          });
+        } else if (doc.status === BookingStatus.CANCELLED) {
+          trans.push({
+            ...base,
+            type: 'refund',
+            amount: -doc.totalAmount,
+          });
+        }
+        return trans;
+      });
 
     return {
       overview: {
@@ -125,8 +126,8 @@ export class DashboardService {
         refunds: periodRefunds,
       },
       revenueChartData: filledChartData,
-      topCompanies: facetData.topCompanies || [],
-      recentTransactions: formattedTransactions as any,
+      topCompanies: facetData?.topCompanies || [],
+      recentTransactions: formattedTransactions,
     };
   }
 }

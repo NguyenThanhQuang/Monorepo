@@ -25,6 +25,7 @@ import {
   PaymentStatus,
   SeatStatus,
   TripStatus,
+  UserRole,
 } from '@obtp/shared-types';
 import { Connection, Types } from 'mongoose';
 import { TripsService } from '../trips/trips.service';
@@ -44,13 +45,13 @@ export class BookingsService {
     private readonly eventEmitter: EventEmitter2,
     @InjectConnection() private readonly connection: Connection,
   ) {}
-async getBookingsByCompany(user: AuthUserResponse) {
-  if (!user.companyId) {
-    throw new ForbiddenException('User không thuộc company nào.');
-  }
+  async getBookingsByCompany(user: AuthUserResponse) {
+    if (!user.companyId) {
+      throw new ForbiddenException('User không thuộc company nào.');
+    }
 
-  return this.bookingsRepository.findByCompanyId(user.companyId);
-}
+    return this.bookingsRepository.findByCompanyId(user.companyId);
+  }
 
   /**
    * TRANSACTION FLOW: CREATE HOLD (GIỮ CHỖ)
@@ -182,7 +183,7 @@ async getBookingsByCompany(user: AuthUserResponse) {
   async confirmBooking(
     bookingId: string,
     payload: ConfirmBookingPayload,
-  ): Promise<any> {
+  ): Promise<BookingDocument> {
     const session = await this.connection.startSession();
     session.startTransaction();
 
@@ -193,39 +194,36 @@ async getBookingsByCompany(user: AuthUserResponse) {
       );
       if (!booking) throw new NotFoundException('Đơn hàng không tồn tại');
 
-      if (booking.status === BookingStatus.CONFIRMED) return booking; // Idempotency
+      if (booking.status === BookingStatus.CONFIRMED) return booking;
       if (booking.status !== BookingStatus.HELD) {
         throw new BadRequestException(
           'Trạng thái vé không hợp lệ để xác nhận.',
         );
       }
 
-      // Validate Payment Amount
       if (payload.paidAmount < booking.totalAmount) {
         throw new BadRequestException('Số tiền thanh toán chưa đủ.');
       }
 
-      // 1. Update Booking
       booking.status = BookingStatus.CONFIRMED;
       booking.paymentStatus = PaymentStatus.PAID;
       booking.paymentMethod = payload.paymentMethod;
-      booking.paymentGatewayTransactionId = payload.transactionDateTime; // Temp usage field
-      booking.heldUntil = undefined; // Remove TTL expiry
-      booking.ticketCode = await this.generateUniqueTicketCode(); // Create Code
+      booking.paymentGatewayTransactionId = payload.transactionDateTime;
+      booking.heldUntil = undefined;
+      booking.ticketCode = await this.generateUniqueTicketCode();
 
       await this.bookingsRepository.save(booking, session);
 
-      // 2. Update Trip Seats -> BOOKED
       const seatNumbers = booking.passengers.map((p) => p.seatNumber);
       await this.tripsService.updateSeatStatus(booking.tripId.toString(), {
         seatNumbers: seatNumbers,
         status: SeatStatus.BOOKED,
         bookingId: booking._id.toString(),
-      }); // Add session arg if TripService supported
+      });
 
       await session.commitTransaction();
 
-      this.eventEmitter.emit('booking.confirmed', booking); // Gửi mail vé
+      this.eventEmitter.emit('booking.confirmed', booking);
 
       return booking;
     } catch (error) {
@@ -256,11 +254,8 @@ async getBookingsByCompany(user: AuthUserResponse) {
 
       if (user) {
         const bookingOwner = booking.userId?.toString();
-        if (
-          bookingOwner &&
-          bookingOwner !== user.id &&
-          !user.roles.includes('admin' as any)
-        ) {
+        const isAdmin = user.roles.includes(UserRole.ADMIN);
+        if (bookingOwner && bookingOwner !== user.id && !isAdmin) {
           throw new ForbiddenException('Không có quyền hủy vé này.');
         }
       }

@@ -21,6 +21,7 @@ import {
   UserRole,
 } from '@obtp/shared-types';
 
+import { CompanyDocument } from '@/companies/schemas/company.schema';
 import { UserDocument } from '@/users/schemas/user.schema';
 import {
   AUTH_CONSTANTS,
@@ -224,17 +225,15 @@ export class AuthService {
 
   async validateActivationToken(token: string): Promise<TokenValidationResult> {
     const user = await this.usersService.findOneByActivationToken(token);
-
     if (!user) {
       return { isValid: false, message: 'Token không hợp lệ hoặc đã hết hạn.' };
     }
 
     let companyName = 'Chưa cập nhật';
-
-    if (user.companyId) {
-      const cmp: any = user.companyId;
-      if (cmp && typeof cmp === 'object' && 'name' in cmp) {
-        companyName = cmp.name;
+    if (user.companyId && typeof user.companyId === 'object') {
+      const companyDoc = user.companyId as unknown as CompanyDocument;
+      if ('name' in companyDoc) {
+        companyName = companyDoc.name;
       }
     }
 
