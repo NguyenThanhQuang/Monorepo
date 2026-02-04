@@ -5,21 +5,36 @@ export type ReviewDocument = HydratedDocument<ReviewDefinition>;
 
 @Schema({ timestamps: true })
 export class ReviewDefinition {
-  @Prop({ type: Types.ObjectId, ref: 'User', index: true, required: false })
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'UserDefinition',
+    index: true,
+    required: false,
+  })
   userId?: Types.ObjectId;
 
   @Prop({ type: String, required: true })
   displayName: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Trip', required: true, index: true })
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'TripDefinition',
+    required: true,
+    index: true,
+  })
   tripId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Company', required: true, index: true })
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'CompanyDefinition',
+    required: true,
+    index: true,
+  })
   companyId: Types.ObjectId;
 
   @Prop({
     type: Types.ObjectId,
-    ref: 'Booking',
+    ref: 'BookingDefinition',
     required: true,
     unique: true,
     index: true,
