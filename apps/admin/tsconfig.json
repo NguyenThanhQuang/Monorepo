@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "@obtp/shared-types": ["../../packages/shared-types/src/index.ts"],
+      "@obtp/validation": ["../../packages/validation/src/index.ts"],
+      "@obtp/api-client": ["../../packages/api-client/src/modules/index.ts"]
+    }
+  },
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}
