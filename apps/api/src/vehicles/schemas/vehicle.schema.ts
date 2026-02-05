@@ -4,7 +4,7 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type VehicleDocument = HydratedDocument<VehicleDefinition>;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'vehicles' })
 export class VehicleDefinition {
   @Prop({
     type: Types.ObjectId,

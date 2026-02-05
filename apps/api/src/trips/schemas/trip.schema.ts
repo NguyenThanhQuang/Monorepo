@@ -21,7 +21,7 @@ export class TripSeat {
   status: SeatStatus;
 
   // Nếu đã đặt, lưu Reference ID (nhưng lưu dưới dạng ObjectId để dễ populate nếu cần)
-  @Prop({ type: Types.ObjectId, ref: 'Booking', required: false })
+  @Prop({ type: Types.ObjectId, ref: 'BookingDefinition', required: false })
   bookingId?: Types.ObjectId;
 }
 export const TripSeatSchema = SchemaFactory.createForClass(TripSeat);
@@ -81,7 +81,7 @@ export class RouteInfo {
 export const RouteInfoSchema = SchemaFactory.createForClass(RouteInfo);
 
 // 4. MAIN TRIP SCHEMA
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'trips' })
 export class TripDefinition {
   @Prop({
     type: Types.ObjectId,

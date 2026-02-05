@@ -7,7 +7,9 @@ import { UserDefinition } from '../../users/schemas/user.schema';
 
 export type BookingDocument = HydratedDocument<BookingDefinition>;
 
-@Schema({ _id: false })
+@Schema({
+  collection: 'bookings',
+})
 export class PassengerInfo {
   @Prop({ type: String, required: true, trim: true })
   name: string;
@@ -33,7 +35,12 @@ export class BookingDefinition {
   })
   userId?: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: TripDefinition.name, required: true, index: true })
+  @Prop({
+    type: Types.ObjectId,
+    ref: TripDefinition.name,
+    required: true,
+    index: true,
+  })
   tripId: Types.ObjectId;
 
   @Prop({
@@ -94,7 +101,12 @@ export class BookingDefinition {
   @Prop({ type: String, index: true })
   paymentGatewayTransactionId?: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Review', required: false, index: true })
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'ReviewDefinition',
+    required: false,
+    index: true,
+  })
   reviewId?: Types.ObjectId;
 }
 
