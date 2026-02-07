@@ -171,7 +171,7 @@ export function HeroSearch(props: HeroSearchProps) {
                   Ngày đi
                 </label>
                 <CustomDatePicker
-                  value={logic.date}
+                  value={logic.date?.toString()}
                   min={today}
                   
                   onChange={logic.setDate}

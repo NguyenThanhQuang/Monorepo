@@ -7,7 +7,6 @@ import { Header } from './components/layout/Header/Header';
 import { Footer } from './components/layout/Footer/Footer';
 
 import { HeroSearch } from './components/shared/Search/HeroSearch';
-import { SearchResults } from './components/shared/Search/SearchResults.ui';
 
 import { Auth } from './pages/auth/auth';
 import { UserProfilePage } from './pages/UserProfile';
@@ -21,6 +20,7 @@ import { BookingManagement } from './pages/admin/BookingManagement';
 import { RouteManagement } from './pages/admin/route-management';
 import VehicleManagementPage from './pages/admin/vehicle-management';
 import AddTripContainer from './pages/company/add-trip/AddTripContainer';
+import { SearchResults } from './components/shared/Search/SearchResults';
 
 /* ===== COMPANY DASHBOARD ===== */
 
@@ -77,11 +77,11 @@ const App = () => {
   const [adminUser, setAdminUser] = useState<any>(null);
 
   /* ================= SEARCH ================= */
-  const [searchParams, setSearchParams] = useState<{
-    fromId: string;
-    toId: string;
-    date?: string;
-  } | null>(null);
+ const [searchParams, setSearchParams] = useState<{
+  fromProvince: string;
+  toProvince: string;
+  date?: string;
+} | null>(null);
 
   /* ================= CHECK LOGIN ================= */
   useEffect(() => {
@@ -164,12 +164,14 @@ const App = () => {
       case 'search-results':
         if (!searchParams) return null;
         return (
-          <SearchResults
-            {...searchParams}
-            onBack={() => setPage('home')}
-            onTripSelect={(id) => console.log(id)}
-          />
-        );
+    <SearchResults
+      fromProvince={searchParams.fromProvince}
+      toProvince={searchParams.toProvince}
+      date={searchParams.date}
+      onBack={() => setPage('home')}
+      onTripSelect={(id) => console.log('Trip selected:', id)}
+    />
+  );
 
       case 'ticketLookup':
         return <TicketLookupPage />;

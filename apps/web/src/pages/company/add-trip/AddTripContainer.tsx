@@ -49,7 +49,7 @@ interface SimpleVehicle {
   companyName?: string;
 }
 
-const API_BASE_URL = 'http://localhost:3001/api/v1';
+const API_BASE_URL = 'http://localhost:3001/api';
 
 // Helper functions để parse response
 const parseDateField = (dateValue: string | Date | undefined): Date => {
@@ -605,7 +605,7 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
           alert('Vui lòng chọn thời gian khởi hành và đến dự kiến');
           return false;
         }
-        if (formData.departureTime.isAfter(formData.expectedArrivalTime)) {
+        if (formData.departureTime.isBefore(formData.expectedArrivalTime)) {
           alert('Thời gian khởi hành phải trước thời gian đến');
           return false;
         }

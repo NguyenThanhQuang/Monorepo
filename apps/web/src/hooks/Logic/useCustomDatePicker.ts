@@ -1,38 +1,27 @@
 import { useRef } from 'react';
 
 interface UseCustomDatePickerProps {
-  value: string;
-  onChange: (date: string) => void;
+  value?: string;
+  onChange: (value: string) => void;
 }
 
-export function useCustomDatePicker({
-  value,
+export const useCustomDatePicker = ({
   onChange,
-}: UseCustomDatePickerProps) {
+}: UseCustomDatePickerProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const formatDisplayDate = (isoDate: string) => {
-    if (!isoDate) return 'dd/mm/yyyy';
-    const [year, month, day] = isoDate.split('-');
-    return `${day}/${month}/${year}`;
-  };
-
   const handleContainerClick = () => {
-    if (!inputRef.current) return;
-
-    try {
-      if (typeof inputRef.current.showPicker === 'function') {
-        inputRef.current.showPicker();
-      } else {
-        inputRef.current.focus();
-      }
-    } catch (error) {
-      console.error('Không thể mở lịch:', error);
-    }
+    inputRef.current?.showPicker?.();
+    inputRef.current?.focus();
   };
 
-  const handleChange = (value: string) => {
-    onChange(value);
+  const handleChange = (val: string) => {
+    onChange(val);
+  };
+
+  const formatDisplayDate = (date?: string) => {
+    if (!date) return 'Chọn ngày';
+    return new Date(date).toLocaleDateString('vi-VN');
   };
 
   return {
@@ -41,4 +30,4 @@ export function useCustomDatePicker({
     handleContainerClick,
     handleChange,
   };
-}
+};

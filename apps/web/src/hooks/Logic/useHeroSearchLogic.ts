@@ -1,3 +1,4 @@
+// src/hooks/Logic/useHeroSearchLogic.ts
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { Location } from '@obtp/shared-types';
@@ -21,7 +22,7 @@ export function useHeroSearchLogic({
   const [fromLocation, setFromLocation] = useState<Location | null>(initialFrom);
   const [toLocation, setToLocation] = useState<Location | null>(initialTo);
 
-const [date, setDate] = useState<string | undefined>(undefined);
+  const [date, setDate] = useState<string | undefined>(undefined);
 
   const [fromSuggestions, setFromSuggestions] = useState<Location[]>([]);
   const [toSuggestions, setToSuggestions] = useState<Location[]>([]);
@@ -32,7 +33,7 @@ const [date, setDate] = useState<string | undefined>(undefined);
   const fromInputRef = useRef<HTMLInputElement>(null);
   const toInputRef = useRef<HTMLInputElement>(null);
 
-  /* ===== LOAD ALL WHEN CLICK ===== */
+  /* ================= LOAD ALL ================= */
   const loadAllFromLocations = async () => {
     const res = await locationApi.search('');
     setFromSuggestions(res);
@@ -43,7 +44,7 @@ const [date, setDate] = useState<string | undefined>(undefined);
     setToSuggestions(res);
   };
 
-  /* ===== AUTOCOMPLETE FROM ===== */
+  /* ================= AUTOCOMPLETE FROM ================= */
   useEffect(() => {
     if (!fromText) return;
 
@@ -55,7 +56,7 @@ const [date, setDate] = useState<string | undefined>(undefined);
     return () => clearTimeout(timer);
   }, [fromText]);
 
-  /* ===== AUTOCOMPLETE TO ===== */
+  /* ================= AUTOCOMPLETE TO ================= */
   useEffect(() => {
     if (!toText) return;
 
@@ -67,7 +68,7 @@ const [date, setDate] = useState<string | undefined>(undefined);
     return () => clearTimeout(timer);
   }, [toText]);
 
-  /* ===== SEARCH ===== */
+  /* ================= SEARCH ================= */
   const handleSearch = () => {
     if (!fromLocation || !toLocation) {
       alert(t('selectBothLocations'));
@@ -75,9 +76,16 @@ const [date, setDate] = useState<string | undefined>(undefined);
     }
 
     const finalDate = date || new Date().toISOString().split('T')[0];
-    onSearch?.(fromLocation.id, toLocation.id, finalDate);
+
+    // ✅ GỬI PROVINCE – KHỚP SearchPage & SearchResults
+     onSearch?.({
+      fromProvince: fromLocation.province,
+      toProvince: toLocation.province,
+      date: finalDate,
+    });
   };
 
+  /* ================= SWAP ================= */
   const handleSwap = () => {
     setFromLocation(toLocation);
     setToLocation(fromLocation);
