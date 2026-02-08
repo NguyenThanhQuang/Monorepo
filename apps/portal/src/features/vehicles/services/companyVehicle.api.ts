@@ -1,6 +1,5 @@
 import type { AxiosError } from "axios";
 import api from "../../../api/api";
-
 import type { VehiclePayload } from "../types/vehicle.types";
 import type { CreateVehiclePayload, UpdateVehiclePayload, Vehicle } from "@obtp/shared-types";
 
@@ -21,6 +20,7 @@ const handleApiError = (error: AxiosError<any>): never => {
   throw new Error(message);
 };
 
+// API calls without auth context (for hooks)
 export const vehiclesApi = {
   getMyCompanyVehicles: async () => {
     const res = await api.get('/vehicles');
@@ -43,7 +43,7 @@ export const vehiclesApi = {
   },
 };
 
-/* ================= VEHICLE API ================= */
+/* ================= VEHICLE API (with companyId) ================= */
 
 export const companyVehicleApi = {
   async getVehicles(companyId: string): Promise<Vehicle[]|any> {

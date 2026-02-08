@@ -2,19 +2,18 @@ import { useState } from 'react';
 import { User, Lock, Building2, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ForgotPasswordModal } from './ForgotPassword';
+import { authApi } from '../api/service/auth/auth.api';
+import { useNavigate } from 'react-router-dom'; // Thêm import này
+import { useAuth } from '../../contexts/AuthContext';
 
 interface AdminLoginProps {
-  onLoginSuccess: (adminData: {
-    name: string;
-    id: string;
-    email: string;
-    companyId: string; // Thêm companyId
-  }) => void;
   onBack: () => void;
 }
 
-export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
+export function AdminLogin({ onBack }: AdminLoginProps) {
   const { t } = useLanguage();
+  const { login } = useAuth(); // Sử dụng useAuth
+  const navigate = useNavigate(); // Sử dụng useNavigate
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -42,17 +41,16 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
         return;
       }
 
-      // ✅ lưu token
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('user', JSON.stringify(user)); // Lưu thông tin user
-
-      // ✅ redirect dashboard
-      onLoginSuccess({
-        name: user.name,
+      // ✅ Sử dụng auth context để login
+      login(accessToken, {
         id: user.id,
         email: user.email,
-        companyId: user.companyId, // Thêm companyId
+        roles: user.roles,
+        companyId: user.companyId,
       });
+
+      // ✅ Redirect to dashboard
+      navigate('/company/dashboard');
     } catch (err: any) {
       setErrorMessage(
         err?.response?.data?.message || 'Đăng nhập thất bại'
