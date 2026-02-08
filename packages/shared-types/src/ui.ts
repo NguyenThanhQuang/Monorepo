@@ -19,7 +19,21 @@ export type CompanyTripStatus =
   | "cancelled";
 
 
-
+export interface VehicleResponse {
+  _id: string;
+  companyId: string;
+  vehicleNumber: string;
+  type: string;
+  description?: string;
+  status: VehicleStatus;
+  floors: number;
+  seatColumns: number;
+  seatRows: number;
+  aislePositions: number[];
+  totalSeats: number;
+  createdAt: string;
+  updatedAt: string;
+}
 export interface BookingUI {
   id: string;
   ticketCode?: string;

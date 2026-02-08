@@ -17,8 +17,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 import { vehiclesService } from '../services/vehicles.service';
-import type { Vehicle } from '../services/vehicles.service';
+import type { VehiclePayload } from '../services/vehicles.service';
 import VehicleDialog from '../components/VehicleDialog';
+import type { Vehicle } from '@obtp/shared-types';
 
 interface Props {
   companyId: string;
@@ -38,6 +39,20 @@ export default function VehicleManagementPage({ companyId }: Props) {
   useEffect(() => {
     fetchVehicles();
   }, []);
+
+  /* ===== HANDLE SAVE ===== */
+  const handleSave = async (payload: VehiclePayload, id?: string) => {
+    try {
+      if (id) {
+        await vehiclesService.update(id, payload);
+      } else {
+        await vehiclesService.create(payload);
+      }
+      fetchVehicles();
+    } catch (error) {
+      console.error('Error saving vehicle:', error);
+    }
+  };
 
   /* ===== DELETE ===== */
   const handleDelete = async (id: string) => {
@@ -73,8 +88,6 @@ export default function VehicleManagementPage({ companyId }: Props) {
             <TableRow>
               <TableCell>Biển số</TableCell>
               <TableCell>Loại xe</TableCell>
-              <TableCell>Hãng</TableCell>
-              <TableCell>Năm SX</TableCell>
               <TableCell>Số ghế</TableCell>
               <TableCell>Trạng thái</TableCell>
               <TableCell />
@@ -85,9 +98,7 @@ export default function VehicleManagementPage({ companyId }: Props) {
             {vehicles.map((v) => (
               <TableRow key={v._id}>
                 <TableCell>{v.vehicleNumber}</TableCell>
-                <TableCell>{v.vehicleType}</TableCell>
-                <TableCell>{v.brand}</TableCell>
-                <TableCell>{v.manufactureYear}</TableCell>
+                <TableCell>{v.type}</TableCell>
                 <TableCell>{v.totalSeats}</TableCell>
                 <TableCell>{v.status}</TableCell>
 
@@ -119,6 +130,7 @@ export default function VehicleManagementPage({ companyId }: Props) {
         open={openDialog}
         companyId={companyId}
         vehicle={selectedVehicle}
+        onSave={handleSave}
         onClose={() => {
           setOpenDialog(false);
           fetchVehicles();

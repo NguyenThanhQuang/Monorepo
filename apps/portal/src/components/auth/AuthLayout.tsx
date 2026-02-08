@@ -8,6 +8,7 @@ interface AdminLoginProps {
     name: string;
     id: string;
     email: string;
+    companyId: string; // Thêm companyId
   }) => void;
   onBack: () => void;
 }
@@ -43,12 +44,14 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
 
       // ✅ lưu token
       localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('user', JSON.stringify(user)); // Lưu thông tin user
 
       // ✅ redirect dashboard
       onLoginSuccess({
         name: user.name,
         id: user.id,
         email: user.email,
+        companyId: user.companyId, // Thêm companyId
       });
     } catch (err: any) {
       setErrorMessage(
@@ -87,7 +90,6 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-
             {/* ERROR MESSAGE */}
             {errorMessage && (
               <div className="bg-red-50 border border-red-300 text-red-600 text-sm p-3 rounded-xl">
@@ -144,7 +146,7 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
               {isLoading ? 'Đang đăng nhập...' : t('login')}
             </button>
 
-            {/* Forgot */}
+            {/* Forgot Password */}
             <button
               type="button"
               onClick={() => setShowForgotPassword(true)}

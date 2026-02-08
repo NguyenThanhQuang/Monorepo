@@ -1,10 +1,8 @@
 import type { AxiosError } from "axios";
 import api from "../../../api/api";
 
-import type {
-  VehiclePayload
-} from "../types/vehicle.types";
-import type { Vehicle } from "@obtp/shared-types";
+import type { VehiclePayload } from "../types/vehicle.types";
+import type { CreateVehiclePayload, UpdateVehiclePayload, Vehicle } from "@obtp/shared-types";
 
 /* ================= COMMON RESPONSE ================= */
 
@@ -23,10 +21,32 @@ const handleApiError = (error: AxiosError<any>): never => {
   throw new Error(message);
 };
 
+export const vehiclesApi = {
+  getMyCompanyVehicles: async () => {
+    const res = await api.get('/vehicles');
+    return res.data;
+  },
+
+  createVehicle: async (payload: CreateVehiclePayload) => {
+    const res = await api.post('/vehicles', payload);
+    return res.data;
+  },
+
+  updateVehicle: async (id: string, payload: UpdateVehiclePayload) => {
+    const res = await api.patch(`/vehicles/${id}`, payload);
+    return res.data;
+  },
+
+  deleteVehicle: async (id: string) => {
+    const res = await api.delete(`/vehicles/${id}`);
+    return res.data;
+  },
+};
+
 /* ================= VEHICLE API ================= */
 
 export const companyVehicleApi = {
-  async getVehicles(companyId: string): Promise<Vehicle[] |any> {
+  async getVehicles(companyId: string): Promise<Vehicle[]|any> {
     try {
       const res = await api.get<ApiResponse<Vehicle[]>>(
         `/vehicles/company/${companyId}`

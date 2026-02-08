@@ -1,32 +1,14 @@
 import type { AxiosResponse } from 'axios';
 import api from '../../../api/api';
+import type { Vehicle } from '@obtp/shared-types';
 
 /* ================= TYPES ================= */
 
 export type VehicleStatus = 'active' | 'inactive' | 'maintenance';
 
-export interface Vehicle {
-  _id: string;
-  companyId: string;
-
-  vehicleNumber: string;
-  vehicleType: string;
-  brand: string;
-  manufactureYear: number;
-  totalSeats: number;
-
-  status: VehicleStatus;
-  lastMaintenanceDate?: string;
-
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export interface VehiclePayload {
   vehicleNumber: string;
-  vehicleType: string;
-  brand: string;
-  manufactureYear: number;
+  type: string;
   totalSeats: number;
   companyId: string;
 }
@@ -49,9 +31,7 @@ export const vehiclesService = {
       '/vehicles',
       {
         vehicleNumber: payload.vehicleNumber,
-        vehicleType: payload.vehicleType,
-        brand: payload.brand,
-        manufactureYear: payload.manufactureYear,
+        type: payload.type,
         totalSeats: payload.totalSeats,
         companyId: payload.companyId,
       },

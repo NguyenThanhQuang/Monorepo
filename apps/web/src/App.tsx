@@ -19,7 +19,7 @@ import { CompanyDashboard } from './pages/company-dashboard';
 import { BookingManagement } from './pages/admin/BookingManagement';
 import { RouteManagement } from './pages/admin/route-management';
 import VehicleManagementPage from './pages/admin/vehicle-management';
-import AddTripContainer from './pages/company/add-trip/AddTripContainer';
+import AddTripContainer from '../../portal/src/features/trips/add-trip/AddTripContainer';
 import { SearchResults } from './components/shared/Search/SearchResults';
 
 /* ===== COMPANY DASHBOARD ===== */

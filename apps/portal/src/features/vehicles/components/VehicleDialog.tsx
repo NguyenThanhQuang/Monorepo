@@ -9,14 +9,13 @@ import {
   Stack,
 } from '@mui/material';
 
-import {
-  vehiclesService,
-  type VehiclePayload,
-} from '../services/vehicles.service';
-import type { Vehicle } from "@obtp/shared-types";
+import type { VehiclePayload } from "../types/vehicle.types";
+import type { Vehicle } from '@obtp/shared-types';
+
 interface Props {
   open: boolean;
   onClose: () => void;
+  onSave: (payload: VehiclePayload, id?: string) => Promise<void>;
   companyId: string;
   vehicle?: Vehicle | null;
 }
@@ -24,6 +23,7 @@ interface Props {
 export default function VehicleDialog({
   open,
   onClose,
+  onSave,
   companyId,
   vehicle,
 }: Props) {
@@ -31,9 +31,7 @@ export default function VehicleDialog({
 
   const [form, setForm] = useState<VehiclePayload>({
     vehicleNumber: '',
-    vehicleType: '',
-    brand: '',
-    manufactureYear: new Date().getFullYear(),
+    type: '',
     totalSeats: 0,
     companyId,
   });
@@ -42,15 +40,20 @@ export default function VehicleDialog({
   useEffect(() => {
     if (vehicle) {
       setForm({
-        vehicleNumber: vehicle.vehicleNumber,
-        vehicleType: vehicle.type,
-        brand: vehicle.brand,
-        manufactureYear: vehicle.manufactureYear,
-        totalSeats: vehicle.totalSeats,
+        vehicleNumber: vehicle.vehicleNumber || '',
+        type: vehicle.type || '',
+        totalSeats: vehicle.totalSeats || 0,
+        companyId,
+      });
+    } else {
+      setForm({
+        vehicleNumber: '',
+        type: '',
+        totalSeats: 0,
         companyId,
       });
     }
-  }, [vehicle]);
+  }, [vehicle, companyId]);
 
   /* ===== HANDLE CHANGE ===== */
   const handleChange = (
@@ -62,13 +65,16 @@ export default function VehicleDialog({
 
   /* ===== SUBMIT ===== */
   const handleSubmit = async () => {
-    if (isEdit && vehicle) {
-      await vehiclesService.update(vehicle._id, form);
-    } else {
-      await vehiclesService.create(form);
+    try {
+      if (isEdit && vehicle) {
+        await onSave(form, vehicle._id);
+      } else {
+        await onSave(form);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error saving vehicle:', error);
     }
-
-    onClose();
   };
 
   return (
@@ -90,28 +96,9 @@ export default function VehicleDialog({
 
           <TextField
             label="Loại xe"
-            value={form.vehicleType}
+            value={form.type}
             onChange={(e) =>
-              handleChange('vehicleType', e.target.value)
-            }
-            fullWidth
-          />
-
-          <TextField
-            label="Hãng xe"
-            value={form.brand}
-            onChange={(e) =>
-              handleChange('brand', e.target.value)
-            }
-            fullWidth
-          />
-
-          <TextField
-            label="Năm sản xuất"
-            type="number"
-            value={form.manufactureYear}
-            onChange={(e) =>
-              handleChange('manufactureYear', Number(e.target.value))
+              handleChange('type', e.target.value)
             }
             fullWidth
           />

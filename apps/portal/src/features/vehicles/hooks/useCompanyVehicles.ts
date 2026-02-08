@@ -16,10 +16,10 @@ export const useCompanyVehicles = () => {
   const fetchVehicles = async () => {
     if (!companyId) return;
     try {
-      const res = await companyVehicleApi.getVehicles(companyId);
-      setVehicles(res.data);
+      const data = await companyVehicleApi.getVehicles(companyId);
+      setVehicles(data);
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Load vehicles failed");
+      setError(err?.message || "Load vehicles failed");
     }
   };
 
@@ -37,13 +37,17 @@ export const useCompanyVehicles = () => {
       setDialogOpen(false);
       fetchVehicles();
     } catch (err: any) {
-      setError(err?.response?.data?.message);
+      setError(err?.message);
     }
   };
 
   const deleteVehicle = async (id: string) => {
-    await companyVehicleApi.deleteVehicle(id);
-    fetchVehicles();
+    try {
+      await companyVehicleApi.deleteVehicle(id);
+      fetchVehicles();
+    } catch (err: any) {
+      setError(err?.message);
+    }
   };
 
   const stats = useMemo(() => {
@@ -51,7 +55,7 @@ export const useCompanyVehicles = () => {
       total: vehicles.length,
       active: vehicles.filter(v => v.status === "active").length,
       maintenance: vehicles.filter(v => v.status === "maintenance").length,
-      totalSeats: vehicles.reduce((sum, v) => sum + v.totalSeats, 0),
+      totalSeats: vehicles.reduce((sum, v) => sum + (v.totalSeats || 0), 0),
     };
   }, [vehicles]);
 

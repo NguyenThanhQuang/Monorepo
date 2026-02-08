@@ -5,10 +5,11 @@ import { X } from 'lucide-react';
 import type {
   CreateVehiclePayload,
   UpdateVehiclePayload,
+  VehicleResponse,
   VehicleStatus,
 } from '@obtp/shared-types';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { vehiclesApi, type VehicleResponse } from '../../../api/vehicles.api';
+import { vehiclesApi } from '../services/companyVehicle.api';
 
 interface Props {
   vehicle?: VehicleResponse | null;

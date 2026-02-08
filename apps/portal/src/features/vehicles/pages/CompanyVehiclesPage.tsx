@@ -1,5 +1,7 @@
 import { Button, Box, Typography, Alert } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useNavigate } from "react-router-dom";
 
 import { useCompanyVehicles } from "../hooks/useCompanyVehicles";
 import VehicleStats from "../components/VehicleStats";
@@ -8,14 +10,23 @@ import VehicleDialog from "../components/VehicleDialog";
 
 export default function CompanyVehiclesPage() {
   const vm = useCompanyVehicles();
+  const navigate = useNavigate();
 
   if (!vm.companyId) return null;
 
   return (
     <Box>
-      <Typography variant="h5" mb={3}>
-        Quản lý xe
-      </Typography>
+      <Box display="flex" alignItems="center" mb={3} gap={2}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/company/dashboard')}
+        >
+          Quay lại
+        </Button>
+        <Typography variant="h5">
+          Quản lý xe
+        </Typography>
+      </Box>
 
       {vm.error && <Alert severity="error">{vm.error}</Alert>}
 
