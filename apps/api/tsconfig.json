@@ -29,6 +29,11 @@
       "@obtp/business-logic": ["../../packages/business-logic/src/index.ts"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "../../packages/**/*"]
+  "include": [
+    "src/**/*",
+    "../../packages/shared-types/src/**/*",
+    "../../packages/validation/src/**/*",
+    "../../packages/business-logic/src/**/*"
+  ],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "../../packages/ui/**/*"]
 }
