@@ -13,7 +13,7 @@ import { DashboardService } from './dashboard.service';
 import {
   CompanyDefinition,
   CompanySchema,
-} from '@/companies/schemas/company.schema';
+} from 'src/companies/schemas/company.schema';
 import { TripDefinition, TripSchema } from '../trips/schemas/trip.schema';
 import { UserDefinition, UserSchema } from '../users/schemas/user.schema';
 

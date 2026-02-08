@@ -13,8 +13,8 @@ import {
   VehicleStatus,
 } from '@obtp/shared-types';
 
-import { TripsService } from '@/trips/trips.service';
 import { calculateVehicleConfig } from '@obtp/business-logic';
+import { TripsService } from 'src/trips/trips.service';
 import { VehicleDocument } from './schemas/vehicle.schema';
 import { VehiclesRepository } from './vehicles.repository';
 

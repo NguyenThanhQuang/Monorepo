@@ -11,6 +11,12 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import {
+  AUTH_CONSTANTS,
+  comparePassword,
+  generateRandomToken,
+  hashPassword,
+} from '@obtp/business-logic';
+import {
   ActivateAccountPayload,
   ForgotPasswordPayload,
   LoginPayload,
@@ -20,15 +26,8 @@ import {
   TokenValidationResult,
   UserRole,
 } from '@obtp/shared-types';
-
-import { CompanyDocument } from '@/companies/schemas/company.schema';
-import { UserDocument } from '@/users/schemas/user.schema';
-import {
-  AUTH_CONSTANTS,
-  comparePassword,
-  generateRandomToken,
-  hashPassword,
-} from '@obtp/business-logic';
+import { CompanyDocument } from 'src/companies/schemas/company.schema';
+import { UserDocument } from 'src/users/schemas/user.schema';
 import { UsersService } from '../users/users.service';
 import { TokenService } from './token/token.service';
 

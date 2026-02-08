@@ -1,13 +1,3 @@
-import {
-  BookingDefinition,
-  BookingDocument,
-} from '@/bookings/schemas/booking.schema';
-import {
-  CompanyDefinition,
-  CompanyDocument,
-} from '@/companies/schemas/company.schema';
-import { TripDefinition, TripDocument } from '@/trips/schemas/trip.schema';
-import { UserDefinition, UserDocument } from '@/users/schemas/user.schema';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -18,6 +8,16 @@ import {
   UserRole,
 } from '@obtp/shared-types';
 import { Model } from 'mongoose';
+import {
+  BookingDefinition,
+  BookingDocument,
+} from 'src/bookings/schemas/booking.schema';
+import {
+  CompanyDefinition,
+  CompanyDocument,
+} from 'src/companies/schemas/company.schema';
+import { TripDefinition, TripDocument } from 'src/trips/schemas/trip.schema';
+import { UserDefinition, UserDocument } from 'src/users/schemas/user.schema';
 
 @Injectable()
 export class DashboardRepository {
@@ -28,7 +28,8 @@ export class DashboardRepository {
     private readonly userModel: Model<UserDocument>,
     @InjectModel(BookingDefinition.name)
     private readonly bookingModel: Model<BookingDocument>,
-    @InjectModel(TripDefinition.name) private readonly tripModel: Model<TripDocument>,
+    @InjectModel(TripDefinition.name)
+    private readonly tripModel: Model<TripDocument>,
   ) {}
 
   async getAdminQuickStats(): Promise<AdminDashboardStats> {

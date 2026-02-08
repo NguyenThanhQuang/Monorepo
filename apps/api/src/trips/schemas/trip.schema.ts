@@ -1,7 +1,7 @@
-import { LocationDefinition } from '@/locations/schemas/location.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { SeatStatus, TripStatus, TripStopStatus } from '@obtp/shared-types';
 import { HydratedDocument, Types } from 'mongoose';
+import { LocationDefinition } from 'src/locations/schemas/location.schema';
 import { CompanyDefinition } from '../../companies/schemas/company.schema';
 import { VehicleDefinition } from '../../vehicles/schemas/vehicle.schema';
 

@@ -20,7 +20,7 @@ import { BookingsService } from './bookings.service';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-import { OptionalJwtAuthGuard } from '@/auth/guards/optional-jwt-auth.guard';
+import { OptionalJwtAuthGuard } from 'src/auth/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
@@ -47,13 +47,11 @@ export class BookingsController {
     return this.bookingsService.confirmBooking(id, payload);
   }
 
-@Get('company')
-@UseGuards(JwtAuthGuard)
-async getCompanyBookings(
-  @CurrentUser() user: sharedTypes.AuthUserResponse,
-) {
-  return this.bookingsService.getBookingsByCompany(user);
-}
+  @Get('company')
+  @UseGuards(JwtAuthGuard)
+  async getCompanyBookings(@CurrentUser() user: sharedTypes.AuthUserResponse) {
+    return this.bookingsService.getBookingsByCompany(user);
+  }
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async cancel(
