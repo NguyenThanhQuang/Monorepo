@@ -1,5 +1,5 @@
 import type { Vehicle } from '@obtp/shared-types';
-import api from '../../api';
+import api from '../../../../../portal/src/api/api';
 
 export const VehiclesApi = {
   getAll(companyId?: string): Promise<Vehicle[]> {

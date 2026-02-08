@@ -4,7 +4,7 @@ import type {
   SanitizedUserResponse,
  
 } from "@obtp/shared-types";
-import api from "../../api";
+import api from "../../../../../portal/src/api/api";
 
 export const usersApi = {
   getAllForAdmin(): Promise<SanitizedUserResponse[]> {

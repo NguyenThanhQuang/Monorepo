@@ -1,6 +1,6 @@
 // src/api/admin.api.ts
 import type { SystemDashboardStats } from "../../../features/system-dashboard/types";
-import api from "../../api";
+import api from "../../../../../portal/src/api/api";
 
 export const adminApi = {
   getDashboardStats(): Promise<SystemDashboardStats> {

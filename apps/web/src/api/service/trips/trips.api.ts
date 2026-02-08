@@ -9,7 +9,7 @@ import axios, {
   type AxiosError,
   type AxiosResponse,
 } from 'axios';
-import api from '../../api';
+import api from '../../../../../portal/src/api/api';
 
 const API_URL = import.meta.env.VITE_API_URLv1 as string;
 

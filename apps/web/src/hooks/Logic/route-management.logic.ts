@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import api from '../../api/api';
+import api from '../../../../portal/src/api/api';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { RouteManagementTrip, TripStatusUI } from '@obtp/shared-types';
 

@@ -1,5 +1,5 @@
 import type { ReviewDTO } from "@obtp/shared-types";
-import api from "../../api";
+import api from "../../../../../portal/src/api/api";
 
 export const reviewApi = {
   getAllForAdmin: (params?: { companyId?: string }) =>

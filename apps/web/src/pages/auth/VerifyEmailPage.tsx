@@ -7,7 +7,7 @@ import {
   Loader2,
   ArrowLeft,
 } from 'lucide-react';
-import api from '../../api/api';
+import api from '../../../../portal/src/api/api';
 
 type Status = 'loading' | 'success' | 'error';
 

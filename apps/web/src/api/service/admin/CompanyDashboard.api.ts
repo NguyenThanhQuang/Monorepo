@@ -1,4 +1,4 @@
-import api from '../../api';
+import api from '../../../../../portal/src/api/api';
 
 export interface DashboardStatsResponse {
   totalTrips: number;

@@ -1,5 +1,5 @@
 import type { Company, CompanyStatsResponse } from '@obtp/shared-types';
-import api from '../../api';
+import api from '../../../../../portal/src/api/api';
 
 export const companyApi = {
   getAllWithStats(): Promise<CompanyStatsResponse[]> {
