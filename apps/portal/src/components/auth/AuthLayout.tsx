@@ -1,11 +1,10 @@
-import { useState } from 'react';
-import { User, Lock, Building2, ArrowLeft } from 'lucide-react';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { ForgotPasswordModal } from './ForgotPassword';
-import { authApi } from '../api/service/auth/auth.api';
-import { useNavigate } from 'react-router-dom'; // Thêm import này
-import { useAuth } from '../../contexts/AuthContext';
-
+import { useState } from "react";
+import { User, Lock, Building2, ArrowLeft } from "lucide-react";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { ForgotPasswordModal } from "./ForgotPassword";
+import { useNavigate } from "react-router-dom"; // Thêm import này
+import { useAuth } from "../../contexts/AuthContext";
+import { authApi } from "@obtp/api-client";
 interface AdminLoginProps {
   onBack: () => void;
 }
@@ -15,9 +14,9 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
   const { login } = useAuth(); // Sử dụng useAuth
   const navigate = useNavigate(); // Sử dụng useNavigate
 
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
@@ -25,7 +24,7 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
     e.preventDefault();
 
     try {
-      setErrorMessage('');
+      setErrorMessage("");
       setIsLoading(true);
 
       const res = await authApi.login({
@@ -36,8 +35,8 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
       const { accessToken, user } = res.data.data;
 
       // ✅ check role company admin
-      if (!user.roles?.includes('company_admin')) {
-        setErrorMessage('Tài khoản không có quyền quản trị công ty.');
+      if (!user.roles?.includes("company_admin")) {
+        setErrorMessage("Tài khoản không có quyền quản trị công ty.");
         return;
       }
 
@@ -50,11 +49,9 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
       });
 
       // ✅ Redirect to dashboard
-      navigate('/company/dashboard');
+      navigate("/company/dashboard");
     } catch (err: any) {
-      setErrorMessage(
-        err?.response?.data?.message || 'Đăng nhập thất bại'
-      );
+      setErrorMessage(err?.response?.data?.message || "Đăng nhập thất bại");
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +65,7 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
           className="mb-4 flex items-center space-x-2 text-white"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>{t('backToHome')}</span>
+          <span>{t("backToHome")}</span>
         </button>
 
         <div className="bg-white rounded-3xl shadow-2xl p-8">
@@ -78,13 +75,9 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
               <Building2 className="w-10 h-10 text-white" />
             </div>
 
-            <h1 className="text-3xl mb-2">
-              {t('companyAdminTitle')}
-            </h1>
+            <h1 className="text-3xl mb-2">{t("companyAdminTitle")}</h1>
 
-            <p className="text-gray-500">
-              {t('companyLoginSubtitle')}
-            </p>
+            <p className="text-gray-500">{t("companyLoginSubtitle")}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -97,9 +90,7 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
 
             {/* Identifier */}
             <div>
-              <label className="block text-sm mb-2">
-                Email / Phone
-              </label>
+              <label className="block text-sm mb-2">Email / Phone</label>
 
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -117,9 +108,7 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
 
             {/* Password */}
             <div>
-              <label className="block text-sm mb-2">
-                {t('password')}
-              </label>
+              <label className="block text-sm mb-2">{t("password")}</label>
 
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -128,7 +117,7 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('enterPassword')}
+                  placeholder={t("enterPassword")}
                   className="w-full pl-10 pr-4 py-3 border rounded-xl"
                   required
                 />
@@ -141,7 +130,7 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
               disabled={isLoading}
               className="w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-xl disabled:opacity-50"
             >
-              {isLoading ? 'Đang đăng nhập...' : t('login')}
+              {isLoading ? "Đang đăng nhập..." : t("login")}
             </button>
 
             {/* Forgot Password */}
@@ -150,7 +139,7 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
               onClick={() => setShowForgotPassword(true)}
               className="w-full text-sm text-indigo-500"
             >
-              {t('forgotPassword')}
+              {t("forgotPassword")}
             </button>
           </form>
         </div>

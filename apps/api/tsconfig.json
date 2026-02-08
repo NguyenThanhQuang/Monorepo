@@ -23,7 +23,9 @@
 
     "paths": {
       "@/*": ["src/*"],
-      "src/*": ["src/*"]
+      "@obtp/shared-types": ["../../packages/shared-types/src/index.ts"],
+      "@obtp/validation": ["../../packages/validation/src/index.ts"],
+      "@obtp/business-logic": ["../../packages/business-logic/src/index.ts"]
     }
   },
   "include": ["src/**/*"],

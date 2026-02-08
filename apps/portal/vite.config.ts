@@ -16,10 +16,23 @@ export default defineConfig({
         __dirname,
         "../../packages/validation/src/index.ts",
       ),
+      "@obtp/business-logic": path.resolve(
+        __dirname,
+        "../../packages/business-logic/src/index.ts",
+      ),
       "@obtp/api-client": path.resolve(
         __dirname,
-        "../../packages/api-client/src/index.ts",
+        "../../packages/api-client/src/modules/index.ts",
       ),
+      "@obtp/ui": path.resolve(__dirname, "../../packages/ui/src/index.ts"),
     },
+  },
+  optimizeDeps: {
+    exclude: [
+      "@obtp/shared-types",
+      "@obtp/validation",
+      "@obtp/business-logic",
+      "@obtp/ui",
+    ],
   },
 });
