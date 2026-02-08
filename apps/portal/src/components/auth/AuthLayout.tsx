@@ -5,6 +5,7 @@ import { ForgotPasswordModal } from "./ForgotPassword";
 import { useNavigate } from "react-router-dom"; // Thêm import này
 import { useAuth } from "../../contexts/AuthContext";
 import { authApi } from "@obtp/api-client";
+import { UserRole } from "@obtp/shared-types";
 interface AdminLoginProps {
   onBack: () => void;
 }
@@ -32,10 +33,10 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
         password,
       });
 
-      const { accessToken, user } = res.data.data;
+      const { accessToken, user } = res;
 
       // ✅ check role company admin
-      if (!user.roles?.includes("company_admin")) {
+      if (!user.roles?.includes(UserRole.COMPANY_ADMIN)) {
         setErrorMessage("Tài khoản không có quyền quản trị công ty.");
         return;
       }

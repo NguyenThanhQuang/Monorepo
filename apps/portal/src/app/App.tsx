@@ -1,10 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import './App.css';
-import LoginPage from './pages/LoginPage';
-import { CompanyDashboard } from './components/CompanyDashboard';
-import CompanyVehiclesPage from './pages/CompanyVehiclesPage';
-import { ThemeProvider } from './providers/ThemeProvider';
-import { AuthProvider, useAuth } from './contexts/AuthContext'; // Thêm useAuth
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import LoginPage from '../components/layout/LoginPage';
+import { CompanyDashboard } from '../features/dashboard/pages/CompanyDashboard';
+import CompanyVehiclesPage from '../features/vehicles/pages/CompanyVehiclesPage';
+import { ThemeProvider } from './providers';
 
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {

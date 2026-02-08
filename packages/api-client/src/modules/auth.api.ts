@@ -8,12 +8,12 @@ import {
 } from "@obtp/shared-types";
 import { http } from "../core/http-client";
 
-export const authApi = {
-  login: (payload: LoginPayload) => {
-    return http.post<LoginResponse>("/auth/login", payload);
-  },
+  export const authApi = {
+    login: (payload: LoginPayload) => {
+      return http.post<LoginResponse>("/auth/login", payload);
+    },
 
-  register: (payload: RegisterPayload) => {
+    register: (payload: RegisterPayload) => {
     return http.post<{ message: string }>("/auth/register", payload);
   },
 

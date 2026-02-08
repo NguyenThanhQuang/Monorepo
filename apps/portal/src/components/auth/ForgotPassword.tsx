@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { X, Mail, CheckCircle, ArrowLeft } from 'lucide-react';
-import { authApi } from '@/api/service/auth/auth.api';
+
 import { useLanguage } from '../../contexts/LanguageContext';
+import { authApi } from '@obtp/api-client';
 
 interface ForgotPasswordModalProps {
   onClose: () => void;

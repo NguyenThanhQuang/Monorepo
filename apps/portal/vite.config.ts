@@ -4,34 +4,44 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react()],
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
 
       "@obtp/shared-types": path.resolve(
         __dirname,
-        "../../packages/shared-types/src/index.ts",
+        "../../packages/shared-types/src"
       ),
+
       "@obtp/validation": path.resolve(
         __dirname,
-        "../../packages/validation/src/index.ts",
+        "../../packages/validation/src"
       ),
+
       "@obtp/business-logic": path.resolve(
         __dirname,
-        "../../packages/business-logic/src/index.ts",
+        "../../packages/business-logic/src"
       ),
+
       "@obtp/api-client": path.resolve(
         __dirname,
-        "../../packages/api-client/src/modules/index.ts",
+        "../../packages/api-client/src"
       ),
-      "@obtp/ui": path.resolve(__dirname, "../../packages/ui/src/index.ts"),
+
+      "@obtp/ui": path.resolve(
+        __dirname,
+        "../../packages/ui/src"
+      ),
     },
   },
+
   optimizeDeps: {
     exclude: [
       "@obtp/shared-types",
       "@obtp/validation",
       "@obtp/business-logic",
+      "@obtp/api-client",
       "@obtp/ui",
     ],
   },
