@@ -18,6 +18,44 @@ export type CompanyTripStatus =
   | "cancelled";
 
 
+export interface BookingUI {
+  id: string;
+  ticketCode?: string;
+  passengerName: string;
+  phone: string;
+  route: string;
+  departureTime: string;
+  seatNumber: string;
+  price: number;
+  status: BookingStatus;
+  bookingDate: string;
+  vehiclePlate?: string;
+  // Thêm các trường mới từ API
+  contactName?: string;
+  contactPhone?: string;
+  totalAmount?: number;
+  passengers?: Array<{
+    name: string;
+    phone: string;
+    seatNumber: string;
+    price: number;
+  }>;
+  tripId?: {
+    departureTime: string;
+    route: {
+      fromLocationId: {
+        name: string;
+      };
+      toLocationId: {
+        name: string;
+      };
+    };
+    companyId: {
+      name: string;
+      logoUrl?: string;
+    };
+  };
+}
 export interface VehicleResponse {
   _id: string;
   companyId: string;

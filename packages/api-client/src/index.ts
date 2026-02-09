@@ -11,12 +11,9 @@ import { usersApi } from "./modules/users.api";
 import { vehiclesApi } from "./modules/vehicles.api";
 
 // Export Core HTTP Client (Nếu muốn dùng thủ công)
-export * from "../src/core/http-client";
 
 // Export Type Definition của Error để catch lỗi
 export type { ApiErrorResponse } from "@obtp/shared-types";
-
-// Import các modules
 
 // Export dạng Single Namespace 'api'
 export const api = {
@@ -33,7 +30,7 @@ export const api = {
   maps: mapsApi,
 };
 
-// Hoặc export lẻ từng cái nếu thích tree-shaking (Optional)
+// Hoặc export lẻ từng cái nếu thích tree-shaking
 export {
   authApi,
   bookingsApi,

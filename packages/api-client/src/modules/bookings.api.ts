@@ -1,10 +1,10 @@
+import { http } from "@/core/http-client";
 import {
   Booking,
   ConfirmBookingPayload,
   CreateBookingPayload,
   LookupBookingPayload,
 } from "@obtp/shared-types";
-import { http } from "../core/http-client";
 
 export const bookingsApi = {
   // Step 1: Giữ chỗ (Tạo Booking Status: HELD)
@@ -24,5 +24,15 @@ export const bookingsApi = {
   // Tra cứu vé cho khách vãng lai
   lookup: (payload: LookupBookingPayload) => {
     return http.post<Booking>("/bookings/lookup", payload);
+  },
+
+  // Lấy danh sách booking của company (cho company admin)
+  getCompanyBookings: () => {
+    return http.get<Booking[]>("/bookings/company");
+  },
+
+  // Lấy chi tiết booking
+  getById: (id: string) => {
+    return http.get<Booking>(`/bookings/${id}`);
   },
 };
