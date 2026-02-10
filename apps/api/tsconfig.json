@@ -35,5 +35,5 @@
     "../../packages/validation/src/**/*",
     "../../packages/business-logic/src/**/*"
   ],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "../../packages/ui/**/*"]
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }
