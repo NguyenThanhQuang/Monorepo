@@ -5,6 +5,7 @@ import { dashboardApi } from "./modules/dashboard.api";
 import { locationsApi } from "./modules/locations.api";
 import { mapsApi } from "./modules/maps.api";
 import { paymentsApi } from "./modules/payments.api";
+import { revenueApi } from "./modules/revenueApi";
 import { reviewsApi } from "./modules/reviews.api";
 import { tripsApi } from "./modules/trips.api";
 import { usersApi } from "./modules/users.api";
@@ -28,6 +29,7 @@ export const api = {
   reviews: reviewsApi,
   dashboard: dashboardApi,
   maps: mapsApi,
+  revenueApi: revenueApi,
 };
 
 // Hoặc export lẻ từng cái nếu thích tree-shaking
@@ -43,4 +45,5 @@ export {
   tripsApi,
   usersApi,
   vehiclesApi,
+  revenueApi
 };

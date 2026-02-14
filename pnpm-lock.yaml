@@ -27,6 +27,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@mui/material':
+        specifier: ^7.3.7
+        version: 7.3.7(@emotion/react@11.14.0(@types/react@19.2.9)(react@19.2.4))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.9)(react@19.2.4))(@types/react@19.2.9)(react@19.2.4))(@types/react@19.2.9)(react-dom@19.2.0(react@19.2.4))(react@19.2.4)
       '@obtp/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
@@ -39,12 +42,18 @@ importers:
       '@obtp/validation':
         specifier: workspace:*
         version: link:../../packages/validation
+      lucide-react:
+        specifier: ^0.563.0
+        version: 0.563.0(react@19.2.4)
       react:
         specifier: ^19.2.0
         version: 19.2.4
       react-dom:
         specifier: ^19.2.0
         version: 19.2.0(react@19.2.4)
+      react-router-dom:
+        specifier: ^7.13.0
+        version: 7.13.0(react-dom@19.2.0(react@19.2.4))(react@19.2.4)
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.1
@@ -6410,6 +6419,27 @@ snapshots:
       '@emotion/styled': 11.14.1(@emotion/react@11.14.0(@types/react@19.2.9)(react@19.2.0))(@types/react@19.2.9)(react@19.2.0)
       '@types/react': 19.2.9
 
+  '@mui/material@7.3.7(@emotion/react@11.14.0(@types/react@19.2.9)(react@19.2.4))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.9)(react@19.2.4))(@types/react@19.2.9)(react@19.2.4))(@types/react@19.2.9)(react-dom@19.2.0(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@babel/runtime': 7.28.6
+      '@mui/core-downloads-tracker': 7.3.7
+      '@mui/system': 7.3.7(@emotion/react@11.14.0(@types/react@19.2.9)(react@19.2.4))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.9)(react@19.2.4))(@types/react@19.2.9)(react@19.2.4))(@types/react@19.2.9)(react@19.2.4)
+      '@mui/types': 7.4.10(@types/react@19.2.9)
+      '@mui/utils': 7.3.7(@types/react@19.2.9)(react@19.2.4)
+      '@popperjs/core': 2.11.8
+      '@types/react-transition-group': 4.4.12(@types/react@19.2.9)
+      clsx: 2.1.1
+      csstype: 3.2.3
+      prop-types: 15.8.1
+      react: 19.2.4
+      react-dom: 19.2.0(react@19.2.4)
+      react-is: 19.2.4
+      react-transition-group: 4.4.5(react-dom@19.2.0(react@19.2.4))(react@19.2.4)
+    optionalDependencies:
+      '@emotion/react': 11.14.0(@types/react@19.2.9)(react@19.2.4)
+      '@emotion/styled': 11.14.1(@emotion/react@11.14.0(@types/react@19.2.9)(react@19.2.4))(@types/react@19.2.9)(react@19.2.4)
+      '@types/react': 19.2.9
+
   '@mui/material@7.3.7(@emotion/react@11.14.0(@types/react@19.2.9)(react@19.2.4))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.9)(react@19.2.4))(@types/react@19.2.9)(react@19.2.4))(@types/react@19.2.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@babel/runtime': 7.28.6
@@ -10107,6 +10137,12 @@ snapshots:
       react-dom: 19.2.0(react@19.2.0)
       react-router: 7.13.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
 
+  react-router-dom@7.13.0(react-dom@19.2.0(react@19.2.4))(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+      react-dom: 19.2.0(react@19.2.4)
+      react-router: 7.13.0(react-dom@19.2.0(react@19.2.4))(react@19.2.4)
+
   react-router-dom@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
@@ -10120,6 +10156,14 @@ snapshots:
       set-cookie-parser: 2.7.2
     optionalDependencies:
       react-dom: 19.2.0(react@19.2.0)
+
+  react-router@7.13.0(react-dom@19.2.0(react@19.2.4))(react@19.2.4):
+    dependencies:
+      cookie: 1.1.1
+      react: 19.2.4
+      set-cookie-parser: 2.7.2
+    optionalDependencies:
+      react-dom: 19.2.0(react@19.2.4)
 
   react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -10137,6 +10181,15 @@ snapshots:
       prop-types: 15.8.1
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
+
+  react-transition-group@4.4.5(react-dom@19.2.0(react@19.2.4))(react@19.2.4):
+    dependencies:
+      '@babel/runtime': 7.28.6
+      dom-helpers: 5.2.1
+      loose-envify: 1.4.0
+      prop-types: 15.8.1
+      react: 19.2.4
+      react-dom: 19.2.0(react@19.2.4)
 
   react-transition-group@4.4.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
