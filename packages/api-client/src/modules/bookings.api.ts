@@ -1,4 +1,4 @@
-import { http } from "@/core/http-client";
+import { http } from "../core/http-client";
 import {
   Booking,
   ConfirmBookingPayload,

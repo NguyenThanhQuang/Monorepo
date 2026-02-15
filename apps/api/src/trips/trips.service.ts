@@ -204,10 +204,14 @@ export class TripsService {
   }
 
   async findAllForManagement(companyId?: string): Promise<TripDocument[]> {
-    const filter: any = {};
-    if (companyId) filter.companyId = companyId;
-    return this.tripsRepository.findManagementTrips(filter);
+  const filter: any = {};
+
+  if (companyId) {
+    filter.companyId = new Types.ObjectId(companyId);
   }
+
+  return this.tripsRepository.findManagementTrips(filter);
+}
  async search(fromId: string, toId: string, date: string) {
     if (!fromId || !toId || !date) {
       throw new BadRequestException('Missing search params');

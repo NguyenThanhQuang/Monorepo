@@ -1,8 +1,8 @@
-// src/pages/company/RouteManagement.tsx
+// src/features/trips/pages/RouteManagement.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, Calendar, Clock, UserPlus, Bus, Ticket, RefreshCw } from 'lucide-react';
-import { DriverAssignment } from '../DriverAssignment';
+// import { DriverAssignment } from '../DriverAssignment';
 import type { Trip } from '@obtp/shared-types';
 import { api } from '@obtp/api-client';
 
@@ -37,10 +37,14 @@ export function RouteManagement() {
     cancelled: { label: 'Đã hủy', color: 'bg-red-500', textColor: 'text-red-600' }
   };
 
-  // Lấy companyId từ localStorage
+  // ✅ helper đảm bảo luôn có tripId
+  const getTripId = (trip: Trip): string => {
+    return (trip as any)?._id || (trip as any)?.id || '';
+  };
+
   const getCompanyId = (): string => {
     try {
-      const userStr = localStorage.getItem('user');
+      const userStr = localStorage.getItem('authUser');
       if (userStr) {
         const userData = JSON.parse(userStr);
         return userData.companyId || '';
@@ -51,7 +55,6 @@ export function RouteManagement() {
     return '';
   };
 
-  // Fetch dữ liệu chuyến đi
   const fetchTrips = async () => {
     const companyId = getCompanyId();
     if (!companyId) {
@@ -64,12 +67,11 @@ export function RouteManagement() {
       setLoading(true);
       setError(null);
       
-      // Lấy dữ liệu chuyến đi
       const response = await api.trips.getAllManagement(companyId);
       const tripsData = response || [];
+      console.log(tripsData)
       setTrips(tripsData);
       
-      // Tính toán thống kê
       const totalTrips = tripsData.length;
       const scheduledTrips = tripsData.filter((trip: Trip) => trip.status === 'scheduled').length;
       const runningTrips = tripsData.filter((trip: Trip) => trip.status === 'departed').length;
@@ -99,7 +101,6 @@ export function RouteManagement() {
     }
   };
 
-  // Filter trips theo search và status
   const filterTrips = async () => {
     const companyId = getCompanyId();
     if (!companyId) return;
@@ -107,11 +108,9 @@ export function RouteManagement() {
     try {
       setLoading(true);
       
-      // Sử dụng searchWithFilter từ tripsApi
       const filteredTrips = await api.trips.searchWithFilter(companyId, searchQuery, filterStatus);
       setTrips(filteredTrips);
       
-      // Tính toán thống kê cho filtered data
       const totalTrips = filteredTrips.length;
       const scheduledTrips = filteredTrips.filter((trip: Trip) => trip.status === 'scheduled').length;
       const runningTrips = filteredTrips.filter((trip: Trip) => trip.status === 'departed').length;
@@ -153,17 +152,21 @@ export function RouteManagement() {
     }
   }, [searchQuery, filterStatus]);
 
-  const handleDeleteTrip = async (tripId: string, tripName: string) => {
+  const handleDeleteTrip = async (trip: Trip, tripName: string) => {
+    const tripId = getTripId(trip);
+
+    if (!tripId) {
+      console.error('TripId undefined:', trip);
+      return;
+    }
+
     if (!window.confirm(`Bạn có chắc chắn muốn hủy chuyến đi "${tripName}"?`)) {
       return;
     }
 
     try {
       await api.trips.cancel(tripId);
-      
-      // Refresh danh sách
       fetchTrips();
-      
       alert('Đã hủy chuyến đi thành công!');
     } catch (err: any) {
       console.error('Error deleting trip:', err);
@@ -171,11 +174,15 @@ export function RouteManagement() {
     }
   };
 
-  const handleEditTrip = (tripId: string) => {
+  const handleEditTrip = (trip: Trip) => {
+    const tripId = getTripId(trip);
+    if (!tripId) return;
     navigate(`/company/trips/edit/${tripId}`);
   };
 
-  const handleAssignDriver = (tripId: string) => {
+  const handleAssignDriver = (trip: Trip) => {
+    const tripId = getTripId(trip);
+    if (!tripId) return;
     setSelectedTripForDriver(tripId);
     setShowDriverAssignment(true);
   };
@@ -183,6 +190,8 @@ export function RouteManagement() {
   const handleDriverAssigned = (driverId: string) => {
     console.log(`Driver ${driverId} assigned to trip ${selectedTripForDriver}`);
     alert('Đã phân công tài xế thành công!');
+    setShowDriverAssignment(false);
+    setSelectedTripForDriver(null);
   };
 
   const handleCreateNewTrip = () => {
@@ -223,7 +232,8 @@ export function RouteManagement() {
   };
 
   const renderTripRow = (trip: Trip) => {
-    const statusInfo = statusConfig[trip.status as keyof typeof statusConfig];
+    const tripId = getTripId(trip);
+
     const totalSeats = trip.totalSeats || (trip.vehicleId as any)?.totalSeats || 40;
     const soldSeats = Math.max(0, totalSeats - (trip.availableSeatsCount || 0));
     const soldPercentage = (soldSeats / totalSeats) * 100;
@@ -231,7 +241,7 @@ export function RouteManagement() {
     const tripInfo = getTripDisplayInfo(trip);
     
     return (
-      <tr key={trip._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
+      <tr key={tripId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
         <td className="px-6 py-4">
           <div className="text-gray-900 dark:text-white font-medium">{tripInfo.routeName}</div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -273,21 +283,21 @@ export function RouteManagement() {
         <td className="px-6 py-4">
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => handleAssignDriver(trip._id)}
+              onClick={() => handleAssignDriver(trip)}
               className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
               title="Phân công tài xế"
             >
               <UserPlus className="w-4 h-4" />
             </button>
             <button
-              onClick={() => handleEditTrip(trip._id)}
+              onClick={() => handleEditTrip(trip)}
               className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
               title="Chỉnh sửa"
             >
               <Edit2 className="w-4 h-4" />
             </button>
             <button
-              onClick={() => handleDeleteTrip(trip._id, tripInfo.routeName)}
+              onClick={() => handleDeleteTrip(trip, tripInfo.routeName)}
               className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title="Hủy chuyến"
               disabled={trip.status === 'departed' || trip.status === 'arrived'}
@@ -301,12 +311,12 @@ export function RouteManagement() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Quản lý chuyến đi</h2>
-          <p className="text-gray-600 dark:text-gray-400">Quản lý lịch trình và chuyến đi</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Quản lý chuyến đi</h1>
+          <p className="text-gray-600 dark:text-gray-400">Quản lý lịch trình và chuyến đi của nhà xe</p>
         </div>
         <div className="flex items-center space-x-3">
           <button
@@ -328,8 +338,8 @@ export function RouteManagement() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -379,7 +389,7 @@ export function RouteManagement() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Search and Filter */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
@@ -416,24 +426,24 @@ export function RouteManagement() {
       {/* Trip List */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center">
+          <div className="p-12 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
             <p className="text-gray-500 mt-2">Đang tải dữ liệu...</p>
           </div>
         ) : trips.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-4">
-              <Bus className="w-8 h-8 text-gray-400" />
+          <div className="p-12 text-center">
+            <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-4">
+              <Bus className="w-10 h-10 text-gray-400" />
             </div>
-            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
               {searchQuery || filterStatus !== 'all' 
                 ? 'Không tìm thấy chuyến đi phù hợp' 
                 : 'Chưa có chuyến đi nào'}
-            </h4>
-            <p className="text-gray-500 max-w-md mx-auto mb-4">
+            </h3>
+            <p className="text-gray-500 max-w-md mx-auto mb-6">
               {searchQuery || filterStatus !== 'all' 
                 ? 'Hãy thử tìm kiếm với từ khóa khác hoặc bỏ bộ lọc.' 
-                : 'Hãy tạo chuyến đi đầu tiên để bắt đầu!'}
+                : 'Hãy tạo chuyến đi đầu tiên để bắt đầu quản lý!'}
             </p>
             <button 
               onClick={handleCreateNewTrip}
@@ -449,25 +459,25 @@ export function RouteManagement() {
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    TUYẾN ĐƯỜNG
+                    Tuyến đường
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    THỜI GIAN
+                    Thời gian
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    VEHICLE
+                    Xe
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    GIÁ VÉ
+                    Giá vé
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    SỐ GHẾ
+                    Số ghế
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    TRẠNG THÁI
+                    Trạng thái
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                    THAO TÁC
+                    Thao tác
                   </th>
                 </tr>
               </thead>
@@ -478,14 +488,6 @@ export function RouteManagement() {
           </div>
         )}
       </div>
-
-      {/* Driver Assignment Modal */}
-      {showDriverAssignment && (
-        <DriverAssignment
-          onClose={() => setShowDriverAssignment(false)}
-          onAssign={handleDriverAssigned}
-        />
-      )}
     </div>
   );
 }

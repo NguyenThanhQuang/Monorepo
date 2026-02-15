@@ -43,6 +43,7 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
 
       // ✅ Sử dụng auth context để login
       login(accessToken, {
+        name:user.name,
         id: user.id,
         email: user.email,
         roles: user.roles,

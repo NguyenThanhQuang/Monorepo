@@ -61,7 +61,7 @@ export class HttpClient {
     }
 
     // 3. Fallback mặc định local
-    return "http://localhost:3000/api/v1";
+    return "http://localhost:3001/api/v1";
   }
 
   public static getInstance(): HttpClient {
