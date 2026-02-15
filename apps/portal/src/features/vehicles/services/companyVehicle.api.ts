@@ -44,17 +44,17 @@ export const vehiclesApi = {
 };
 
 /* ================= VEHICLE API (with companyId) ================= */
-
 export const companyVehicleApi = {
-  async getVehicles(companyId: string): Promise<Vehicle[]|any> {
+  async getVehicles(companyId: string): Promise<Vehicle[]> {
     try {
       const res = await api.get<ApiResponse<Vehicle[]>>(
-        `/vehicles/company/${companyId}`
+        `/vehicles?companyId=${companyId}`
       );
 
       return res.data.data;
     } catch (error) {
       handleApiError(error as AxiosError);
+      return []; // nên return để tránh undefined
     }
   },
 

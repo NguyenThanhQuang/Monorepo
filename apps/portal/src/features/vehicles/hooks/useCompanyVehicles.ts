@@ -1,11 +1,13 @@
+// src/features/vehicles/hooks/useCompanyVehicles.ts
 import { useEffect, useMemo, useState } from "react";
 import { companyVehicleApi } from "../services/companyVehicle.api";
-import { useAuth } from "../../../contexts/AuthContext"; // Sử dụng AuthContext
+import { useAuth } from "../../../contexts/AuthContext";
 import type { Vehicle } from "@obtp/shared-types";
+import { VehicleStatus } from "@obtp/shared-types"; // Import enum
 import type { VehiclePayload } from "../types/vehicle.types";
 
 export const useCompanyVehicles = () => {
-  const { user } = useAuth(); // Lấy user từ context
+  const { user } = useAuth();
   const companyId = user?.companyId;
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -54,6 +56,7 @@ export const useCompanyVehicles = () => {
         await companyVehicleApi.createVehicle(vehiclePayload);
       }
       setDialogOpen(false);
+      setEditingVehicle(null);
       fetchVehicles();
     } catch (err: any) {
       setError(err?.message || "Không thể lưu thông tin xe");
@@ -74,8 +77,8 @@ export const useCompanyVehicles = () => {
   const stats = useMemo(() => {
     return {
       total: vehicles.length,
-      active: vehicles.filter(v => v.status === "active").length,
-      maintenance: vehicles.filter(v => v.status === "maintenance").length,
+      active: vehicles.filter(v => v.status === VehicleStatus.ACTIVE).length, // SỬA: Dùng enum
+      maintenance: vehicles.filter(v => v.status === VehicleStatus.MAINTENANCE).length,
       totalSeats: vehicles.reduce((sum, v) => sum + (v.totalSeats || 0), 0),
     };
   }, [vehicles]);

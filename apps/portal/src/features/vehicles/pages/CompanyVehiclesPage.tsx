@@ -1,3 +1,4 @@
+// src/features/vehicles/pages/CompanyVehiclesPage.tsx
 import { Button, Box, Typography, Alert } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -6,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useCompanyVehicles } from "../hooks/useCompanyVehicles";
 import VehicleStats from "../components/VehicleStats";
 import VehicleTable from "../components/VehicleTable";
-import VehicleDialog from "../components/VehicleDialog";
+import AddVehicleDialog from "../components/VehicleDialog";
 
 export default function CompanyVehiclesPage() {
   const vm = useCompanyVehicles();
@@ -28,7 +29,7 @@ export default function CompanyVehiclesPage() {
         </Typography>
       </Box>
 
-      {vm.error && <Alert severity="error">{vm.error}</Alert>}
+      {vm.error && <Alert severity="error" sx={{ mb: 2 }}>{vm.error}</Alert>}
 
       <VehicleStats stats={vm.stats} />
 
@@ -41,23 +42,31 @@ export default function CompanyVehiclesPage() {
           vm.setDialogOpen(true);
         }}
       >
-        Thêm xe
+        Thêm xe mới
       </Button>
 
-      <VehicleTable
-        vehicles={vm.vehicles}
-        onEdit={(v:any) => {
-          vm.setEditingVehicle(v);
-          vm.setDialogOpen(true);
-        }}
-        onDelete={vm.deleteVehicle}
-      />
+      {vm.loading ? (
+        <Typography>Đang tải dữ liệu...</Typography>
+      ) : (
+        <VehicleTable
+          vehicles={vm.vehicles}
+          onEdit={(v: any) => {
+            vm.setEditingVehicle(v);
+            vm.setDialogOpen(true);
+          }}
+          onDelete={vm.deleteVehicle}
+        />
+      )}
 
-      <VehicleDialog
+      {/* SỬA: Dùng dialog mới */}
+      <AddVehicleDialog
         open={vm.dialogOpen}
-        onClose={() => vm.setDialogOpen(false)}
+        onClose={() => {
+          vm.setDialogOpen(false);
+          vm.setEditingVehicle(null);
+        }}
         onSave={vm.saveVehicle}
-        vehicle={vm.editingVehicle}
+        vehicleToEdit={vm.editingVehicle}
         companyId={vm.companyId}
       />
     </Box>

@@ -1,3 +1,4 @@
+// src/api/api.ts
 import axios, {
   type AxiosInstance,
   type AxiosError,
@@ -20,13 +21,19 @@ const api: AxiosInstance = axios.create({
 
 /* ================= AUTH INTERCEPTOR ================= */
 api.interceptors.request.use((config) => {
+  // SỬA: Ưu tiên dùng accessToken từ AuthContext
+  const accessToken = localStorage.getItem('accessToken');
   const adminToken = localStorage.getItem('adminToken');
   const userToken = localStorage.getItem('access_token');
 
-  const token = adminToken || userToken;
+  // Ưu tiên theo thứ tự: accessToken -> adminToken -> userToken
+  const token = accessToken || adminToken || userToken;
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('Token being sent:', token.substring(0, 20) + '...'); // Debug log
+  } else {
+    console.warn('No token found in localStorage');
   }
 
   return config;
@@ -37,14 +44,18 @@ api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError<any>) => {
     if (error.response) {
-      if (error.response.status === 401) {
-        localStorage.clear();
-      }
       console.error(
         'API Error:',
         error.response.status,
         error.response.data,
       );
+      
+      if (error.response.status === 401) {
+        console.log('Token expired or invalid - clearing storage');
+        localStorage.clear();
+        // Có thể redirect về trang login
+        // window.location.href = '/login';
+      }
     } else {
       console.error('Network Error:', error.message);
     }
