@@ -22,8 +22,9 @@ import { Save, NavigateNext, NavigateBefore, ArrowBack, Add } from '@mui/icons-m
 import dayjs, { Dayjs } from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 
-import type { AddTripFormState, Vehicle, LocationData, Company } from '@obtp/shared-types';
-import { CompanyStatus, UserRole } from '@obtp/shared-types';
+import type { AddTripFormState, LocationData, Company, Vehicle, Trip } from '@obtp/shared-types';
+import { CompanyStatus, VehicleStatus } from '@obtp/shared-types';
+import { useAuth } from '../../../contexts/AuthContext';
 import BasicInfoStep from './BasicInfoStep';
 import ScheduleStep from './ScheduleStep';
 import PricingStep from './PricingStep';
@@ -33,22 +34,28 @@ interface AddTripContainerProps {
   onClose?: () => void;
 }
 
-interface SimpleVehicle {
+interface SimpleVehicle extends Omit<Vehicle, 'createdAt' | 'updatedAt'> {
   _id: string;
   id: string;
   licensePlate: string;
-  vehicleNumber?: string;
+  vehicleNumber: string;
   name?: string;
   brand?: string;
   model?: string;
-  type?: string;
+  type: string;
   capacity: number;
-  totalSeats?: number;
+  totalSeats: number;
   companyId: string;
-  status: string;
+  status: VehicleStatus;
+  companyName?: string;
   createdAt: Date;
   updatedAt: Date;
-  companyName?: string;
+  floors: number;
+  seatRows: number;
+  seatColumns: number;
+  aislePositions: number[];
+  seatMap?: any;
+  seatMapFloor2?: any;
 }
 
 const API_BASE_URL = 'http://localhost:3001/api/v1';
@@ -66,6 +73,8 @@ const parseDateField = (dateValue: string | Date | undefined): Date => {
 const parseCompanyResponse = (data: any): Company => {
   return {
     ...data,
+    _id: data.id || data._id || '',
+    id: data.id || data._id || '',
     createdAt: parseDateField(data.createdAt),
     updatedAt: parseDateField(data.updatedAt),
   };
@@ -74,17 +83,19 @@ const parseCompanyResponse = (data: any): Company => {
 const parseLocationResponse = (data: any): LocationData => {
   return {
     ...data,
+    _id: data.id || data._id || '',
+    id: data.id || data._id || '',
     createdAt: parseDateField(data.createdAt),
     updatedAt: parseDateField(data.updatedAt),
   };
 };
 
 const parseVehicleResponse = (data: any): SimpleVehicle => {
-  const licensePlate = data.licensePlate || data.vehicleNumber || 'Không có biển số';
+  const vehicleNumber = data.vehicleNumber || 'Không có biển số';
   const brand = data.brand || '';
   const model = data.model || '';
-  const name = data.name || (brand && model ? `${brand} ${model}` : brand || model || licensePlate);
-  const capacity = data.capacity || data.totalSeats || 0;
+  const name = data.name || (brand && model ? `${brand} ${model}` : brand || model || vehicleNumber);
+  const capacity = data.totalSeats || data.capacity || 0;
   const type = data.type || 'standard';
   
   let companyId = '';
@@ -92,6 +103,9 @@ const parseVehicleResponse = (data: any): SimpleVehicle => {
   
   if (typeof data.companyId === 'string') {
     companyId = data.companyId;
+  } else if (data.companyId && data.companyId.id) {
+    companyId = data.companyId.id.toString();
+    companyName = data.companyId.name || '';
   } else if (data.companyId && data.companyId._id) {
     companyId = data.companyId._id.toString();
     companyName = data.companyId.name || '';
@@ -99,11 +113,18 @@ const parseVehicleResponse = (data: any): SimpleVehicle => {
     companyId = data.companyId.toString();
   }
   
+  let status: VehicleStatus = VehicleStatus.ACTIVE;
+  if (data.status === 'inactive' || data.status === 'INACTIVE') {
+    status = VehicleStatus.INACTIVE;
+  } else if (data.status === 'maintenance' || data.status === 'MAINTENANCE') {
+    status = VehicleStatus.MAINTENANCE;
+  }
+  
   return {
-    _id: data._id || data.id,
-    id: data._id || data.id,
-    licensePlate,
-    vehicleNumber: licensePlate,
+    _id: data.id || data._id || '',
+    id: data.id || data._id || '',
+    licensePlate: vehicleNumber,
+    vehicleNumber: vehicleNumber,
     name,
     brand,
     model,
@@ -111,15 +132,47 @@ const parseVehicleResponse = (data: any): SimpleVehicle => {
     capacity,
     totalSeats: capacity,
     companyId,
-    status: data.status || 'ACTIVE',
+    status,
     companyName: companyName || data.companyName || '',
     createdAt: parseDateField(data.createdAt),
     updatedAt: parseDateField(data.updatedAt),
+    floors: data.floors || 1,
+    seatRows: data.seatRows || 0,
+    seatColumns: data.seatColumns || 0,
+    aislePositions: data.aislePositions || [],
+    seatMap: data.seatMap,
+    seatMapFloor2: data.seatMapFloor2,
+    amenities: data.amenities || [],
+    description: data.description,
+    vehicle: data.vehicle,
   };
+};
+
+// THÊM: Hàm parse trip response để log chi tiết
+const parseTripResponse = (data: any) => {
+  console.log('Trip created successfully:', {
+    _id: data._id || data.id,
+    companyId: data.companyId,
+    vehicleId: data.vehicleId,
+    companyIdType: typeof data.companyId,
+    vehicleIdType: typeof data.vehicleId,
+    route: data.route,
+    departureTime: data.departureTime,
+    expectedArrivalTime: data.expectedArrivalTime,
+    price: data.price,
+    status: data.status,
+    seatsCount: data.seats?.length,
+    availableSeatsCount: data.availableSeatsCount,
+    isRecurrenceTemplate: data.isRecurrenceTemplate,
+    isRecurrenceActive: data.isRecurrenceActive,
+  });
+  
+  return data;
 };
 
 const extractDataFromResponse = <T,>(response: any): T[] => {
   if (!response) return [];
+  
   if (response.data && Array.isArray(response.data)) {
     return response.data;
   } else if (Array.isArray(response)) {
@@ -129,7 +182,7 @@ const extractDataFromResponse = <T,>(response: any): T[] => {
 };
 
 const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
   
   if (!token) {
     throw new Error('No authentication token found. Please login again.');
@@ -147,11 +200,10 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
     const errorText = await response.text();
     
     if (response.status === 401) {
-      localStorage.removeItem('access_token');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('authUser');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
       throw new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
     }
     
@@ -161,74 +213,10 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   return response;
 };
 
-const useCurrentUser = () => {
-  const [user, setUser] = useState<{
-    id: string;
-    name: string;
-    role: 'ADMIN' | 'COMPANY_ADMIN' | 'USER';
-    companyId?: string;
-    companyName?: string;
-    token: string;
-  } | null>(null);
-
-  useEffect(() => {
-    const loadUser = () => {
-      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
-      if (!token) {
-        setUser(null);
-        return;
-      }
-      
-      const userStr = localStorage.getItem('user');
-      if (!userStr) {
-        setUser(null);
-        return;
-      }
-      
-      try {
-        const userData = JSON.parse(userStr);
-        const roles = userData.roles || [];
-        
-        const isCompanyAdmin = roles.includes('company_admin');
-        const isSystemAdmin = roles.includes('admin');
-        
-        let role: 'ADMIN' | 'COMPANY_ADMIN' | 'USER' = 'USER';
-        if (isSystemAdmin) {
-          role = 'ADMIN';
-        } else if (isCompanyAdmin) {
-          role = 'COMPANY_ADMIN';
-        }
-        
-        if (role === 'ADMIN' || role === 'COMPANY_ADMIN') {
-          const userObj = {
-            id: userData._id || userData.id || userData.userId,
-            name: userData.name || userData.username || 'User',
-            role,
-            companyId: userData.companyId,
-            companyName: userData.companyName,
-            token,
-          };
-          setUser(userObj);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        setUser(null);
-      }
-    };
-    
-    loadUser();
-    window.addEventListener('storage', loadUser);
-    return () => window.removeEventListener('storage', loadUser);
-  }, []);
-
-  return user;
-};
-
 const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
   const navigate = useNavigate();
-  const user = useCurrentUser();
+  const { user, accessToken } = useAuth();
+  
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [loginAlertMessage, setLoginAlertMessage] = useState('');
   
@@ -246,8 +234,15 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
     locations: false,
   });
 
+  // Xác định role dựa trên user từ context
+  const userRole = user?.roles?.includes('admin') 
+    ? 'ADMIN' 
+    : user?.roles?.includes('company_admin') 
+      ? 'COMPANY_ADMIN' 
+      : 'USER';
+
   const [formData, setFormData] = useState<AddTripFormState>({
-    companyId: user?.role === 'COMPANY_ADMIN' && user.companyId ? user.companyId : '',
+    companyId: userRole === 'COMPANY_ADMIN' && user?.companyId ? user.companyId : '',
     vehicleId: null,
     fromLocationId: null,
     toLocationId: null,
@@ -259,44 +254,39 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
   });
 
   useEffect(() => {
-    if (user?.role === 'COMPANY_ADMIN' && user.companyId) {
+    if (userRole === 'COMPANY_ADMIN' && user?.companyId) {
       setFormData(prev => ({
         ...prev,
         companyId: user.companyId || ''
       }));
     }
-  }, [user]);
+  }, [user, userRole]);
 
   const handleLogoutAndRedirect = (message: string) => {
-    localStorage.removeItem('access_token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('authUser');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
     
     setLoginAlertMessage(message);
     setShowLoginAlert(true);
     
     setTimeout(() => {
-      window.location.href = '/admin-login';
+      window.location.href = '/login';
     }, 2000);
   };
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      if (!user) {
+      if (!user || !accessToken) {
         setSubmitError('Vui lòng đăng nhập để tiếp tục');
-        return;
-      }
-
-      if (!user.token) {
-        setSubmitError('Token không hợp lệ');
         return;
       }
 
       try {
         setLoading(prev => ({ ...prev, locations: true, companies: true }));
         
+        // Fetch locations - không cần auth
         try {
           const locationsRes = await fetch(`${API_BASE_URL}/locations`);
           if (locationsRes.ok) {
@@ -304,12 +294,13 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
             const locationsData = extractDataFromResponse<LocationData>(response);
             const parsedLocations = locationsData.map(parseLocationResponse);
             setAllLocations(parsedLocations);
+            console.log('Locations loaded:', parsedLocations.length);
           }
         } catch (error) {
           console.error('Error fetching locations:', error);
         }
 
-        if (user.role === 'COMPANY_ADMIN' && user.companyId) {
+        if (userRole === 'COMPANY_ADMIN' && user.companyId) {
           try {
             const companyUrl = `${API_BASE_URL}/companies/${user.companyId}`;
             const companyRes = await fetchWithAuth(companyUrl);
@@ -322,6 +313,7 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
               }
               
               const parsedCompany = parseCompanyResponse(companyData);
+              console.log('Company loaded:', parsedCompany);
               
               if (parsedCompany.status === CompanyStatus.ACTIVE) {
                 setAllCompanies([parsedCompany]);
@@ -341,7 +333,7 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
               setSubmitError(`Lỗi khi tải thông tin nhà xe: ${error.message}`);
             }
           }
-        } else if (user.role === 'ADMIN') {
+        } else if (userRole === 'ADMIN') {
           try {
             const companiesRes = await fetchWithAuth(`${API_BASE_URL}/companies`);
             if (companiesRes.ok) {
@@ -362,10 +354,10 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
       }
     };
 
-    if (user) {
+    if (user && accessToken) {
       fetchInitialData();
     }
-  }, [user]);
+  }, [user, accessToken, userRole]);
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -377,11 +369,14 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
       setLoading(prev => ({ ...prev, vehicles: true }));
       
       try {
-        const vehiclesUrl = `${API_BASE_URL}/vehicles/companyId/${formData.companyId}`;
+        const vehiclesUrl = `${API_BASE_URL}/vehicles?companyId=${formData.companyId}`;
+        console.log('Fetching vehicles from:', vehiclesUrl);
+        
         const res = await fetchWithAuth(vehiclesUrl);
         
         if (res.ok) {
           const response = await res.json();
+          console.log('Vehicles API response:', response);
           
           let vehiclesData = [];
           if (response.data && Array.isArray(response.data)) {
@@ -391,6 +386,8 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
           }
           
           const parsedVehicles = vehiclesData.map(parseVehicleResponse);
+          console.log('Parsed vehicles:', parsedVehicles);
+          
           setAllVehicles(parsedVehicles);
         } else {
           setAllVehicles([]);
@@ -409,6 +406,13 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
       setAllVehicles([]);
     }
   }, [formData.companyId]);
+
+  // Debug logs
+  useEffect(() => {
+    console.log('Current formData:', formData);
+    console.log('All vehicles:', allVehicles);
+    console.log('Selected company vehicles:', allVehicles.filter(v => v.companyId === formData.companyId));
+  }, [formData, allVehicles]);
 
   const handleFormChange = <K extends keyof AddTripFormState>(
     field: K,
@@ -552,11 +556,21 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
         throw new Error(errorText || 'Có lỗi xảy ra khi tạo chuyến đi');
       }
 
+      const responseData = await response.json();
+      
+      // SỬA: Parse response để log chi tiết
+      let tripData = responseData;
+      if (responseData.data) {
+        tripData = responseData.data;
+      }
+      
+      parseTripResponse(tripData);
+
       setSubmitSuccess(true);
       
       setTimeout(() => {
         setFormData({
-          companyId: user?.role === 'COMPANY_ADMIN' && user.companyId ? user.companyId : '',
+          companyId: userRole === 'COMPANY_ADMIN' && user?.companyId ? user.companyId : '',
           vehicleId: null,
           fromLocationId: null,
           toLocationId: null,
@@ -596,142 +610,19 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
     switch (currentStep) {
       case 0:
         return (
-          <Paper elevation={0} sx={{ p: 3, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Thông tin cơ bản
-            </Typography>
-            
-            {user?.role === 'ADMIN' && (
-              <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputLabel>Chọn nhà xe</InputLabel>
-                <Select
-                  label="Chọn nhà xe"
-                  value={formData.companyId || ''}
-                  onChange={(e) => handleFormChange('companyId', e.target.value)}
-                  disabled={loading.companies}
-                >
-                  {loading.companies ? (
-                    <MenuItem value="">
-                      <CircularProgress size={20} /> Đang tải...
-                    </MenuItem>
-                  ) : allCompanies.length === 0 ? (
-                    <MenuItem value="" disabled>
-                      Không có nhà xe nào
-                    </MenuItem>
-                  ) : (
-                    allCompanies.map((company) => (
-                      <MenuItem key={company._id} value={company._id}>
-                        {company.name}
-                      </MenuItem>
-                    ))
-                  )}
-                </Select>
-              </FormControl>
-            )}
-            
-            {user?.role === 'COMPANY_ADMIN' && user.companyName && (
-              <Box sx={{ mb: 3, p: 2, bgcolor: '#e3f2fd', borderRadius: 1 }}>
-                <Typography variant="body1">
-                  <strong>Nhà xe:</strong> {user.companyName}
-                </Typography>
-              </Box>
-            )}
-            
-            <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>Chọn xe</InputLabel>
-              <Select
-                label="Chọn xe"
-                value={formData.vehicleId || ''}
-                onChange={(e) => handleFormChange('vehicleId', e.target.value)}
-                disabled={loading.vehicles || allVehicles.length === 0}
-              >
-                {loading.vehicles ? (
-                  <MenuItem value="">
-                    <CircularProgress size={20} /> Đang tải...
-                  </MenuItem>
-                ) : allVehicles.length === 0 ? (
-                  <MenuItem value="" disabled>
-                    Không có xe nào
-                  </MenuItem>
-                ) : (
-                  allVehicles.map((vehicle) => (
-                    <MenuItem key={vehicle._id} value={vehicle._id}>
-                      {vehicle.licensePlate} - {vehicle.type} ({vehicle.capacity} ghế)
-                    </MenuItem>
-                  ))
-                )}
-              </Select>
-              
-              {allVehicles.length === 0 && !loading.vehicles && (
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
-                  <Alert severity="warning" sx={{ mb: 2 }}>
-                    Nhà xe chưa có xe nào được đăng ký.
-                  </Alert>
-                  <Button 
-                    variant="outlined" 
-                    onClick={() => navigate('/company/vehicles')}
-                    startIcon={<Add />}
-                  >
-                    Thêm xe mới
-                  </Button>
-                </Box>
-              )}
-            </FormControl>
-            
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-              <FormControl fullWidth>
-                <InputLabel>Điểm đi</InputLabel>
-                <Select
-                  label="Điểm đi"
-                  value={formData.fromLocationId || ''}
-                  onChange={(e) => handleFormChange('fromLocationId', e.target.value)}
-                  disabled={loading.locations}
-                >
-                  {loading.locations ? (
-                    <MenuItem value="">
-                      <CircularProgress size={20} /> Đang tải...
-                    </MenuItem>
-                  ) : allLocations.length === 0 ? (
-                    <MenuItem value="" disabled>
-                      Không có địa điểm
-                    </MenuItem>
-                  ) : (
-                    allLocations.map((location) => (
-                      <MenuItem key={location._id} value={location._id}>
-                        {location.name} ({location.province})
-                      </MenuItem>
-                    ))
-                  )}
-                </Select>
-              </FormControl>
-              
-              <FormControl fullWidth>
-                <InputLabel>Điểm đến</InputLabel>
-                <Select
-                  label="Điểm đến"
-                  value={formData.toLocationId || ''}
-                  onChange={(e) => handleFormChange('toLocationId', e.target.value)}
-                  disabled={loading.locations}
-                >
-                  {loading.locations ? (
-                    <MenuItem value="">
-                      <CircularProgress size={20} /> Đang tải...
-                    </MenuItem>
-                  ) : allLocations.length === 0 ? (
-                    <MenuItem value="" disabled>
-                      Không có địa điểm
-                    </MenuItem>
-                  ) : (
-                    allLocations.map((location) => (
-                      <MenuItem key={location._id} value={location._id}>
-                        {location.name} ({location.province})
-                      </MenuItem>
-                    ))
-                  )}
-                </Select>
-              </FormControl>
-            </Box>
-          </Paper>
+          <BasicInfoStep
+            formData={formData}
+            onFormChange={handleFormChange}
+            companyVehicles={allVehicles as unknown as Vehicle[]}
+            allLocations={allLocations}
+            allCompanies={allCompanies}
+            loadingVehicles={loading.vehicles}
+            loadingLocations={loading.locations}
+            loadingCompanies={loading.companies}
+            userRole={userRole === 'USER' ? 'COMPANY_ADMIN' : userRole as 'ADMIN' | 'COMPANY_ADMIN'}
+            userCompanyId={user?.companyId}
+            userCompanyName={user?.name}
+          />
         );
       case 1:
         return (
@@ -755,7 +646,7 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
         return (
           <PreviewStep
             formData={formData}
-            vehicleData={vehicleData as any}
+            vehicleData={vehicleData as unknown as Vehicle}
             fromLocationData={fromLocationData}
             toLocationData={toLocationData}
             stopsData={[]}
@@ -766,14 +657,15 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
     }
   };
 
-  if (!user) {
+  // Kiểm tra user và accessToken
+  if (!user || !accessToken) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert severity="error">
           Vui lòng đăng nhập để sử dụng chức năng này
         </Alert>
         <Button 
-          onClick={() => window.location.href = '/admin-login'}
+          onClick={() => window.location.href = '/login'}
           startIcon={<ArrowBack />}
           sx={{ mt: 2 }}
         >
@@ -783,7 +675,7 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
     );
   }
 
-  if (!['ADMIN', 'COMPANY_ADMIN'].includes(user.role)) {
+  if (!['ADMIN', 'COMPANY_ADMIN'].includes(userRole)) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert severity="error">
@@ -819,8 +711,8 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
               <Typography variant="h4" gutterBottom>
                 Tạo chuyến đi mới
                 <Chip 
-                  label={user.role === 'ADMIN' ? 'Quản trị hệ thống' : 'Quản trị nhà xe'} 
-                  color={user.role === 'ADMIN' ? 'primary' : 'secondary'}
+                  label={userRole === 'ADMIN' ? 'Quản trị hệ thống' : 'Quản trị nhà xe'} 
+                  color={userRole === 'ADMIN' ? 'primary' : 'secondary'}
                   size="small"
                   sx={{ ml: 2 }}
                 />

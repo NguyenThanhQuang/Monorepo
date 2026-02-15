@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, Calendar, Clock, UserPlus, Bus, Ticket, RefreshCw } from 'lucide-react';
-// import { DriverAssignment } from '../DriverAssignment';
 import type { Trip } from '@obtp/shared-types';
 import { api } from '@obtp/api-client';
+import { DriverAssignment } from './DriverAssignment';
 
 interface TripStats {
   totalTrips: number;
@@ -488,6 +488,18 @@ export function RouteManagement() {
           </div>
         )}
       </div>
+
+      {/* Driver Assignment Modal */}
+      {showDriverAssignment && selectedTripForDriver && (
+        <DriverAssignment
+          tripId={selectedTripForDriver}
+          onClose={() => {
+            setShowDriverAssignment(false);
+            setSelectedTripForDriver(null);
+          }}
+          onAssign={handleDriverAssigned}
+        />
+      )}
     </div>
   );
 }

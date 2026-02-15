@@ -13,6 +13,7 @@ import {
   SearchTripQuery,
   SeatStatus,
   TripStatus,
+  TripStopStatus,
   UpdateTripPayload,
   UpdateTripSeatStatusPayload,
   Vehicle,
@@ -30,7 +31,6 @@ export class TripsService {
     private readonly tripsRepository: TripsRepository,
     @Inject(forwardRef(() => VehiclesService))
     private readonly vehiclesService: VehiclesService,
-
     private readonly companiesService: CompaniesService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -78,21 +78,33 @@ export class TripsService {
         : undefined,
     }));
 
-    return this.tripsRepository.create({
-      ...payload,
+    // SỬA: Chuyển đổi companyId và vehicleId sang ObjectId
+    // và thêm status cho stops
+    const tripData = {
+      companyId: new Types.ObjectId(companyId),
+      vehicleId: new Types.ObjectId(vehicleId),
       route: {
-        ...payload.route,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        stops: payload.route.stops || [],
+        fromLocationId: new Types.ObjectId(payload.route.fromLocationId),
+        toLocationId: new Types.ObjectId(payload.route.toLocationId),
+        stops: (payload.route.stops || []).map(stop => ({
+          locationId: new Types.ObjectId(stop.locationId),
+          expectedArrivalTime: new Date(stop.expectedArrivalTime),
+          expectedDepartureTime: stop.expectedDepartureTime ? new Date(stop.expectedDepartureTime) : undefined,
+          status: TripStopStatus.PENDING, // THÊM: status mặc định
+        })),
         ...mapInfo,
       },
       departureTime: depart,
       expectedArrivalTime: arrive,
+      price: payload.price,
       seats: initialSeats,
       status: TripStatus.SCHEDULED,
       availableSeatsCount: initialSeats.length,
-    });
+      isRecurrenceTemplate: payload.isRecurrenceTemplate || false,
+      isRecurrenceActive: payload.isRecurrenceTemplate || false,
+    };
+
+    return this.tripsRepository.create(tripData);
   }
 
   async findPublicTrips(query: SearchTripQuery): Promise<any[]> {
@@ -144,17 +156,14 @@ export class TripsService {
       }
     }
 
-    // 2. Prepare Update Data
-    // Note: Nếu đổi xe (change vehicle), logic rất phức tạp (remap seats).
-    // Ở MVP migration, ta tạm thời block đổi xe nếu đã có booking.
-    // Nếu chưa có booking, re-generate seats.
-
     const updateData: any = { ...payload };
 
     if (payload.departureTime)
       updateData.departureTime = new Date(payload.departureTime);
     if (payload.expectedArrivalTime)
       updateData.expectedArrivalTime = new Date(payload.expectedArrivalTime);
+
+    // XÓA: Không có companyId, vehicleId trong UpdateTripPayload
 
     return this.tripsRepository.update(id, updateData);
   }
@@ -204,15 +213,16 @@ export class TripsService {
   }
 
   async findAllForManagement(companyId?: string): Promise<TripDocument[]> {
-  const filter: any = {};
+    const filter: any = {};
 
-  if (companyId) {
-    filter.companyId = new Types.ObjectId(companyId);
+    if (companyId) {
+      filter.companyId = new Types.ObjectId(companyId);
+    }
+
+    return this.tripsRepository.findManagementTrips(filter);
   }
 
-  return this.tripsRepository.findManagementTrips(filter);
-}
- async search(fromId: string, toId: string, date: string) {
+  async search(fromId: string, toId: string, date: string) {
     if (!fromId || !toId || !date) {
       throw new BadRequestException('Missing search params');
     }
@@ -224,21 +234,23 @@ export class TripsService {
       isActive: true,
     });
   }
-  async searchByFrom(fromId: string) {
-  if (!fromId) {
-    throw new BadRequestException('Missing fromId');
-  }
 
-  return this.tripsRepository.searchByFrom(fromId);
-}
+  async searchByFrom(fromId: string) {
+    if (!fromId) {
+      throw new BadRequestException('Missing fromId');
+    }
+
+    return this.tripsRepository.searchByFrom(fromId);
+  }
 
   async searchByRoute(fromId: string, toId: string) {
-  if (!fromId || !toId) {
-    throw new BadRequestException('Missing route params');
+    if (!fromId || !toId) {
+      throw new BadRequestException('Missing route params');
+    }
+
+    return this.tripsRepository.searchByRoute(fromId, toId);
   }
 
-  return this.tripsRepository.searchByRoute(fromId, toId);
-}
   async toggleRecurrence(
     id: string,
     isActive: boolean,

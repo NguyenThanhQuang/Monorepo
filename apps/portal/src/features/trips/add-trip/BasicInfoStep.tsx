@@ -19,13 +19,13 @@ interface BasicInfoStepProps {
     field: K,
     value: AddTripFormState[K]
   ) => void;
-  companyVehicles: Vehicle[];
+  companyVehicles: Vehicle[]; // SỬA: Nhận đúng kiểu Vehicle[]
   allLocations: LocationData[];
   allCompanies: Company[];
   loadingVehicles: boolean;
   loadingLocations: boolean;
   loadingCompanies: boolean;
-  userRole: 'ADMIN' | 'COMPANY_ADMIN';
+  userRole: 'ADMIN' | 'COMPANY_ADMIN'; // SỬA: Chỉ nhận ADMIN hoặc COMPANY_ADMIN
   userCompanyId?: string;
   userCompanyName?: string;
 }
@@ -43,12 +43,14 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
   userCompanyId,
   userCompanyName,
 }) => {
-  // Xác định company đang chọn - SỬA LẠI LOGIC NÀY
+  // Debug props
+  console.log('BasicInfoStep - companyVehicles:', companyVehicles);
+  console.log('BasicInfoStep - formData.companyId:', formData.companyId);
+
+  // Xác định company đang chọn
   const selectedCompany = useMemo(() => {
     if (userRole === 'COMPANY_ADMIN' && userCompanyId) {
-      // COMPANY_ADMIN: tìm company trong allCompanies
       const company = allCompanies.find(c => c._id === userCompanyId);
-      // Nếu không tìm thấy trong allCompanies, tạo một object giả
       if (!company && userCompanyName) {
         return {
           _id: userCompanyId,
@@ -61,21 +63,30 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
     return allCompanies.find(c => c._id === formData.companyId) || null;
   }, [allCompanies, formData.companyId, userRole, userCompanyId, userCompanyName]);
 
-  // Filter vehicles theo company đã chọn - SỬA: Luôn hiển thị tất cả xe khi là COMPANY_ADMIN
+  // Filter vehicles theo company đã chọn
   const filteredVehicles = useMemo(() => {
     if (userRole === 'COMPANY_ADMIN' && userCompanyId) {
-      // COMPANY_ADMIN: hiển thị tất cả xe từ API
-      return companyVehicles;
+      // Lọc xe theo companyId của user
+      const filtered = companyVehicles.filter(v => {
+        const vehicleCompanyId = typeof v.companyId === 'string' 
+          ? v.companyId 
+          : (v.companyId as any)?._id || (v.companyId as any)?.id;
+        return vehicleCompanyId === userCompanyId;
+      });
+      console.log('Filtered vehicles for COMPANY_ADMIN:', filtered);
+      return filtered;
     }
     
     if (!selectedCompany) return [];
     
-    return companyVehicles.filter(v => {
+    const filtered = companyVehicles.filter(v => {
       const vehicleCompanyId = typeof v.companyId === 'string' 
         ? v.companyId 
-        : (v.companyId as any)?._id;
+        : (v.companyId as any)?._id || (v.companyId as any)?.id;
       return vehicleCompanyId === selectedCompany._id;
     });
+    console.log('Filtered vehicles for ADMIN:', filtered);
+    return filtered;
   }, [companyVehicles, selectedCompany, userRole, userCompanyId]);
 
   // Filter locations
@@ -126,14 +137,18 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
     }
   };
 
-  // Xác định xem có nên hiển thị dropdown xe không - SỬA
+  // Lấy biển số xe để hiển thị
+  const getVehicleDisplayName = (vehicle: Vehicle): string => {
+    const plate = vehicle.vehicleNumber || 'Không có biển số';
+    const type = vehicle.type || 'Không rõ loại';
+    const seats = vehicle.totalSeats || 0;
+    return `${plate} - ${type} (${seats} ghế)`;
+  };
+
+  // Xác định xem có nên hiển thị dropdown xe không
   const shouldShowVehicleSelect = () => {
-    // COMPANY_ADMIN: luôn hiển thị dropdown xe
     if (userRole === 'COMPANY_ADMIN') return true;
-    
-    // ADMIN: hiển thị nếu đã chọn company
     if (userRole === 'ADMIN' && selectedCompany) return true;
-    
     return false;
   };
 
@@ -161,7 +176,6 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
             value={selectedCompany}
             onChange={(_, newValue) => {
               onFormChange("companyId", newValue?._id || '');
-              // Reset vehicle và locations khi đổi company
               onFormChange("vehicleId", null);
               onFormChange("fromLocationId", null);
               onFormChange("toLocationId", null);
@@ -198,16 +212,14 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
         </Grid>
       )}
 
-      {/* Chọn Vehicle - SỬA: HIỂN THỊ CHO CẢ COMPANY_ADMIN VÀ ADMIN */}
+      {/* Chọn Vehicle */}
       {shouldShowVehicleSelect() && (
         <Grid size={{ xs: 12 }}>
           <Autocomplete
             fullWidth
             options={filteredVehicles}
             loading={loadingVehicles}
-            getOptionLabel={(option) =>
-              `${ option.vehicleNumber || option.type} - ${option.type} (${option.totalSeats} ghế)`
-            }
+            getOptionLabel={(option) => getVehicleDisplayName(option)}
             value={selectedVehicle || null}
             onChange={(_, newValue) =>
               onFormChange("vehicleId", newValue?._id || null)
@@ -231,10 +243,10 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
               <Box component="li" {...props} key={option._id}>
                 <Box>
                   <Typography variant="body1">
-                    { option.vehicleNumber || 'Không số'} - {option.type}
+                    {getVehicleDisplayName(option)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Số ghế: {option.totalSeats} • Trạng thái: {getVehicleStatusDisplay(option.status)}
+                    Trạng thái: {getVehicleStatusDisplay(option.status)}
                   </Typography>
                 </Box>
               </Box>
@@ -255,7 +267,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
             }
           />
           
-          {/* Thông báo nếu không có xe nào - SỬA */}
+          {/* Thông báo nếu không có xe nào */}
           {!loadingVehicles && filteredVehicles.length === 0 && shouldShowVehicleSelect() && (
             <Alert severity="warning" sx={{ mt: 1 }}>
               {userRole === 'COMPANY_ADMIN'

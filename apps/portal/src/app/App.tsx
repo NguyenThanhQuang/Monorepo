@@ -1,5 +1,8 @@
 // src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import 'dayjs/locale/vi'; // Import locale tiếng Việt
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { LanguageProvider } from '../contexts/LanguageContext';
 import LoginPage from '../components/layout/LoginPage';
@@ -88,7 +91,10 @@ function App() {
     <ThemeProvider>
       <LanguageProvider>
         <AuthProvider>
-          <AppContent />
+          {/* Bọc LocalizationProvider ở đây để các DatePicker hoạt động ổn định */}
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="vi">
+            <AppContent />
+          </LocalizationProvider>
         </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
