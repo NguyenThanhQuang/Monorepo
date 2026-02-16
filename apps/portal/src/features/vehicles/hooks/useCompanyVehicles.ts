@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { companyVehicleApi } from "../services/companyVehicle.api";
 import { useAuth } from "../../../contexts/AuthContext";
 import type { Vehicle } from "@obtp/shared-types";
-import { VehicleStatus } from "@obtp/shared-types"; // Import enum
+import { VehicleStatus } from "@obtp/shared-types";
 import type { VehiclePayload } from "../types/vehicle.types";
 
 export const useCompanyVehicles = () => {
@@ -48,7 +48,15 @@ export const useCompanyVehicles = () => {
       }
 
       // Đảm bảo có companyId trong payload
-      const vehiclePayload = { ...payload, companyId };
+      const vehiclePayload = { 
+        ...payload, 
+        companyId,
+        // Đảm bảo các trường bắt buộc có giá trị hợp lệ
+        floors: payload.floors || 1,
+        seatColumns: payload.seatColumns || 4,
+        seatRows: payload.seatRows || 11,
+        aislePositions: payload.aislePositions || [2]
+      };
       
       if (id) {
         await companyVehicleApi.updateVehicle(id, vehiclePayload);
@@ -57,7 +65,7 @@ export const useCompanyVehicles = () => {
       }
       setDialogOpen(false);
       setEditingVehicle(null);
-      fetchVehicles();
+      await fetchVehicles();
     } catch (err: any) {
       setError(err?.message || "Không thể lưu thông tin xe");
     }
@@ -68,7 +76,7 @@ export const useCompanyVehicles = () => {
     
     try {
       await companyVehicleApi.deleteVehicle(id);
-      fetchVehicles();
+      await fetchVehicles();
     } catch (err: any) {
       setError(err?.message || "Không thể xoá xe");
     }
@@ -77,7 +85,7 @@ export const useCompanyVehicles = () => {
   const stats = useMemo(() => {
     return {
       total: vehicles.length,
-      active: vehicles.filter(v => v.status === VehicleStatus.ACTIVE).length, // SỬA: Dùng enum
+      active: vehicles.filter(v => v.status === VehicleStatus.ACTIVE).length,
       maintenance: vehicles.filter(v => v.status === VehicleStatus.MAINTENANCE).length,
       totalSeats: vehicles.reduce((sum, v) => sum + (v.totalSeats || 0), 0),
     };

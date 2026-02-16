@@ -172,12 +172,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
 }) => {
   const isEditMode = !!vehicleToEdit;
 
-  const [formData, setFormData] = useState<
-    Omit<
-      VehiclePayload,
-      "floors" | "seatColumns" | "seatRows" | "aislePositions"
-    >
-  >({
+  const [formData, setFormData] = useState({
     companyId: "",
     type: "",
     vehicleNumber: "",
@@ -200,10 +195,9 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
         vehicleCompanyId = (vehicleToEdit.companyId as any).id || (vehicleToEdit.companyId as any)._id || companyId;
       }
 
-      // SỬA: Xử lý status từ vehicleToEdit bằng switch case
+      // Xử lý status từ vehicleToEdit
       let status = VehicleStatus.ACTIVE;
       
-      // Chuyển đổi từ string hoặc enum
       if (typeof vehicleToEdit.status === 'string') {
         const statusStr = vehicleToEdit.status.toLowerCase();
         if (statusStr === VehicleStatus.ACTIVE) {
@@ -214,7 +208,6 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
           status = VehicleStatus.INACTIVE;
         }
       } else {
-        // Nếu đã là enum thì dùng trực tiếp
         status = vehicleToEdit.status as VehicleStatus;
       }
 
@@ -306,11 +299,19 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({
 
     setIsSaving(true);
     try {
+      // FIX: Include all required fields in the payload
       const payload: VehiclePayload = { 
-        ...formData, 
-        ...seatParams,
-        companyId: companyId
+        companyId: companyId,
+        vehicleNumber: formData.vehicleNumber,
+        type: formData.type,
+        status: formData.status,
+        description: formData.description,
+        floors: seatParams.floors,
+        seatColumns: seatParams.seatColumns,
+        seatRows: seatParams.seatRows,
+        aislePositions: seatParams.aislePositions
       };
+      
       await onSave(payload, vehicleToEdit?._id);
       onClose();
     } catch (err: unknown) {

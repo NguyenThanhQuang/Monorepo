@@ -53,12 +53,11 @@ export const companyVehicleApi = {
 
       return res.data.data;
     } catch (error) {
-      handleApiError(error as AxiosError);
-      return []; // nên return để tránh undefined
+      return handleApiError(error as AxiosError);
     }
   },
 
-  async createVehicle(payload: VehiclePayload): Promise<Vehicle|any> {
+  async createVehicle(payload: VehiclePayload): Promise<Vehicle> {
     try {
       const res = await api.post<ApiResponse<Vehicle>>(
         `/vehicles`,
@@ -67,14 +66,14 @@ export const companyVehicleApi = {
 
       return res.data.data;
     } catch (error) {
-      handleApiError(error as AxiosError);
+      return handleApiError(error as AxiosError);
     }
   },
 
   async updateVehicle(
     id: string,
     payload: VehiclePayload
-  ): Promise<Vehicle|any> {
+  ): Promise<Vehicle> {
     try {
       const res = await api.patch<ApiResponse<Vehicle>>(
         `/vehicles/${id}`,
@@ -83,16 +82,16 @@ export const companyVehicleApi = {
 
       return res.data.data;
     } catch (error) {
-      handleApiError(error as AxiosError);
+      return handleApiError(error as AxiosError);
     }
   },
 
-  async deleteVehicle(id: string): Promise<boolean|any> {
+  async deleteVehicle(id: string): Promise<boolean> {
     try {
       await api.delete(`/vehicles/${id}`);
       return true;
     } catch (error) {
-      handleApiError(error as AxiosError);
+      return handleApiError(error as AxiosError);
     }
   },
 };

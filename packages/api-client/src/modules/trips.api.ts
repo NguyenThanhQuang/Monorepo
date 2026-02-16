@@ -26,17 +26,38 @@ export const tripsApi = {
 
   // MANAGEMENT (Admin & Company Admin)
   // Query param `companyId` optional cho Super Admin lọc
-  getAllManagement: (companyId?: string) => {
-    return http.get<Trip[]>("/trips/management/all", {
-      params: { companyId },
-    });
+  getAllManagement: async (companyId?: string): Promise<Trip[]> => {
+    try {
+      const response = await http.get<any>("/trips/management/all", {
+        params: { companyId },
+      });
+      
+      // Xử lý response an toàn
+      if (!response) return [];
+      
+      // Nếu response có cấu trúc { data: [...] }
+      if (response.data && Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      // Nếu response trực tiếp là array
+      if (Array.isArray(response)) {
+        return response;
+      }
+      
+      // Log để debug
+      console.warn('Unexpected response format from getAllManagement:', response);
+      return [];
+    } catch (error) {
+      console.error('Error in getAllManagement:', error);
+      throw error;
+    }
   },
 
   create: (payload: CreateTripPayload) => {
     return http.post<Trip>("/trips", payload);
   },
 
-  // Không có Update Full, thường là cancel hoặc update specific fields
   cancel: (id: string) => {
     return http.patch<Trip>(`/trips/${id}/cancel`);
   },
@@ -58,8 +79,7 @@ export const tripsApi = {
   // Hàm tiện ích: Lấy thống kê chuyến đi
   getStats: async (companyId: string): Promise<TripStats> => {
     try {
-      const response = await tripsApi.getAllManagement(companyId);
-      const trips = response || [];
+      const trips = await tripsApi.getAllManagement(companyId);
       
       const totalTrips = trips.length;
       const scheduledTrips = trips.filter((trip: Trip) => trip.status === 'scheduled').length;
@@ -81,21 +101,27 @@ export const tripsApi = {
       };
     } catch (error) {
       console.error('Error getting trip stats:', error);
-      throw error;
+      // Trả về giá trị mặc định thay vì throw
+      return {
+        totalTrips: 0,
+        scheduledTrips: 0,
+        runningTrips: 0,
+        totalTicketsSold: 0
+      };
     }
   },
 
   // Tìm kiếm chuyến đi với filter
   searchWithFilter: async (companyId: string, searchQuery?: string, status?: string): Promise<Trip[]> => {
     try {
-      const response = await tripsApi.getAllManagement(companyId);
-      let trips = response || [];
+      const trips = await tripsApi.getAllManagement(companyId);
+      
+      let filteredTrips = [...trips];
       
       // Filter by search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        trips = trips.filter((trip: Trip) => {
-          // Xử lý route name từ Trip interface
+      if (searchQuery && searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        filteredTrips = filteredTrips.filter((trip: Trip) => {
           const fromName = (trip.route as any)?.fromLocationId?.name?.toLowerCase() || 
                           (trip.route as any)?.from?.name?.toLowerCase() || '';
           const toName = (trip.route as any)?.toLocationId?.name?.toLowerCase() || 
@@ -103,23 +129,20 @@ export const tripsApi = {
           const routeName = `${fromName} → ${toName}`;
           
           const vehiclePlate = (trip.vehicleId as any)?.vehicleNumber?.toLowerCase() || '';
-          const vehicleType = (trip.vehicleId as any)?.type?.toLowerCase() || '';
           
-          return routeName.includes(query) || 
-                 vehiclePlate.includes(query) || 
-                 vehicleType.includes(query);
+          return routeName.includes(query) || vehiclePlate.includes(query);
         });
       }
       
       // Filter by status
       if (status && status !== 'all') {
-        trips = trips.filter((trip: Trip) => trip.status === status);
+        filteredTrips = filteredTrips.filter((trip: Trip) => trip.status === status);
       }
       
-      return trips;
+      return filteredTrips;
     } catch (error) {
       console.error('Error searching trips:', error);
-      throw error;
+      return [];
     }
   },
 
@@ -128,37 +151,42 @@ export const tripsApi = {
     const route = trip.route as any;
     const vehicle = trip.vehicleId as any;
     
+    const fromName = route?.fromLocationId?.name || route?.from?.name || 'N/A';
+    const toName = route?.toLocationId?.name || route?.to?.name || 'N/A';
+    
     return {
-      routeName: `${route?.fromLocationId?.name || route?.from?.name || 'N/A'} → ${route?.toLocationId?.name || route?.to?.name || 'N/A'}`,
+      routeName: `${fromName} → ${toName}`,
       vehiclePlate: vehicle?.vehicleNumber || 'N/A',
       vehicleType: vehicle?.type,
-      fromName: route?.fromLocationId?.name || route?.from?.name,
-      toName: route?.toLocationId?.name || route?.to?.name
+      fromName,
+      toName
     };
   },
 
   // Helper function để format date
-  formatDate: (date: Date | string) => {
+  formatDate: (date: Date | string): string => {
     try {
       const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) return 'Invalid Date';
       return dateObj.toLocaleDateString('vi-VN');
     } catch {
-      return typeof date === 'string' ? date : 'Invalid Date';
+      return 'Invalid Date';
     }
   },
 
   // Helper function để format time
-  formatTime: (date: Date | string) => {
+  formatTime: (date: Date | string): string => {
     try {
       const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) return 'Invalid Time';
       return dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
     } catch {
-      return typeof date === 'string' ? date : 'Invalid Time';
+      return 'Invalid Time';
     }
   },
 
   // Helper function để format price
-  formatPrice: (price: number) => {
+  formatPrice: (price: number): string => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
   }
 };

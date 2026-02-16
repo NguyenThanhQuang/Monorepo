@@ -6,7 +6,7 @@ export interface VehiclePayload {
   companyId: string;
   vehicleNumber: string;
   type: string;
-  status: VehicleStatus; // SỬA: Dùng enum
+  status: VehicleStatus;
   description?: string;
   floors: number;
   seatColumns: number;

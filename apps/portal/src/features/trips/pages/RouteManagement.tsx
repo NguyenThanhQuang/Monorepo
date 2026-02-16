@@ -37,7 +37,6 @@ export function RouteManagement() {
     cancelled: { label: 'Đã hủy', color: 'bg-red-500', textColor: 'text-red-600' }
   };
 
-  // ✅ helper đảm bảo luôn có tripId
   const getTripId = (trip: Trip): string => {
     return (trip as any)?._id || (trip as any)?.id || '';
   };
@@ -55,6 +54,27 @@ export function RouteManagement() {
     return '';
   };
 
+  const calculateStatsFromTrips = (tripsData: Trip[]) => {
+    const totalTrips = tripsData.length;
+    const scheduledTrips = tripsData.filter((trip: Trip) => trip.status === 'scheduled').length;
+    const runningTrips = tripsData.filter((trip: Trip) => trip.status === 'departed').length;
+    
+    let totalTicketsSold = 0;
+    tripsData.forEach((trip: Trip) => {
+      const totalSeats = trip.totalSeats || (trip.vehicleId as any)?.totalSeats || 40;
+      const availableSeats = trip.availableSeatsCount || 0;
+      const soldSeats = Math.max(0, totalSeats - availableSeats);
+      totalTicketsSold += soldSeats;
+    });
+
+    setStats({
+      totalTrips,
+      scheduledTrips,
+      runningTrips,
+      totalTicketsSold
+    });
+  };
+
   const fetchTrips = async () => {
     const companyId = getCompanyId();
     if (!companyId) {
@@ -68,89 +88,82 @@ export function RouteManagement() {
       setError(null);
       
       const response = await api.trips.getAllManagement(companyId);
-      const tripsData = response || [];
-      console.log(tripsData)
+      console.log('API Response:', response);
+      
+      let tripsData: Trip[] = [];
+      if (response && typeof response === 'object') {
+        if (Array.isArray(response)) {
+          tripsData = response;
+        } else if ('data' in response && Array.isArray((response as any).data)) {
+          tripsData = (response as any).data;
+        }
+      }
+      
+      console.log('Trips data:', tripsData);
       setTrips(tripsData);
-      
-      const totalTrips = tripsData.length;
-      const scheduledTrips = tripsData.filter((trip: Trip) => trip.status === 'scheduled').length;
-      const runningTrips = tripsData.filter((trip: Trip) => trip.status === 'departed').length;
-      
-      let totalTicketsSold = 0;
-      tripsData.forEach((trip: Trip) => {
-        const totalSeats = trip.totalSeats || (trip.vehicleId as any)?.totalSeats || 40;
-        const availableSeats = trip.availableSeatsCount || 0;
-        const soldSeats = Math.max(0, totalSeats - availableSeats);
-        totalTicketsSold += soldSeats;
-      });
-
-      setStats({
-        totalTrips,
-        scheduledTrips,
-        runningTrips,
-        totalTicketsSold
-      });
+      calculateStatsFromTrips(tripsData);
       
     } catch (err: any) {
       console.error('Error fetching trips:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Không thể tải danh sách chuyến đi';
+      
+      // Xác định loại lỗi để hiển thị thông báo phù hợp
+      let errorMessage = 'Không thể tải danh sách chuyến đi';
+      
+      if (err.code === 'ECONNREFUSED' || err.message?.includes('ERR_CONNECTION_REFUSED')) {
+        errorMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra:';
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Máy chủ đang gặp sự cố (500). Vui lòng thử lại sau.';
+      } else if (err.response?.status === 401) {
+        errorMessage = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Bạn không có quyền xem danh sách chuyến đi.';
+      } else if (err.response?.status === 404) {
+        errorMessage = 'API không tìm thấy. Vui lòng kiểm tra đường dẫn.';
+      }
+      
       setError(errorMessage);
+      setTrips([]); // Đảm bảo trips là mảng rỗng
+      calculateStatsFromTrips([]);
+      
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  const filterTrips = async () => {
-    const companyId = getCompanyId();
-    if (!companyId) return;
-
-    try {
-      setLoading(true);
-      
-      const filteredTrips = await api.trips.searchWithFilter(companyId, searchQuery, filterStatus);
-      setTrips(filteredTrips);
-      
-      const totalTrips = filteredTrips.length;
-      const scheduledTrips = filteredTrips.filter((trip: Trip) => trip.status === 'scheduled').length;
-      const runningTrips = filteredTrips.filter((trip: Trip) => trip.status === 'departed').length;
-      
-      let totalTicketsSold = 0;
-      filteredTrips.forEach((trip: Trip) => {
-        const totalSeats = trip.totalSeats || (trip.vehicleId as any)?.totalSeats || 40;
-        const availableSeats = trip.availableSeatsCount || 0;
-        const soldSeats = Math.max(0, totalSeats - availableSeats);
-        totalTicketsSold += soldSeats;
+  const getFilteredTrips = () => {
+    if (!trips.length) return trips;
+    
+    let filtered = [...trips];
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(trip => {
+        const route = trip.route as any;
+        const fromName = route?.fromLocationId?.name?.toLowerCase() || 
+                        route?.from?.name?.toLowerCase() || '';
+        const toName = route?.toLocationId?.name?.toLowerCase() || 
+                      route?.to?.name?.toLowerCase() || '';
+        const routeName = `${fromName} ${toName}`;
+        
+        const vehiclePlate = (trip.vehicleId as any)?.vehicleNumber?.toLowerCase() || '';
+        
+        return routeName.includes(query) || vehiclePlate.includes(query);
       });
-
-      setStats({
-        totalTrips,
-        scheduledTrips,
-        runningTrips,
-        totalTicketsSold
-      });
-      
-    } catch (err: any) {
-      console.error('Error filtering trips:', err);
-      setError(err.response?.data?.message || 'Lỗi khi lọc dữ liệu');
-    } finally {
-      setLoading(false);
     }
+    
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(trip => trip.status === filterStatus);
+    }
+    
+    return filtered;
   };
 
   useEffect(() => {
     fetchTrips();
   }, []);
 
-  useEffect(() => {
-    if (!loading) {
-      const timer = setTimeout(() => {
-        filterTrips();
-      }, 300);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [searchQuery, filterStatus]);
+  const displayedTrips = getFilteredTrips();
 
   const handleDeleteTrip = async (trip: Trip, tripName: string) => {
     const tripId = getTripId(trip);
@@ -166,8 +179,8 @@ export function RouteManagement() {
 
     try {
       await api.trips.cancel(tripId);
-      fetchTrips();
       alert('Đã hủy chuyến đi thành công!');
+      fetchTrips(); // Refresh list
     } catch (err: any) {
       console.error('Error deleting trip:', err);
       alert('Không thể hủy chuyến đi: ' + (err.response?.data?.message || 'Lỗi hệ thống'));
@@ -192,6 +205,7 @@ export function RouteManagement() {
     alert('Đã phân công tài xế thành công!');
     setShowDriverAssignment(false);
     setSelectedTripForDriver(null);
+    fetchTrips(); // Refresh list
   };
 
   const handleCreateNewTrip = () => {
@@ -204,7 +218,7 @@ export function RouteManagement() {
   };
 
   const renderStatusBadge = (status: keyof typeof statusConfig) => {
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig.scheduled;
     return (
       <div className="flex items-center space-x-1.5">
         <div className={`w-2 h-2 ${config.color} rounded-full`}></div>
@@ -216,28 +230,46 @@ export function RouteManagement() {
   };
 
   const getTripDisplayInfo = (trip: Trip) => {
-    return api.trips.getTripDisplayInfo(trip);
+    const route = trip.route as any;
+    const vehicle = trip.vehicleId as any;
+    
+    const fromName = route?.fromLocationId?.name || route?.from?.name || 'N/A';
+    const toName = route?.toLocationId?.name || route?.to?.name || 'N/A';
+    
+    return {
+      routeName: `${fromName} → ${toName}`,
+      vehiclePlate: vehicle?.vehicleNumber || 'N/A',
+      vehicleType: vehicle?.type || 'Không xác định'
+    };
   };
 
   const formatPrice = (price: number) => {
-    return api.trips.formatPrice(price);
+    return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
   };
 
   const formatDate = (date: Date | string) => {
-    return api.trips.formatDate(date);
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      return dateObj.toLocaleDateString('vi-VN');
+    } catch {
+      return 'Invalid Date';
+    }
   };
 
   const formatTime = (date: Date | string) => {
-    return api.trips.formatTime(date);
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      return dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return 'Invalid Time';
+    }
   };
 
   const renderTripRow = (trip: Trip) => {
     const tripId = getTripId(trip);
-
     const totalSeats = trip.totalSeats || (trip.vehicleId as any)?.totalSeats || 40;
     const soldSeats = Math.max(0, totalSeats - (trip.availableSeatsCount || 0));
     const soldPercentage = (soldSeats / totalSeats) * 100;
-    
     const tripInfo = getTripDisplayInfo(trip);
     
     return (
@@ -416,10 +448,25 @@ export function RouteManagement() {
         </div>
       </div>
 
-      {/* Error Message */}
+      {/* Error Message - Chi tiết hơn để debug */}
       {error && (
         <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-          <p className="text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-red-600 dark:text-red-400 font-medium mb-2">Lỗi kết nối</p>
+          <p className="text-red-600 dark:text-red-400 mb-3">{error}</p>
+          <div className="text-sm text-red-500 dark:text-red-500 space-y-1">
+            <p>🔍 Các bước kiểm tra:</p>
+            <p>1. Đảm bảo backend server đang chạy (npm run start:dev)</p>
+            <p>2. Kiểm tra cổng backend (mặc định: 3001)</p>
+            <p>3. Xác nhận API endpoint /trips/management/all hoạt động</p>
+            <p>4. Kiểm tra token đăng nhập còn hiệu lực</p>
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {refreshing ? 'Đang thử lại...' : 'Thử lại kết nối'}
+          </button>
         </div>
       )}
 
@@ -430,7 +477,7 @@ export function RouteManagement() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
             <p className="text-gray-500 mt-2">Đang tải dữ liệu...</p>
           </div>
-        ) : trips.length === 0 ? (
+        ) : displayedTrips.length === 0 && !error ? (
           <div className="p-12 text-center">
             <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-4">
               <Bus className="w-10 h-10 text-gray-400" />
@@ -453,7 +500,7 @@ export function RouteManagement() {
               Tạo chuyến đi mới
             </button>
           </div>
-        ) : (
+        ) : !error && displayedTrips.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
@@ -482,11 +529,11 @@ export function RouteManagement() {
                 </tr>
               </thead>
               <tbody>
-                {trips.map(renderTripRow)}
+                {displayedTrips.map(renderTripRow)}
               </tbody>
             </table>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Driver Assignment Modal */}
