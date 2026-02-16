@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { BookingStatus } from '@obtp/shared-types';
 import { ClientSession, Model, QueryFilter, Types } from 'mongoose';
 import { BookingDefinition, BookingDocument } from './schemas/booking.schema';
 
@@ -17,28 +18,26 @@ export class BookingsRepository {
     const newBooking = new this.bookingModel(doc);
     return newBooking.save({ session });
   }
-async findByCompanyId(
-  companyId: string | Types.ObjectId,
-): Promise<BookingDocument[]> {
-  const companyObjectId =
-    typeof companyId === 'string'
-      ? new Types.ObjectId(companyId)
-      : companyId;
+  async findByCompanyId(
+    companyId: string | Types.ObjectId,
+  ): Promise<BookingDocument[]> {
+    const companyObjectId =
+      typeof companyId === 'string' ? new Types.ObjectId(companyId) : companyId;
 
-  return this.bookingModel
-    .find({ companyId: companyObjectId })
-    .populate({
-      path: 'tripId',
-      select: 'departureTime route vehicleId',
-      populate: [
-        { path: 'route.fromLocationId', select: 'name fullAddress' },
-        { path: 'route.toLocationId', select: 'name fullAddress' },
-        { path: 'vehicleId', select: 'licensePlate' },
-      ],
-    })
-    .sort({ createdAt: -1 })
-    .exec();
-}
+    return this.bookingModel
+      .find({ companyId: companyObjectId })
+      .populate({
+        path: 'tripId',
+        select: 'departureTime route vehicleId',
+        populate: [
+          { path: 'route.fromLocationId', select: 'name fullAddress' },
+          { path: 'route.toLocationId', select: 'name fullAddress' },
+          { path: 'vehicleId', select: 'licensePlate' },
+        ],
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
 
   async findById(
     id: string | Types.ObjectId,
@@ -127,5 +126,76 @@ async findByCompanyId(
 
   async deleteById(id: string | Types.ObjectId): Promise<void> {
     await this.bookingModel.findByIdAndDelete(id).exec();
+  }
+
+  async getPopularRoutes(limit = 5): Promise<any[]> {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    return this.bookingModel.aggregate([
+      {
+        $match: {
+          status: BookingStatus.CONFIRMED,
+          createdAt: { $gte: ninetyDaysAgo },
+        },
+      },
+      { $addFields: { tripObjectId: { $toObjectId: '$tripId' } } },
+      {
+        $lookup: {
+          from: 'trips',
+          localField: 'tripObjectId',
+          foreignField: '_id',
+          as: 'tripInfo',
+        },
+      },
+      { $unwind: '$tripInfo' },
+      {
+        $addFields: {
+          'tripInfo.route.fromLocationObjectId': {
+            $toObjectId: '$tripInfo.route.fromLocationId',
+          },
+          'tripInfo.route.toLocationObjectId': {
+            $toObjectId: '$tripInfo.route.toLocationId',
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            from: '$tripInfo.route.fromLocationObjectId',
+            to: '$tripInfo.route.toLocationObjectId',
+          },
+          bookingCount: { $sum: 1 },
+        },
+      },
+      { $sort: { bookingCount: -1 } },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'locations',
+          localField: '_id.from',
+          foreignField: '_id',
+          as: 'fromLocation',
+        },
+      },
+      {
+        $lookup: {
+          from: 'locations',
+          localField: '_id.to',
+          foreignField: '_id',
+          as: 'toLocation',
+        },
+      },
+      { $unwind: '$fromLocation' },
+      { $unwind: '$toLocation' },
+      {
+        $project: {
+          _id: 0,
+          fromLocation: '$fromLocation',
+          toLocation: '$toLocation',
+          bookingCount: 1,
+        },
+      },
+    ]);
   }
 }

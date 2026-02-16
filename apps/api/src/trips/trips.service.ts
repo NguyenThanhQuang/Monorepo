@@ -7,8 +7,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { initializeTripSeats, isValidTripTime } from '@obtp/business-logic';
+import { initializeTripSeats } from '@obtp/business-logic';
 import {
+  CompanyStatus,
   CreateTripPayload,
   SearchTripQuery,
   SeatStatus,
@@ -19,7 +20,11 @@ import {
   Vehicle,
   VehicleStatus,
 } from '@obtp/shared-types';
+import dayjs from 'dayjs';
 import { Types } from 'mongoose';
+import { BookingsRepository } from 'src/bookings/bookings.repository';
+import { LocationsRepository } from 'src/locations/locations.repository';
+import { MapsService } from 'src/maps/maps.service';
 import { CompaniesService } from '../companies/companies.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { TripDocument } from './schemas/trip.schema';
@@ -32,6 +37,11 @@ export class TripsService {
     @Inject(forwardRef(() => VehiclesService))
     private readonly vehiclesService: VehiclesService,
     private readonly companiesService: CompaniesService,
+    private readonly mapsService: MapsService,
+    private readonly locationsRepository: LocationsRepository,
+    @Inject(forwardRef(() => BookingsRepository))
+    private readonly bookingsRepository: BookingsRepository,
+
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -41,76 +51,109 @@ export class TripsService {
 
     const depart = new Date(departureTime);
     const arrive = new Date(expectedArrivalTime);
-    if (!isValidTripTime(depart, arrive)) {
+    if (depart >= arrive) {
       throw new BadRequestException(
         'Thời gian khởi hành phải trước thời gian đến.',
       );
     }
+
+    const stopLocationIds = (route.stops || []).map((s) => s.locationId);
+    const allLocationIds = [
+      route.fromLocationId,
+      route.toLocationId,
+      ...stopLocationIds,
+    ];
 
     const [company, vehicle] = await Promise.all([
       this.companiesService.findOne(companyId),
       this.vehiclesService.findOne(vehicleId),
     ]);
 
-    if (company.status !== 'active')
-      throw new BadRequestException('Nhà xe đang ngừng hoạt động.');
-
-    if (vehicle.status !== VehicleStatus.ACTIVE)
+    if (company.status !== CompanyStatus.ACTIVE) {
+      throw new BadRequestException(`Nhà xe đang ngừng hoạt động.`);
+    }
+    if (vehicle.status !== VehicleStatus.ACTIVE) {
       throw new BadRequestException(
-        `Xe ${vehicle.vehicleNumber} không khả dụng.`,
+        `Xe ${vehicle.vehicleNumber} đang không khả dụng.`,
       );
-    if (vehicle.companyId._id.toString() !== companyId)
-      throw new BadRequestException('Xe không thuộc về nhà xe này.');
+    }
 
-    const mapInfo = { polyline: '', duration: 0, distance: 0 };
+    const vehicleCompanyId = vehicle.companyId._id
+      ? vehicle.companyId._id.toString()
+      : vehicle.companyId.toString();
 
-    const vehicleParam: Partial<Vehicle> = {
-      ...vehicle.toObject(),
-      _id: vehicle._id.toString(),
-    } as unknown as Partial<Vehicle>;
+    if (vehicleCompanyId !== companyId) {
+      throw new BadRequestException('Xe này không thuộc về nhà xe đã chọn.');
+    }
 
-    const rawSeats = initializeTripSeats(vehicleParam);
+    const fromLoc = await this.locationsRepository.findById(
+      route.fromLocationId,
+    );
+    const toLoc = await this.locationsRepository.findById(route.toLocationId);
 
-    const initialSeats = rawSeats.map((seat) => ({
-      ...seat,
-      bookingId: seat.bookingId
-        ? new Types.ObjectId(seat.bookingId)
-        : undefined,
+    if (!fromLoc || !toLoc) {
+      throw new BadRequestException('Điểm đi hoặc điểm đến không tồn tại.');
+    }
+
+    let mapInfo = { polyline: '', duration: 0, distance: 0 };
+    try {
+      const routeData = await this.mapsService.getRouteInfo([
+        {
+          lat: fromLoc.location.coordinates[1],
+          lng: fromLoc.location.coordinates[0],
+        },
+        {
+          lat: toLoc.location.coordinates[1],
+          lng: toLoc.location.coordinates[0],
+        },
+      ]);
+      mapInfo = routeData;
+    } catch (error) {
+      console.warn(
+        `[TripsService] Không thể lấy lộ trình từ Maps: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
+    const vehicleObj = vehicle.toObject ? vehicle.toObject() : vehicle;
+    const initialSeats = initializeTripSeats(vehicleObj as unknown as Vehicle);
+
+    const readySeats = initialSeats.map((s) => ({
+      ...s,
+      status: SeatStatus.AVAILABLE,
     }));
 
-    // SỬA: Chuyển đổi companyId và vehicleId sang ObjectId
-    // và thêm status cho stops
-    const tripData = {
+    const stopsData = (route.stops || []).map((stop) => ({
+      locationId: new Types.ObjectId(stop.locationId),
+      expectedArrivalTime: new Date(stop.expectedArrivalTime),
+      expectedDepartureTime: stop.expectedDepartureTime
+        ? new Date(stop.expectedDepartureTime)
+        : undefined,
+      status: TripStopStatus.PENDING,
+    }));
+
+    return this.tripsRepository.create({
       companyId: new Types.ObjectId(companyId),
       vehicleId: new Types.ObjectId(vehicleId),
       route: {
-        fromLocationId: new Types.ObjectId(payload.route.fromLocationId),
-        toLocationId: new Types.ObjectId(payload.route.toLocationId),
-        stops: (payload.route.stops || []).map(stop => ({
-          locationId: new Types.ObjectId(stop.locationId),
-          expectedArrivalTime: new Date(stop.expectedArrivalTime),
-          expectedDepartureTime: stop.expectedDepartureTime ? new Date(stop.expectedDepartureTime) : undefined,
-          status: TripStopStatus.PENDING, // THÊM: status mặc định
-        })),
+        fromLocationId: new Types.ObjectId(route.fromLocationId),
+        toLocationId: new Types.ObjectId(route.toLocationId),
+        stops: stopsData,
         ...mapInfo,
       },
       departureTime: depart,
       expectedArrivalTime: arrive,
       price: payload.price,
-      seats: initialSeats,
       status: TripStatus.SCHEDULED,
-      availableSeatsCount: initialSeats.length,
+      availableSeatsCount: readySeats.length,
       isRecurrenceTemplate: payload.isRecurrenceTemplate || false,
       isRecurrenceActive: payload.isRecurrenceTemplate || false,
-    };
-
-    return this.tripsRepository.create(tripData);
+    });
   }
 
   async findPublicTrips(query: SearchTripQuery): Promise<any[]> {
     const date = new Date(query.date);
-    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+    const startOfDay = dayjs(date).startOf('day').toDate();
+    const endOfDay = dayjs(date).endOf('day').toDate();
 
     const rawTrips = await this.tripsRepository.findPublicTripsByCondition(
       startOfDay,
@@ -120,9 +163,10 @@ export class TripsService {
     );
 
     return rawTrips.map((trip) => {
-      const availableCount = trip.seats.filter(
-        (s: any) => s.status === SeatStatus.AVAILABLE,
-      ).length;
+      const availableCount = trip.seats
+        ? trip.seats.filter((s: any) => s.status === SeatStatus.AVAILABLE)
+            .length
+        : 0;
 
       return {
         ...trip,
@@ -142,28 +186,39 @@ export class TripsService {
     id: string,
     payload: UpdateTripPayload,
   ): Promise<TripDocument | null> {
-    const trip = await this.findOne(id);
+    const existingTrip = await this.findOne(id);
 
-    const hasBookings = trip.seats.some(
+    const hasActiveBookings = existingTrip.seats.some(
       (s) => s.status === SeatStatus.BOOKED || s.status === SeatStatus.HELD,
     );
 
-    if (hasBookings) {
-      if (payload.price !== undefined || payload.departureTime) {
+    if (hasActiveBookings) {
+      if (payload.price !== undefined && payload.price !== existingTrip.price) {
         throw new ConflictException(
-          'Không thể thay đổi giá/thời gian khi đã có vé được đặt.',
+          'Không thể đổi giá vé khi đã có người đặt.',
         );
+      }
+
+      if (payload.departureTime) {
+        const oldTime = new Date(existingTrip.departureTime).getTime();
+        const newTime = new Date(payload.departureTime).getTime();
+        if (oldTime !== newTime) {
+          throw new ConflictException(
+            'Không thể đổi giờ khởi hành khi đã có vé được đặt.',
+          );
+        }
       }
     }
 
-    const updateData: any = { ...payload };
-
+    const updateData: any = {};
+    if (payload.status) updateData.status = payload.status;
+    if (payload.price !== undefined) updateData.price = payload.price;
     if (payload.departureTime)
       updateData.departureTime = new Date(payload.departureTime);
     if (payload.expectedArrivalTime)
       updateData.expectedArrivalTime = new Date(payload.expectedArrivalTime);
-
-    // XÓA: Không có companyId, vehicleId trong UpdateTripPayload
+    if (payload.isRecurrenceActive !== undefined)
+      updateData.isRecurrenceActive = payload.isRecurrenceActive;
 
     return this.tripsRepository.update(id, updateData);
   }
@@ -193,22 +248,20 @@ export class TripsService {
     payload: UpdateTripSeatStatusPayload,
   ): Promise<void> {
     const trip = await this.tripsRepository.findById(tripId);
-    if (!trip) throw new NotFoundException('Trip not found');
+    if (!trip) throw new NotFoundException();
 
-    payload.seatNumbers.forEach((seatNum) => {
-      const seat = trip.seats.find((s) => s.seatNumber === seatNum);
+    payload.seatNumbers.forEach((num) => {
+      const seat = trip.seats.find((s) => s.seatNumber === num);
       if (seat) {
         seat.status = payload.status;
         seat.bookingId = payload.bookingId
-          ? (payload.bookingId as any)
+          ? (new Types.ObjectId(payload.bookingId) as any)
           : undefined;
       }
     });
-
     trip.availableSeatsCount = trip.seats.filter(
       (s) => s.status === SeatStatus.AVAILABLE,
     ).length;
-
     await this.tripsRepository.save(trip);
   }
 
@@ -265,5 +318,27 @@ export class TripsService {
 
   async checkVehicleHasActiveTrips(vehicleId: string): Promise<boolean> {
     return this.tripsRepository.hasActiveTripsForVehicle(vehicleId);
+  }
+
+  async findPopularRoutes(limit = 5) {
+    // Logic cũ bạn dùng bookingModel.aggregate trực tiếp.
+    // Tốt nhất: Viết hàm getTopRoutes ở BookingsRepository rồi gọi sang.
+    // Ở đây tôi giả định bạn gọi qua Repository của module Booking
+    return this.bookingsRepository.getPopularRoutes(limit);
+  }
+
+  async updateTripStopStatus(
+    tripId: string,
+    stopLocationId: string,
+    status: TripStopStatus,
+  ) {
+    const result = await this.tripsRepository.updateStopStatus(
+      tripId,
+      stopLocationId,
+      status,
+    );
+    if (!result)
+      throw new NotFoundException('Không tìm thấy chuyến hoặc trạm.');
+    return result;
   }
 }

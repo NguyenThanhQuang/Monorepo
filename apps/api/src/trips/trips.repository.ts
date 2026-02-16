@@ -1,7 +1,6 @@
-// src/modules/trips/trips.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { TripStatus } from '@obtp/shared-types';
+import { TripStatus, TripStopStatus } from '@obtp/shared-types';
 import {
   ClientSession,
   Model,
@@ -14,7 +13,8 @@ import { TripDefinition, TripDocument } from './schemas/trip.schema';
 @Injectable()
 export class TripsRepository {
   constructor(
-    @InjectModel(TripDefinition.name) private readonly tripModel: Model<TripDocument>,
+    @InjectModel(TripDefinition.name)
+    private readonly tripModel: Model<TripDocument>,
   ) {}
 
   async create(
@@ -251,5 +251,35 @@ export class TripsRepository {
       })
       .exec();
     return count > 0;
+  }
+
+  async updateStopStatus(
+    tripId: string,
+    locationId: string,
+    status: TripStopStatus,
+  ): Promise<TripDocument | null> {
+    return this.tripModel
+      .findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(tripId),
+          'route.stops.locationId': new Types.ObjectId(locationId),
+        },
+        {
+          $set: { 'route.stops.$.status': status },
+        },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async updateManyStatus(
+    filter: QueryFilter<TripDocument>,
+    newStatus: TripStatus,
+  ): Promise<any> {
+    return this.tripModel
+      .updateMany(filter, {
+        $set: { status: newStatus },
+      })
+      .exec();
   }
 }

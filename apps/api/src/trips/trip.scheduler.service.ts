@@ -15,7 +15,7 @@ export class TripSchedulerService {
     private readonly vehiclesService: VehiclesService,
   ) {}
 
-  // 1. Tự động sinh chuyến đi hàng ngày (Daily Trip Gen)
+  // Tự động sinh chuyến đi hàng ngày (Daily Trip Gen)
   @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async handleDailyTripGeneration() {
     this.logger.log('Started Daily Trip Generation...');
@@ -73,7 +73,7 @@ export class TripSchedulerService {
         recurrenceParentId: template._id as any,
 
         status: TripStatus.SCHEDULED,
-        seats: seats, // <--- Đã fix
+        seats: seats,
         availableSeatsCount: seats.length,
       });
       count++;
@@ -81,12 +81,45 @@ export class TripSchedulerService {
     this.logger.log(`Generated ${count} trips for tomorrow.`);
   }
 
-  // 2. Update Status (SCHEDULED -> DEPARTED)
+  // Update Status (SCHEDULED -> DEPARTED)
   @Cron(CronExpression.EVERY_10_MINUTES)
   async handleStatusUpdate() {
     // Vì Repository Mongoose support updateMany
     // Ta có thể inject TripModel vào đây hoặc thêm method updateStatus vào Repo
     // Ở đây demo concept, ta giả định Repo có updateManyStatus
     // await this.tripsRepository.updateManyStatus(...)
+  }
+
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  async handleUpdateDepartedTrips() {
+    this.logger.log('SCAN: Updating DEPARTED trips...');
+    const now = new Date();
+    const result = await this.tripsRepository.updateManyStatus(
+      {
+        status: TripStatus.SCHEDULED,
+        departureTime: { $lte: now },
+      },
+      TripStatus.DEPARTED,
+    );
+
+    if (result.modifiedCount > 0) {
+      this.logger.log(`UPDATED: ${result.modifiedCount} trips to DEPARTED.`);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_30_MINUTES)
+  async handleUpdateArrivedTrips() {
+    this.logger.log('SCAN: Updating ARRIVED trips...');
+    const now = new Date();
+    const result = await this.tripsRepository.updateManyStatus(
+      {
+        status: { $in: [TripStatus.DEPARTED, TripStatus.SCHEDULED] },
+        expectedArrivalTime: { $lt: now },
+      },
+      TripStatus.ARRIVED,
+    );
+    if (result.modifiedCount > 0) {
+      this.logger.log(`UPDATED: ${result.modifiedCount} trips to ARRIVED.`);
+    }
   }
 }
