@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+// src/modules/companies/companies.module.ts
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MailModule } from '../mail/mail.module';
 import { UsersModule } from '../users/users.module';
@@ -12,11 +13,15 @@ import { CompanyDefinition, CompanySchema } from './schemas/company.schema';
     MongooseModule.forFeature([
       { name: CompanyDefinition.name, schema: CompanySchema },
     ]),
-    UsersModule,
+    forwardRef(() => UsersModule), // Thêm forwardRef để tránh circular dependency
     MailModule,
   ],
   controllers: [CompaniesController],
   providers: [CompaniesService, CompaniesRepository],
-  exports: [CompaniesService, CompaniesRepository],
+  exports: [
+    CompaniesService, 
+    CompaniesRepository,
+    MongooseModule, // THÊM: Export MongooseModule để các module khác có thể dùng model Company
+  ],
 })
 export class CompaniesModule {}

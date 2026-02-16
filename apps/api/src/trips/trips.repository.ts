@@ -1,3 +1,4 @@
+// src/modules/trips/trips.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { TripStatus } from '@obtp/shared-types';
@@ -56,7 +57,7 @@ export class TripsRepository {
   ): Promise<TripDocument | null> {
     return this.tripModel
       .findById(id)
-      .populate('companyId')
+      .populate('companyId') // SẼ HOẠT ĐỘNG SAU KHI IMPORT CompaniesModule
       .populate('vehicleId', 'type vehicleNumber totalSeats')
       .populate('route.fromLocationId')
       .populate('route.toLocationId')
@@ -67,10 +68,11 @@ export class TripsRepository {
   async findManagementTrips(
     filter: QueryFilter<TripDocument>,
   ): Promise<TripDocument[]> {
+    // SỬA: Chỉ populate khi cần thiết, nếu không có dữ liệu thì không populate
     return this.tripModel
       .find(filter)
-      .populate('companyId', 'name')
-      .populate('vehicleId', 'type vehicleNumber')
+      .populate('companyId') // SẼ HOẠT ĐỘNG SAU KHI IMPORT CompaniesModule
+      .populate('vehicleId', 'type vehicleNumber totalSeats')
       .populate('route.fromLocationId', 'name province')
       .populate('route.toLocationId', 'name province')
       .sort({ departureTime: -1 })
@@ -195,44 +197,47 @@ export class TripsRepository {
       .findByIdAndUpdate(id, updateData, { new: true, session })
       .exec();
   }
-async search(filter: any) {
-  return this.tripModel
-    .find(filter)
-    .populate('from')
-    .populate('to')
-    .populate('company')
-    .sort({ departureTime: 1 })
-    .exec();
-}
-async searchByRoute(fromId: string, toId: string) {
-  return this.tripModel
-    .find({
-      'route.fromLocationId': new Types.ObjectId(fromId),
-      'route.toLocationId': new Types.ObjectId(toId),
-      status: { $ne: TripStatus.ARRIVED }, // 🚨 chưa hoàn thành
-      isRecurrenceTemplate: false,
-    })
-    .populate('companyId', 'name logoUrl')
-    .populate('vehicleId', 'type vehicleNumber totalSeats')
-    .populate('route.fromLocationId', 'name province')
-    .populate('route.toLocationId', 'name province')
-    .sort({ departureTime: 1 })
-    .exec();
-}
-async searchByFrom(fromId: string) {
-  return this.tripModel
-    .find({
-      'route.fromLocationId': new Types.ObjectId(fromId),
-      status: { $ne: TripStatus.ARRIVED },
-      isRecurrenceTemplate: false,
-    })
-    .populate('companyId', 'name logoUrl')
-    .populate('vehicleId', 'type vehicleNumber totalSeats amenities')
-    .populate('route.fromLocationId', 'name province')
-    .populate('route.toLocationId', 'name province')
-    .sort({ departureTime: 1 })
-    .exec();
-}
+
+  async search(filter: any) {
+    return this.tripModel
+      .find(filter)
+      .populate('route.fromLocationId')
+      .populate('route.toLocationId')
+      .populate('companyId')
+      .sort({ departureTime: 1 })
+      .exec();
+  }
+
+  async searchByRoute(fromId: string, toId: string) {
+    return this.tripModel
+      .find({
+        'route.fromLocationId': new Types.ObjectId(fromId),
+        'route.toLocationId': new Types.ObjectId(toId),
+        status: { $ne: TripStatus.ARRIVED },
+        isRecurrenceTemplate: false,
+      })
+      .populate('companyId', 'name logoUrl')
+      .populate('vehicleId', 'type vehicleNumber totalSeats')
+      .populate('route.fromLocationId', 'name province')
+      .populate('route.toLocationId', 'name province')
+      .sort({ departureTime: 1 })
+      .exec();
+  }
+
+  async searchByFrom(fromId: string) {
+    return this.tripModel
+      .find({
+        'route.fromLocationId': new Types.ObjectId(fromId),
+        status: { $ne: TripStatus.ARRIVED },
+        isRecurrenceTemplate: false,
+      })
+      .populate('companyId', 'name logoUrl')
+      .populate('vehicleId', 'type vehicleNumber totalSeats amenities')
+      .populate('route.fromLocationId', 'name province')
+      .populate('route.toLocationId', 'name province')
+      .sort({ departureTime: 1 })
+      .exec();
+  }
 
   /**
    * Kiểm tra xem xe có đang được sử dụng trong các chuyến đi Sắp/Đang chạy hay không

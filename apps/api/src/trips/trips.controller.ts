@@ -1,3 +1,4 @@
+// src/modules/trips/trips.controller.ts
 import {
   BadRequestException,
   Body,
@@ -37,12 +38,24 @@ export class TripsController {
     @CurrentUser() user: sharedTypes.AuthUserResponse,
     @Query('companyId') filterCmpId: string,
   ) {
-    let targetId = filterCmpId;
-    if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      if (!user.companyId) throw new ForbiddenException();
-      targetId = user.companyId;
+    try {
+      let targetId = filterCmpId;
+      
+      if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
+        if (!user.companyId) throw new ForbiddenException('Không tìm thấy companyId của bạn');
+        targetId = user.companyId;
+      }
+      
+      const trips = await this.tripsService.findAllForManagement(targetId);
+      return {
+        success: true,
+        data: trips,
+        count: trips.length
+      };
+    } catch (error) {
+      console.error('Error in findForManagement:', error);
+      throw error;
     }
-    return this.tripsService.findAllForManagement(targetId);
   }
 
   @Get(':id')
@@ -63,10 +76,11 @@ export class TripsController {
     }
     return this.tripsService.create(payload);
   }
-@Get('search/from')
-searchByFrom(@Query('fromId') fromId: string) {
-  return this.tripsService.searchByFrom(fromId);
-}
+
+  @Get('search/from')
+  searchByFrom(@Query('fromId') fromId: string) {
+    return this.tripsService.searchByFrom(fromId);
+  }
 
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -99,7 +113,4 @@ searchByFrom(@Query('fromId') fromId: string) {
 
     return this.tripsService.search(fromId, toId, date);
   }
-
-  // 4. UPDATE TRIP (Manual Put/Patch handling)
-  // ... Logic similar to create/cancel with ownership checks
 }
