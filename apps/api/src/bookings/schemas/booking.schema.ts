@@ -63,7 +63,7 @@ export class BookingDefinition {
   })
   status: BookingStatus;
 
-  @Prop({ type: Date, index: true })
+  @Prop({ type: Date })
   heldUntil?: Date;
 
   @Prop({

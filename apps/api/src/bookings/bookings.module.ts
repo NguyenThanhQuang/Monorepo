@@ -16,7 +16,7 @@ import { BookingDefinition, BookingSchema } from './schemas/booking.schema';
     ConfigModule,
 
     forwardRef(() => TripsModule),
-    UsersModule,
+    forwardRef(() => UsersModule),
   ],
   controllers: [BookingsController],
   providers: [BookingsService, BookingsRepository],

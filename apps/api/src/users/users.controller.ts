@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -81,5 +82,32 @@ export class UsersController {
     // Zod pipe hoặc Global Pipe phải đảm bảo validate userId là MongoId
     // Tạm thời tin tưởng Pipe global đã setup
     return this.usersService.updateUserStatus(userId, payload.isBanned);
+  }
+
+  // Lấy vé của tôi
+  @Get('me/bookings')
+  @UseGuards(JwtAuthGuard)
+  getMyBookings(@CurrentUser() user: sharedTypes.AuthUserResponse) {
+    return this.usersService.findUserBookings(user.id);
+  }
+
+  // Xem Profile người khác (Cho Admin hoặc xem chính mình qua ID)
+  @Get(':userId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getUserProfile(
+    @Param('userId') targetUserId: string,
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+  ) {
+    const isAdmin = user.roles.includes(sharedTypes.UserRole.ADMIN);
+    const isOwner = user.id === targetUserId;
+
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException('Bạn không có quyền xem thông tin này.');
+    }
+
+    const fullUser = await this.usersService.findById(targetUserId);
+    if (!fullUser) throw new NotFoundException('Người dùng không tồn tại.');
+
+    return this.usersService.sanitizeUser(fullUser);
   }
 }

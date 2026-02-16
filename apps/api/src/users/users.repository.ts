@@ -74,4 +74,8 @@ export class UsersRepository {
   async findAll(): Promise<UserDocument[]> {
     return this.userModel.find().exec();
   }
+
+  async delete(id: string | Types.ObjectId): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndDelete(id).exec();
+  }
 }

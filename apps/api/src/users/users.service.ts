@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -21,6 +23,7 @@ import {
   UserRole,
 } from '@obtp/shared-types';
 import { Connection, Types } from 'mongoose';
+import { BookingsRepository } from 'src/bookings/bookings.repository';
 import { UserDocument } from './schemas/user.schema';
 import { UsersRepository } from './users.repository';
 
@@ -39,6 +42,8 @@ export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
     @InjectConnection() private readonly connection: Connection,
+    @Inject(forwardRef(() => BookingsRepository))
+    private readonly bookingsRepository: BookingsRepository,
   ) {}
 
   async findById(id: string): Promise<UserDocument | null> {
@@ -259,5 +264,13 @@ export class UsersService {
       passwordResetToken: token,
       passwordResetExpires: { $gt: new Date() },
     });
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.usersRepository.update(id, { isBanned: true });
+  }
+
+  async findUserBookings(userId: string): Promise<any[]> {
+    return this.bookingsRepository.findByUserId(userId);
   }
 }
