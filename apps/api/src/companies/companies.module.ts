@@ -13,10 +13,11 @@ import { CompanyDefinition, CompanySchema } from './schemas/company.schema';
       { name: CompanyDefinition.name, schema: CompanySchema },
     ]),
     forwardRef(() => UsersModule),
+    forwardRef(() => UsersModule),
     MailModule,
   ],
   controllers: [CompaniesController],
   providers: [CompaniesService, CompaniesRepository],
-  exports: [CompaniesService, CompaniesRepository],
+  exports: [CompaniesService, CompaniesRepository, MongooseModule],
 })
 export class CompaniesModule {}
