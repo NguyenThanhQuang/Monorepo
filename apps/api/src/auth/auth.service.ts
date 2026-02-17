@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { JwtService } from '@nestjs/jwt';
 import {
   AUTH_CONSTANTS,
   comparePassword,
@@ -38,7 +37,6 @@ export class AuthService {
   constructor(
     @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
-    private jwtService: JwtService,
     private eventEmitter: EventEmitter2,
     private configService: ConfigService,
     private tokenService: TokenService,
@@ -74,7 +72,6 @@ export class AuthService {
         !existingUser.isEmailVerified &&
         existingUser.emailVerificationToken
       ) {
-        // Logic resend nếu chưa verify
         await this.requestResendVerificationEmail(existingUser.email);
         return {
           message:

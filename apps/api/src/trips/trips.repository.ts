@@ -57,7 +57,7 @@ export class TripsRepository {
   ): Promise<TripDocument | null> {
     return this.tripModel
       .findById(id)
-      .populate('companyId') // SẼ HOẠT ĐỘNG SAU KHI IMPORT CompaniesModule
+      .populate('companyId')
       .populate('vehicleId', 'type vehicleNumber totalSeats')
       .populate('route.fromLocationId')
       .populate('route.toLocationId')
@@ -68,10 +68,9 @@ export class TripsRepository {
   async findManagementTrips(
     filter: QueryFilter<TripDocument>,
   ): Promise<TripDocument[]> {
-    // SỬA: Chỉ populate khi cần thiết, nếu không có dữ liệu thì không populate
     return this.tripModel
       .find(filter)
-      .populate('companyId') // SẼ HOẠT ĐỘNG SAU KHI IMPORT CompaniesModule
+      .populate('companyId')
       .populate('vehicleId', 'type vehicleNumber totalSeats')
       .populate('route.fromLocationId', 'name province')
       .populate('route.toLocationId', 'name province')
