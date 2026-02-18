@@ -6,33 +6,48 @@ import {
   LookupBookingPayload,
 } from "@obtp/shared-types";
 
+// Interface cho response chuẩn của API
+interface ApiResponse<T> {
+  statusCode: number;
+  message: string;
+  data: T;
+}
+
 export const bookingsApi = {
-  // Step 1: Giữ chỗ (Tạo Booking Status: HELD)
-  createHold: (payload: CreateBookingPayload) => {
-    return http.post<Booking>("/bookings/hold", payload);
+  createHold: async (payload: CreateBookingPayload) => {
+    const response = await http.post<ApiResponse<Booking>>("/bookings/hold", payload);
+    return response.data;
   },
 
-  // Step 2: Confirm (Thường gọi nội bộ sau Payment hoặc Admin xác nhận tay)
-  manualConfirm: (id: string, payload: ConfirmBookingPayload) => {
-    return http.post<Booking>(`/bookings/confirm/${id}`, payload);
+  manualConfirm: async (id: string, payload: ConfirmBookingPayload) => {
+    const response = await http.post<ApiResponse<Booking>>(
+      `/bookings/confirm/${id}`,
+      payload
+    );
+    return response.data;
   },
 
-  cancel: (id: string) => {
-    return http.delete<Booking>(`/bookings/${id}`);
+  cancel: async (id: string) => {
+    const response = await http.delete<ApiResponse<Booking>>(`/bookings/${id}`);
+    return response.data;
   },
 
-  // Tra cứu vé cho khách vãng lai
-  lookup: (payload: LookupBookingPayload) => {
-    return http.post<Booking>("/bookings/lookup", payload);
+  lookup: async (payload: LookupBookingPayload) => {
+    const response = await http.post<ApiResponse<Booking>>(
+      "/bookings/lookup",
+      payload
+    );
+    return response.data;
   },
 
-  // Lấy danh sách booking của company (cho company admin)
-  getCompanyBookings: () => {
-    return http.get<Booking[]>("/bookings/company");
+  getCompanyBookings: async (): Promise<Booking[]> => {
+    const response = await http.get<Booking[]>("/bookings/company");
+    // Response trực tiếp là mảng Booking, không phải ApiResponse
+    return response ?? [];
   },
 
-  // Lấy chi tiết booking
-  getById: (id: string) => {
-    return http.get<Booking>(`/bookings/${id}`);
+  getById: async (id: string) => {
+    const response = await http.get<ApiResponse<Booking>>(`/bookings/${id}`);
+    return response.data;
   },
 };

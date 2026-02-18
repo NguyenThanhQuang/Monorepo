@@ -21,7 +21,7 @@ export class TripDefinition {
           locationId: { type: Types.ObjectId, ref: 'Location', required: true },
           expectedArrivalTime: { type: Date, required: true },
           expectedDepartureTime: Date,
-          status: { type: String, enum: TripStopStatus, default: TripStopStatus.PENDING }, // THÊM: status
+          status: { type: String, enum: TripStopStatus, default: TripStopStatus.PENDING },
         },
       ],
       duration: Number,
@@ -37,7 +37,7 @@ export class TripDefinition {
       locationId: Types.ObjectId;
       expectedArrivalTime: Date;
       expectedDepartureTime?: Date;
-      status: TripStopStatus; // THÊM: status
+      status: TripStopStatus;
     }>;
     duration?: number;
     distance?: number;
@@ -98,3 +98,12 @@ TripSchema.index({ departureTime: 1, status: 1 });
 TripSchema.index({ 'route.fromLocationId': 1, 'route.toLocationId': 1 });
 TripSchema.index({ companyId: 1, departureTime: -1 });
 TripSchema.index({ recurrenceParentId: 1 });
+
+// Middleware để log khi query
+TripSchema.pre('find', function() {
+  console.log('Mongoose Query:', this.getFilter());
+});
+
+TripSchema.pre('findOne', function() {
+  console.log('Mongoose FindOne:', this.getFilter());
+});

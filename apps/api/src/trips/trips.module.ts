@@ -1,3 +1,4 @@
+// trips.module.ts
 import { Module, forwardRef } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -20,12 +21,12 @@ import { TripsService } from './trips.service';
     forwardRef(() => VehiclesModule),
     forwardRef(() => CompaniesModule),
     forwardRef(() => BookingsModule),
-
-    CompaniesModule,
+    // Import trực tiếp để có thể sử dụng trong repository
     LocationsModule,
+    // Không cần VehiclesModule ở đây vì đã forwardRef ở trên
   ],
   controllers: [TripsController],
   providers: [TripsService, TripsRepository, TripSchedulerService],
-  exports: [TripsService],
+  exports: [TripsService, TripsRepository],
 })
 export class TripsModule {}

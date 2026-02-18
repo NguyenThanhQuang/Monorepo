@@ -1,4 +1,3 @@
-// src/modules/trips/trips.controller.ts
 import {
   BadRequestException,
   Body,
@@ -40,17 +39,20 @@ export class TripsController {
   ) {
     try {
       let targetId = filterCmpId;
-      
+
       if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-        if (!user.companyId) throw new ForbiddenException('Không tìm thấy companyId của bạn');
+        if (!user.companyId)
+          throw new ForbiddenException('Không tìm thấy companyId của bạn');
         targetId = user.companyId;
       }
-      
+
+      console.log('Controller - Finding trips for companyId:', targetId);
       const trips = await this.tripsService.findAllForManagement(targetId);
+      
       return {
         success: true,
         data: trips,
-        count: trips.length
+        count: trips.length,
       };
     } catch (error) {
       console.error('Error in findForManagement:', error);
@@ -58,10 +60,39 @@ export class TripsController {
     }
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.tripsService.findOne(id);
+  // ===== SEARCH ROUTES (ĐẶT TRƯỚC :id) =====
+
+  @Get('search')
+  async searchTrips(
+    @Query('fromLocationId') fromLocationId: string,
+    @Query('toLocationId') toLocationId: string,
+    @Query('date') date: string,
+  ) {
+    if (!fromLocationId || !toLocationId || !date) {
+      throw new BadRequestException(
+        'Missing required search parameters',
+      );
+    }
+
+    const trips =
+      await this.tripsService.searchTripsByLocationId(
+        fromLocationId,
+        toLocationId,
+        date,
+      );
+
+    return {
+      success: true,
+      data: trips,
+      count: trips.length,
+    };
   }
+  @Get('search/from')
+  searchByFrom(@Query('fromId') fromId: string) {
+    return this.tripsService.searchByFrom(fromId);
+  }
+
+  // ===== CREATE =====
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -72,15 +103,20 @@ export class TripsController {
     @Body() payload: sharedTypes.CreateTripPayload,
   ) {
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      if (payload.companyId !== user.companyId) throw new ForbiddenException();
+      if (payload.companyId !== user.companyId)
+        throw new ForbiddenException();
     }
-    return this.tripsService.create(payload);
+    
+    const trip = await this.tripsService.create(payload);
+    
+    return {
+      success: true,
+      data: trip,
+      message: 'Tạo chuyến đi thành công',
+    };
   }
 
-  @Get('search/from')
-  searchByFrom(@Query('fromId') fromId: string) {
-    return this.tripsService.searchByFrom(fromId);
-  }
+  // ===== CANCEL =====
 
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -95,22 +131,20 @@ export class TripsController {
         ? trip.companyId._id.toString()
         : trip.companyId.toString();
 
-      if (tripCompanyId !== user.companyId) throw new ForbiddenException();
+      if (tripCompanyId !== user.companyId)
+        throw new ForbiddenException();
     }
     return this.tripsService.cancel(id);
   }
 
-  @Get('search')
-  @UsePipes(new ZodValidationPipe(SearchTripQuerySchema))
-  async search(
-    @Query('fromId') fromId: string,
-    @Query('toId') toId: string,
-    @Query('date') date: string,
-  ): Promise<any> {
-    if (!fromId || !toId || !date) {
-      throw new BadRequestException('Missing required search parameters');
-    }
+  // ===== GET BY ID (LUÔN ĐẶT CUỐI) =====
 
-    return this.tripsService.search(fromId, toId, date);
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const trip = await this.tripsService.findOne(id);
+    return {
+      success: true,
+      data: trip,
+    };
   }
 }

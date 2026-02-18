@@ -28,12 +28,20 @@ export const tripsApi = {
   // Query param `companyId` optional cho Super Admin lọc
   getAllManagement: async (companyId?: string): Promise<Trip[]> => {
     try {
-      const response = await http.get<any>("/trips/management/all", {
-        params: { companyId },
-      });
+      const params: any = {};
+      if (companyId) {
+        params.companyId = companyId;
+      }
+      
+      const response = await http.get<any>("/trips/management/all", { params });
       
       // Xử lý response an toàn
       if (!response) return [];
+      
+      // Nếu response có cấu trúc { success: true, data: [...] }
+      if (response.success && response.data && Array.isArray(response.data)) {
+        return response.data;
+      }
       
       // Nếu response có cấu trúc { data: [...] }
       if (response.data && Array.isArray(response.data)) {
@@ -45,7 +53,6 @@ export const tripsApi = {
         return response;
       }
       
-      // Log để debug
       console.warn('Unexpected response format from getAllManagement:', response);
       return [];
     } catch (error) {
@@ -54,9 +61,34 @@ export const tripsApi = {
     }
   },
 
-  create: (payload: CreateTripPayload) => {
-    return http.post<Trip>("/trips", payload);
-  },
+create: async (payload: CreateTripPayload): Promise<Trip> => {
+  try {
+    console.log('Calling API create with payload:', payload);
+    
+    const response = await http.post<any>("/trips", payload);
+    
+    console.log('API create response:', response);
+    
+    // Xử lý response format
+    if (response && response.success && response.data) {
+      return response.data;
+    }
+    
+    if (response && response.data) {
+      return response.data;
+    }
+    
+    if (response && response._id) {
+      return response;
+    }
+    
+    console.warn('Unexpected response format from create:', response);
+    return response;
+  } catch (error) {
+    console.error('Error in tripsApi.create:', error);
+    throw error;
+  }
+},
 
   cancel: (id: string) => {
     return http.patch<Trip>(`/trips/${id}/cancel`);
@@ -101,7 +133,6 @@ export const tripsApi = {
       };
     } catch (error) {
       console.error('Error getting trip stats:', error);
-      // Trả về giá trị mặc định thay vì throw
       return {
         totalTrips: 0,
         scheduledTrips: 0,
@@ -122,10 +153,11 @@ export const tripsApi = {
       if (searchQuery && searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
         filteredTrips = filteredTrips.filter((trip: Trip) => {
-          const fromName = (trip.route as any)?.fromLocationId?.name?.toLowerCase() || 
-                          (trip.route as any)?.from?.name?.toLowerCase() || '';
-          const toName = (trip.route as any)?.toLocationId?.name?.toLowerCase() || 
-                        (trip.route as any)?.to?.name?.toLowerCase() || '';
+          const route = trip.route as any;
+          const fromName = route?.fromLocationId?.name?.toLowerCase() || 
+                          route?.from?.name?.toLowerCase() || '';
+          const toName = route?.toLocationId?.name?.toLowerCase() || 
+                        route?.to?.name?.toLowerCase() || '';
           const routeName = `${fromName} → ${toName}`;
           
           const vehiclePlate = (trip.vehicleId as any)?.vehicleNumber?.toLowerCase() || '';

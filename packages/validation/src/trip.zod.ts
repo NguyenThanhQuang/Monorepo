@@ -44,7 +44,7 @@ export const CreateTripSchema = z
     (data) => {
       const start = new Date(data.departureTime);
       const end = new Date(data.expectedArrivalTime);
-      return start < end;
+      return start > end;
     },
     {
       message: "Thời gian khởi hành phải trước thời gian dự kiến đến",

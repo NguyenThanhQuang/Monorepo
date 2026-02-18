@@ -1,3 +1,4 @@
+// src/components/trip/PaymentModal.tsx
 import { useState } from 'react';
 import { X, CreditCard, Smartphone, Building2, Check } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -11,6 +12,8 @@ interface PaymentModalProps {
     date: string;
     time: string;
     seats: string[];
+    companyName: string;
+    vehicleType: string;
   };
 }
 
@@ -55,12 +58,12 @@ export function PaymentModal({ onClose, onPaymentComplete, amount, ticketInfo }:
       <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white dark:bg-gray-900 p-6 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between">
-            <h3 className="text-gray-900 dark:text-white">{t('payment')}</h3>
+            <h3 className="text-xl text-gray-900 dark:text-white">{t('payment')}</h3>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
             </button>
           </div>
         </div>
@@ -68,8 +71,12 @@ export function PaymentModal({ onClose, onPaymentComplete, amount, ticketInfo }:
         <div className="p-6 space-y-6">
           {/* Ticket Summary */}
           <div className="bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-900/20 dark:to-teal-900/20 rounded-2xl p-6">
-            <h4 className="text-gray-900 dark:text-white mb-4">{t('ticketInfo')}</h4>
-            <div className="space-y-2 text-sm">
+            <h4 className="text-lg text-gray-900 dark:text-white mb-4">{t('ticketInfo')}</h4>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">{t('company')}</span>
+                <span className="text-gray-900 dark:text-white">{ticketInfo.companyName}</span>
+              </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">{t('routeLabel')}</span>
                 <span className="text-gray-900 dark:text-white">{ticketInfo.route}</span>
@@ -83,26 +90,30 @@ export function PaymentModal({ onClose, onPaymentComplete, amount, ticketInfo }:
                 <span className="text-gray-900 dark:text-white">{ticketInfo.time}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">{t('vehicleType')}</span>
+                <span className="text-gray-900 dark:text-white">{ticketInfo.vehicleType}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">{t('seatNumberLabel')}</span>
                 <span className="text-gray-900 dark:text-white">{ticketInfo.seats.join(', ')}</span>
               </div>
               <div className="pt-3 mt-3 border-t border-blue-200 dark:border-blue-800 flex justify-between">
-                <span className="text-gray-900 dark:text-white">{t('totalAmount')}</span>
-                <span className="text-xl text-blue-600 dark:text-blue-400">{formatPrice(amount)}</span>
+                <span className="text-lg text-gray-900 dark:text-white">{t('totalAmount')}</span>
+                <span className="text-2xl text-blue-600 dark:text-blue-400">{formatPrice(amount)}</span>
               </div>
             </div>
           </div>
 
           {/* Payment Methods */}
           <div>
-            <h4 className="text-gray-900 dark:text-white mb-4">{t('paymentMethod')}</h4>
+            <h4 className="text-lg text-gray-900 dark:text-white mb-4">{t('paymentMethod')}</h4>
             <div className="space-y-3">
               <button
                 onClick={() => setPaymentMethod('credit-card')}
                 className={`w-full p-4 rounded-2xl border-2 transition-all ${
                   paymentMethod === 'credit-card'
                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 dark:border-gray-700'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
                 }`}
               >
                 <div className="flex items-center space-x-4">
@@ -114,7 +125,7 @@ export function PaymentModal({ onClose, onPaymentComplete, amount, ticketInfo }:
                     <CreditCard className="w-6 h-6" />
                   </div>
                   <div className="flex-1 text-left">
-                    <div className="text-gray-900 dark:text-white">{t('creditCard')}</div>
+                    <div className="text-base text-gray-900 dark:text-white">{t('creditCard')}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">{t('creditCardDesc')}</div>
                   </div>
                 </div>
@@ -124,8 +135,8 @@ export function PaymentModal({ onClose, onPaymentComplete, amount, ticketInfo }:
                 onClick={() => setPaymentMethod('momo')}
                 className={`w-full p-4 rounded-2xl border-2 transition-all ${
                   paymentMethod === 'momo'
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 dark:border-gray-700'
+                    ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-pink-300'
                 }`}
               >
                 <div className="flex items-center space-x-4">
@@ -137,7 +148,7 @@ export function PaymentModal({ onClose, onPaymentComplete, amount, ticketInfo }:
                     <Smartphone className="w-6 h-6" />
                   </div>
                   <div className="flex-1 text-left">
-                    <div className="text-gray-900 dark:text-white">{t('momoWallet')}</div>
+                    <div className="text-base text-gray-900 dark:text-white">MoMo</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">{t('momoWalletDesc')}</div>
                   </div>
                 </div>
@@ -147,8 +158,8 @@ export function PaymentModal({ onClose, onPaymentComplete, amount, ticketInfo }:
                 onClick={() => setPaymentMethod('bank-transfer')}
                 className={`w-full p-4 rounded-2xl border-2 transition-all ${
                   paymentMethod === 'bank-transfer'
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 dark:border-gray-700'
+                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-green-300'
                 }`}
               >
                 <div className="flex items-center space-x-4">
@@ -160,53 +171,13 @@ export function PaymentModal({ onClose, onPaymentComplete, amount, ticketInfo }:
                     <Building2 className="w-6 h-6" />
                   </div>
                   <div className="flex-1 text-left">
-                    <div className="text-gray-900 dark:text-white">{t('bankTransfer')}</div>
+                    <div className="text-base text-gray-900 dark:text-white">{t('bankTransfer')}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">{t('bankTransferDesc')}</div>
                   </div>
                 </div>
               </button>
             </div>
           </div>
-
-          {/* Payment Form */}
-          {paymentMethod === 'credit-card' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-2">{t('cardNumber')}</label>
-                <input
-                  type="text"
-                  placeholder={t('cardNumberPlaceholder')}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-gray-700 dark:text-gray-300 mb-2">{t('expiryDate')}</label>
-                  <input
-                    type="text"
-                    placeholder={t('expiryDatePlaceholder')}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 dark:text-gray-300 mb-2">CVV</label>
-                  <input
-                    type="text"
-                    placeholder="123"
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-2">{t('cardholderName')}</label>
-                <input
-                  type="text"
-                  placeholder={t('cardholderPlaceholder')}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                />
-              </div>
-            </div>
-          )}
 
           {/* Action Buttons */}
           <div className="flex space-x-3 pt-4">

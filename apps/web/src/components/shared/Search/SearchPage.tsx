@@ -6,46 +6,41 @@ import { SearchResults } from './SearchResults';
 interface SearchParams {
   fromProvince: string;
   toProvince: string;
-  date?: string; // undefined = all days
+  date?: string;
 }
 
 export function SearchPage() {
   const [params, setParams] = useState<SearchParams | null>(null);
 
-  /* ================= SLIDER EVENT ================= */
   useEffect(() => {
     const handler = (e: CustomEvent) => {
       const { fromProvince, toProvince } = e.detail;
-
       setParams({
         fromProvince,
         toProvince,
-        date: undefined, // slider = all dates
+        date: undefined,
       });
     };
 
     window.addEventListener('searchRoute', handler as EventListener);
-    return () =>
-      window.removeEventListener('searchRoute', handler as EventListener);
+    return () => window.removeEventListener('searchRoute', handler as EventListener);
   }, []);
 
-  /* ================= UI ================= */
   return (
     <>
       {!params && (
-     // src/components/search/SearchPage.tsx
-<HeroSearch
-  onSearch={(params) => {
-    setParams({
-      fromProvince: params.fromProvince,
-      toProvince: params.toProvince,
-      date: params.date,
-    });
-  }}
-/>
+        <HeroSearch
+          onSearch={(searchParams) => {
+            setParams({
+              fromProvince: searchParams.fromProvince,
+              toProvince: searchParams.toProvince,
+              date: searchParams.date,
+            });
+          }}
+        />
       )}
 
-      {params && (  
+      {params && (
         <SearchResults
           fromProvince={params.fromProvince}
           toProvince={params.toProvince}
@@ -53,9 +48,10 @@ export function SearchPage() {
           onBack={() => setParams(null)}
           onTripSelect={(id) => {
             console.log('Trip selected:', id);
+            // TODO: Navigate to trip detail
           }}
         />
       )}
     </>
   );
-}
+} 

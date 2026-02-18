@@ -45,14 +45,40 @@ export class BookingsService {
     private readonly eventEmitter: EventEmitter2,
     @InjectConnection() private readonly connection: Connection,
   ) {}
-  async getBookingsByCompany(user: AuthUserResponse) {
-    if (!user.companyId) {
-      throw new ForbiddenException('User không thuộc company nào.');
-    }
+// bookings.service.ts
+async getBookingsByCompany(user: AuthUserResponse) {
+  console.log('getBookingsByCompany called with user:', {
+    id: user.id,
+    companyId: user.companyId,
+    roles: user.roles
+  });
 
-    return this.bookingsRepository.findByCompanyId(user.companyId);
+  if (!user.companyId) {
+    console.log('No companyId found for user');
+    throw new ForbiddenException('User không thuộc company nào.');
   }
 
+  try {
+    const bookings = await this.bookingsRepository.findByCompanyId(user.companyId);
+    console.log(`Found ${bookings.length} bookings for company ${user.companyId}`);
+    
+    // Log chi tiết booking đầu tiên nếu có
+    if (bookings.length > 0) {
+      console.log('First booking details:', {
+        id: bookings[0]._id,
+        ticketCode: bookings[0].ticketCode,
+        contactName: bookings[0].contactName,
+        tripId: bookings[0].tripId,
+        passengersCount: bookings[0].passengers?.length
+      });
+    }
+
+    return bookings;
+  } catch (error) {
+    console.error('Error in getBookingsByCompany:', error);
+    throw error;
+  }
+}
   /**
    * TRANSACTION FLOW: CREATE HOLD (GIỮ CHỖ)
    * 1. Start Session

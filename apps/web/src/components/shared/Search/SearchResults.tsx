@@ -12,15 +12,9 @@ import {
   SlidersHorizontal,
   ArrowRight,
 } from 'lucide-react';
+import type { Trip, Company, Vehicle, Location } from '@obtp/shared-types';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import type { Trip } from '@obtp/shared-types';
-import { tripApi } from '../../../api/service/trips/trips.api';
-
-type TripWithVehicleAmenities = Trip & {
-  vehicle?: {
-    amenities?: string[];
-  };
-};
+import { getCompanyLogo, getCompanyName, getFromLocationName, getToLocationName, getVehicleAmenities, getVehicleType, tripApi } from '../../../api/service/trips/trips.api';
 
 interface SearchResultsProps {
   fromProvince: string;
@@ -38,21 +32,19 @@ export function SearchResults({
   onTripSelect,
 }: SearchResultsProps) {
   const { t } = useLanguage();
-  const [trips, setTrips] = useState<TripWithVehicleAmenities[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'price' | 'time' | 'duration'>('time');
 
   useEffect(() => {
-    // ⛔ Không gọi API khi thiếu param
     if (!fromProvince || !toProvince) return;
 
     const fetchTrips = async () => {
       setLoading(true);
       try {
-        const finalDate =
-          date ?? new Date().toISOString().split('T')[0];
+        const finalDate = date ?? new Date().toISOString().split('T')[0];
 
-        const data = await tripApi.searchTrips(
+        const data = await tripApi.searchByProvinces(
           fromProvince,
           toProvince,
           finalDate,
@@ -60,11 +52,6 @@ export function SearchResults({
 
         setTrips(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.log('API PARAMS', {
-          fromProvince,
-          toProvince,
-          date,
-        });
         console.error('SEARCH ERROR', err);
         setTrips([]);
       } finally {
@@ -81,7 +68,7 @@ export function SearchResults({
   };
 
   // Calculate duration in hours and minutes
-  const calculateDuration = (departureTime: string, arrivalTime: string) => {
+  const calculateDuration = (departureTime: string | Date, arrivalTime: string | Date) => {
     const depTime = new Date(departureTime);
     const arrTime = new Date(arrivalTime);
     const diffMs = arrTime.getTime() - depTime.getTime();
@@ -165,7 +152,7 @@ export function SearchResults({
                   <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   <div className="flex-1">
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {trips[0]?.route?.from?.name} → {trips[0]?.route?.to?.name}
+                      {fromProvince} → {toProvince}
                     </div>
                     <div className="text-gray-900 dark:text-white">
                       {date ? new Date(date).toLocaleDateString('vi-VN') : 'Hôm nay'}
@@ -222,26 +209,64 @@ export function SearchResults({
 
         <div className="space-y-4">
           {sortedTrips.map((trip) => {
-            const duration = calculateDuration(trip.departureTime.toString(), trip.expectedArrivalTime.toString());
-            const companyName = (trip.companyId as any)?.name ?? 'Nhà xe';
-            const companyRating = (trip as any)?.companyAvgRating ?? 4;
-            const companyReviewCount = (trip as any)?.companyReviewCount ?? 0;
-            const availableSeats = trip.availableSeatsCount ?? trip.seats?.filter(s => s.status === 'available').length ?? 0;
-            // Sử dụng loại xe mặc định nếu không có thông tin
-            const busType = 'Xe khách';
+            const duration = calculateDuration(
+              trip.departureTime, 
+              trip.expectedArrivalTime
+            );
+            
+            // Lấy thông tin an toàn bằng helpers
+            const companyName = getCompanyName(trip);
+            const companyLogo = getCompanyLogo(trip);
+            const vehicleType = getVehicleType(trip);
+            const amenities = getVehicleAmenities(trip);
+            const fromLocationName = getFromLocationName(trip) || fromProvince;
+            const toLocationName = getToLocationName(trip) || toProvince;
+            
+            // Lấy thông tin company từ object nếu có
+            const companyObj = typeof trip.companyId === 'object' ? trip.companyId as Company : null;
+            const companyRating = (trip as any).companyAvgRating ?? 4;
+            const companyReviewCount = (trip as any).companyReviewCount ?? 0;
+            
+            // Số ghế trống
+            const availableSeats = trip.availableSeatsCount ?? 
+              (trip.seats?.filter(s => s.status === 'available').length ?? 0);
+
+            // Format giờ khởi hành và đến
+            const departureTimeFormatted = new Date(trip.departureTime).toLocaleTimeString('vi-VN', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+            
+            const arrivalTimeFormatted = new Date(trip.expectedArrivalTime).toLocaleTimeString('vi-VN', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
 
             return (
               <div
-                key={trip._id}
-                onClick={() => onTripSelect(trip._id)}
+                key={trip._id || trip.id}
+                onClick={() => onTripSelect(trip._id || trip.id)}
                 className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm hover:shadow-lg dark:hover:shadow-blue-500/10 transition-all cursor-pointer border border-gray-100 dark:border-gray-700"
               >
                 {/* Company Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-teal-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg">
-                      {companyName.charAt(0)}
-                    </div>
+                    {companyLogo ? (
+                      <img 
+                        src={companyLogo} 
+                        alt={companyName}
+                        className="w-12 h-12 rounded-2xl object-cover"
+                        onError={(e) => {
+                          // Fallback nếu ảnh lỗi
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          (e.target as HTMLImageElement).parentElement?.classList.add('bg-gradient-to-br', 'from-blue-600', 'to-teal-500', 'rounded-2xl', 'flex', 'items-center', 'justify-center', 'text-white', 'font-bold', 'text-lg');
+                        }}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-teal-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg">
+                        {companyName.charAt(0)}
+                      </div>
+                    )}
                     <div>
                       <h3 className="text-gray-900 dark:text-white font-semibold">{companyName}</h3>
                       <div className="flex items-center space-x-2">
@@ -267,19 +292,16 @@ export function SearchResults({
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
                     <div className="text-2xl text-gray-900 dark:text-white mb-1">
-                      {new Date(trip.departureTime).toLocaleTimeString('vi-VN', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
+                      {departureTimeFormatted}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {trip.route?.from?.name}
+                      {fromLocationName}
                     </div>
                   </div>
                   <div className="flex-1 px-4">
                     <div className="relative">
                       <div className="border-t-2 border-gray-300 dark:border-gray-600"></div>
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-50 dark:bg-gray-800 px-2">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 px-2">
                         <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
                           <Clock className="w-4 h-4" />
                           <span>{duration}</span>
@@ -289,13 +311,10 @@ export function SearchResults({
                   </div>
                   <div className="flex-1 text-right">
                     <div className="text-2xl text-gray-900 dark:text-white mb-1">
-                      {new Date(trip.expectedArrivalTime).toLocaleTimeString('vi-VN', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
+                      {arrivalTimeFormatted}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {trip.route?.to?.name}
+                      {toLocationName}
                     </div>
                   </div>
                 </div>
@@ -304,11 +323,12 @@ export function SearchResults({
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
                   <div className="flex items-center space-x-2">
                     <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-full text-sm">
-                      {busType}
+                      {vehicleType}
                     </span>
                     <div className="flex items-center space-x-2">
-                      {trip.vehicle?.amenities?.map((amenity) => {
-                        const amenityConfig = amenityIcons[amenity];
+                      {amenities.slice(0, 4).map((amenity) => {
+                        const amenityKey = amenity.toLowerCase();
+                        const amenityConfig = amenityIcons[amenityKey];
                         if (!amenityConfig) return null;
                         
                         const Icon = amenityConfig.icon;
@@ -322,6 +342,11 @@ export function SearchResults({
                           </div>
                         );
                       })}
+                      {amenities.length > 4 && (
+                        <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-xs text-gray-600 dark:text-gray-400">
+                          +{amenities.length - 4}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <button className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">

@@ -1,3 +1,4 @@
+// App.tsx
 import { useEffect, useState } from 'react';
 
 import { FAQPage } from './components/layout/faq/FAQPage';
@@ -7,6 +8,7 @@ import { Header } from './components/layout/Header/Header';
 import { Footer } from './components/layout/Footer/Footer';
 
 import { HeroSearch } from './components/shared/Search/HeroSearch';
+import { SearchResults } from './components/shared/Search/SearchResults';
 
 import { Auth } from './pages/auth/auth';
 import { UserProfilePage } from './pages/UserProfile';
@@ -20,10 +22,9 @@ import { BookingManagement } from './pages/admin/BookingManagement';
 import { RouteManagement } from './pages/admin/route-management';
 import VehicleManagementPage from './pages/admin/vehicle-management';
 import AddTripContainer from '../../portal/src/features/trips/add-trip/AddTripContainer';
-import { SearchResults } from './components/shared/Search/SearchResults';
+import { TripDetail } from './components/shared/Search/TripDetail';
 
 /* ===== COMPANY DASHBOARD ===== */
-
 
 /* ================= PLACEHOLDER ================= */
 const TicketLookupPage = () => <div className="p-6">Tra Cứu Vé</div>;
@@ -39,16 +40,15 @@ export type Page =
   | 'profile'
   | 'myTrips'
   | 'admin-login'
- | 'company-dashboard' 
-  | 'add-trip'  // 👈 THÊM DÒNG NÀY
+  | 'company-dashboard' 
+  | 'add-trip'
   | 'trips-management' 
   | 'vehicles-management'
-  | 'trip-detail'
+  | 'trip-detail'        // 👈 THÊM DÒNG NÀY
   | 'booking-management'
   /* SYSTEM */
   | 'system-dashboard'
   | 'user-management'
-
   /* COMPANY */
   | 'company-dashboard'
   | 'company-booking'
@@ -71,17 +71,19 @@ const App = () => {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminType, setAdminType] =
-    useState<'company' | 'system'>('system');
+  const [adminType, setAdminType] = useState<'company' | 'system'>('system');
 
   const [adminUser, setAdminUser] = useState<any>(null);
 
   /* ================= SEARCH ================= */
- const [searchParams, setSearchParams] = useState<{
-  fromProvince: string;
-  toProvince: string;
-  date?: string;
-} | null>(null);
+  const [searchParams, setSearchParams] = useState<{
+    fromProvince: string;
+    toProvince: string;
+    date?: string;
+  } | null>(null);
+
+  /* ================= TRIP DETAIL ================= */
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
   /* ================= CHECK LOGIN ================= */
   useEffect(() => {
@@ -158,20 +160,52 @@ const App = () => {
     }
   };
 
+  /* ================= TRIP HANDLERS ================= */
+  const handleTripSelect = (tripId: string) => {
+    setSelectedTripId(tripId);
+    setPage('trip-detail');
+  };
+
+  const handleBackFromTrip = () => {
+    setSelectedTripId(null);
+    setPage('search-results');
+  };
+
+  const handleBookingComplete = (selectedSeats: string[]) => {
+    console.log('Booking completed for seats:', selectedSeats);
+    alert(`Đặt vé thành công! Ghế: ${selectedSeats.join(', ')}`);
+    setSelectedTripId(null);
+    setPage('home');
+  };
+
   /* ================= RENDER ================= */
   const renderPage = () => {
+    // Ưu tiên hiển thị TripDetail nếu đang ở trang trip-detail
+    if (page === 'trip-detail' && selectedTripId) {
+      return (
+        <TripDetail
+          tripId={selectedTripId}
+          onBack={handleBackFromTrip}
+          onBooking={handleBookingComplete}
+        />
+      );
+    }
+
     switch (page) {
       case 'search-results':
         if (!searchParams) return null;
         return (
-    <SearchResults
-      fromProvince={searchParams.fromProvince}
-      toProvince={searchParams.toProvince}
-      date={searchParams.date}
-      onBack={() => setPage('home')}
-      onTripSelect={(id) => console.log('Trip selected:', id)}
-    />
-  );
+          <SearchResults
+            fromProvince={searchParams.fromProvince}
+            toProvince={searchParams.toProvince}
+            date={searchParams.date}
+            onBack={() => {
+              setPage('home');
+              setSearchParams(null);
+            }}
+            onTripSelect={handleTripSelect}
+          />
+        );
 
       case 'ticketLookup':
         return <TicketLookupPage />;
@@ -181,8 +215,10 @@ const App = () => {
 
       case 'myTrips':
         return <MyTripsPage />;
-    case 'add-trip': // 👈 THÊM CASE NÀY
-      return <AddTripContainer />;
+
+      case 'add-trip':
+        return <AddTripContainer />;
+
       case 'faq':
         return <FAQPage onBack={() => setPage('home')} />;
 
@@ -218,9 +254,8 @@ const App = () => {
         return <UserManagementContainer />;
 
       /* ===== COMPANY ===== */
-     case 'company-dashboard':
-  return <CompanyDashboard onNavigate={setPage} />;
-
+      case 'company-dashboard':
+        return <CompanyDashboard onNavigate={setPage} />;
 
       case 'company-booking':
         return <BookingManagement />;
@@ -249,24 +284,25 @@ const App = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-   <Header
-  isLoggedIn={isLoggedIn}
-  onLoginClick={() => setShowAuth(true)}
-  onLogout={handleLogout}
-  onHomeClick={() => setPage('home')}
-  onTicketLookupClick={() => setPage('ticketLookup')}
-  onContactClick={() => setPage('contact')}
-  onMyTripsClick={() => setPage('myTrips')}
-  onProfileClick={() => setPage('profile')}
-
-  /* 🔥 ADMIN */
-  onAdminAccess={handleAdminAccess}
-
-  /* 🔥 COMPANY */
-  onCompanyDashboard={() => setPage('company-dashboard')}
-  onCompanyTrips={() => setPage('company-booking')}
-/>
-
+      <Header
+        isLoggedIn={isLoggedIn}
+        onLoginClick={() => setShowAuth(true)}
+        onLogout={handleLogout}
+        onHomeClick={() => {
+          setPage('home');
+          setSearchParams(null);
+          setSelectedTripId(null);
+        }}
+        onTicketLookupClick={() => setPage('ticketLookup')}
+        onContactClick={() => setPage('contact')}
+        onMyTripsClick={() => setPage('myTrips')}
+        onProfileClick={() => setPage('profile')}
+        /* 🔥 ADMIN */
+        onAdminAccess={handleAdminAccess}
+        /* 🔥 COMPANY */
+        onCompanyDashboard={() => setPage('company-dashboard')}
+        onCompanyTrips={() => setPage('company-booking')}
+      />
 
       <main className="flex-1">{renderPage()}</main>
 

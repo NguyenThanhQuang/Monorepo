@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Post,
@@ -47,11 +48,27 @@ export class BookingsController {
     return this.bookingsService.confirmBooking(id, payload);
   }
 
-  @Get('company')
-  @UseGuards(JwtAuthGuard)
-  async getCompanyBookings(@CurrentUser() user: sharedTypes.AuthUserResponse) {
-    return this.bookingsService.getBookingsByCompany(user);
+// bookings.controller.ts
+@Get('company')
+@UseGuards(JwtAuthGuard)
+async getCompanyBookings(@CurrentUser() user: sharedTypes.AuthUserResponse) {
+  console.log('GET /bookings/company - User:', {
+    id: user.id,
+    companyId: user.companyId,
+    email: user.email
+  });
+
+  try {
+    const bookings = await this.bookingsService.getBookingsByCompany(user);
+    console.log('Returning bookings:', bookings?.length || 0);
+    
+    // Trả về trực tiếp, interceptor sẽ wrap thành { statusCode, message, data }
+    return bookings;
+  } catch (error) {
+    console.error('Controller error:', error);
+    throw error;
   }
+}
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async cancel(

@@ -8,33 +8,12 @@ import { Header } from '../Header/Header';
 import { useContactPageLogic } from '../../../hooks/Logic/useContactPageLogic';
 import type { ContactPageProps } from '../../../hooks/Props/layout/ContactProps';
 
-export function ContactPage({
-  onBack,
-  isLoggedIn,
-  onLoginClick,
-  onMyTripsClick,
-  onProfileClick,
-  onLogout,
-  onRoutesClick,
-  onTicketLookupClick,
-  onHotlineClick,
-}: ContactPageProps) {
+export function ContactPage() {
   const logic = useContactPageLogic();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      <Header
-        onHomeClick={onBack}
-        isLoggedIn={isLoggedIn}
-        onLoginClick={onLoginClick}
-        onMyTripsClick={onMyTripsClick}
-        onProfileClick={onProfileClick}
-        onLogout={onLogout}
-        onRoutesClick={onRoutesClick}
-        onContactClick={() => {}}
-        onTicketLookupClick={onTicketLookupClick}
-        onHotlineClick={onHotlineClick}
-      />
+   
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* TITLE */}

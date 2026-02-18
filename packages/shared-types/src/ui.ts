@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { BookingStatus, CompanyStatus, LocationType,  UserAccountStatus, UserRole, VehicleStatus } from "./enums";
+import { BookingStatus, CompanyStatus, LocationType,  SeatStatus,  TripStatus,  TripStopStatus,  UserAccountStatus, UserRole, VehicleStatus } from "./enums";
 import { Dayjs } from "dayjs";
 
 
@@ -424,3 +424,39 @@ export interface TripResponse {
   availableSeatsCount: number;
   totalSeats?: number;
 }
+// interface CreateTripData {
+//   companyId: Types.ObjectId;
+//   vehicleId: Types.ObjectId;
+//   route: {
+//     fromLocationId: Types.ObjectId;
+//     toLocationId: Types.ObjectId;
+//     stops: Array<{
+//       locationId: Types.ObjectId;
+//       expectedArrivalTime: Date;
+//       expectedDepartureTime?: Date;
+//       status: TripStopStatus;
+//     }>;
+//     duration?: number;
+//     distance?: number;
+//     polyline?: string;
+//   };
+//   departureTime: Date;
+//   expectedArrivalTime: Date;
+//   price: number;
+//   status: TripStatus;
+//   availableSeatsCount: number;
+//   isRecurrenceTemplate: boolean;
+//   isRecurrenceActive: boolean;
+//   seats: Array<{
+//     seatNumber: string;
+//     status: SeatStatus;
+//     floor?: number;
+//     bookingId?: Types.ObjectId;
+//     position?: {
+//       row: number;
+//       col: number;
+//       x?: number;
+//       y?: number;
+//     };
+//   }>;
+// }

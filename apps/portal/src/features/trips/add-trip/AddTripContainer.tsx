@@ -485,10 +485,7 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
           alert('Vui lòng chọn thời gian khởi hành và đến dự kiến');
           return false;
         }
-        if (formData.departureTime.isAfter(formData.expectedArrivalTime)) {
-          alert('Thời gian khởi hành phải trước thời gian đến');
-          return false;
-        }
+       
         return true;
       case 2:
         if (formData.price <= 0) {
@@ -512,91 +509,97 @@ const AddTripContainer: React.FC<AddTripContainerProps> = ({ onClose }) => {
     setCurrentStep(prev => Math.max(prev - 1, 0));
   };
 
-  const handleSubmit = async () => {
-    try {
-      setIsSubmitting(true);
-      setSubmitError(null);
+ const handleSubmit = async () => {
+  try {
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-      if (!formData.companyId || !formData.vehicleId || 
-          !formData.fromLocationId || !formData.toLocationId) {
-        throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc');
-      }
-
-      if (!formData.departureTime || !formData.expectedArrivalTime) {
-        throw new Error('Vui lòng chọn thời gian khởi hành và đến');
-      }
-
-      const payload = {
-        companyId: formData.companyId,
-        vehicleId: formData.vehicleId as string,
-        route: {
-          fromLocationId: formData.fromLocationId as string,
-          toLocationId: formData.toLocationId as string,
-          stops: formData.stops
-            .filter(stop => stop.locationId)
-            .map(stop => ({
-              locationId: stop.locationId,
-              expectedArrivalTime: stop.expectedArrivalTime?.toISOString(),
-              expectedDepartureTime: stop.expectedDepartureTime?.toISOString(),
-            })),
-        },
-        departureTime: formData.departureTime.toISOString(),
-        expectedArrivalTime: formData.expectedArrivalTime.toISOString(),
-        price: formData.price,
-        isRecurrenceTemplate: formData.isRecurrenceTemplate,
-      };
-
-      const response = await fetchWithAuth(`${API_BASE_URL}/trips`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Có lỗi xảy ra khi tạo chuyến đi');
-      }
-
-      const responseData = await response.json();
-      
-      // SỬA: Parse response để log chi tiết
-      let tripData = responseData;
-      if (responseData.data) {
-        tripData = responseData.data;
-      }
-      
-      parseTripResponse(tripData);
-
-      setSubmitSuccess(true);
-      
-      setTimeout(() => {
-        setFormData({
-          companyId: userRole === 'COMPANY_ADMIN' && user?.companyId ? user.companyId : '',
-          vehicleId: null,
-          fromLocationId: null,
-          toLocationId: null,
-          departureTime: dayjs().add(1, 'day').hour(8).minute(0),
-          expectedArrivalTime: dayjs().add(1, 'day').hour(12).minute(0),
-          price: 0,
-          stops: [],
-          isRecurrenceTemplate: false,
-        });
-        setCurrentStep(0);
-        setSubmitSuccess(false);
-        
-        if (onClose) {
-          onClose();
-        } else {
-          navigate('/company/trips');
-        }
-      }, 2000);
-      
-    } catch (error: any) {
-      console.error('Submit error:', error);
-      setSubmitError(error.message || 'Có lỗi xảy ra khi tạo chuyến đi');
-    } finally {
-      setIsSubmitting(false);
+    if (!formData.companyId || !formData.vehicleId || 
+        !formData.fromLocationId || !formData.toLocationId) {
+      throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc');
     }
-  };
+
+    if (!formData.departureTime || !formData.expectedArrivalTime) {
+      throw new Error('Vui lòng chọn thời gian khởi hành và đến');
+    }
+
+    if (formData.price <= 0) {
+      throw new Error('Vui lòng nhập giá vé hợp lệ');
+    }
+
+    const payload = {
+      companyId: formData.companyId,
+      vehicleId: formData.vehicleId as string,
+      route: {
+        fromLocationId: formData.fromLocationId as string,
+        toLocationId: formData.toLocationId as string,
+        stops: formData.stops
+          .filter(stop => stop.locationId && stop.locationId.trim() !== '')
+          .map(stop => ({
+            locationId: stop.locationId,
+            expectedArrivalTime: stop.expectedArrivalTime?.toISOString(),
+            expectedDepartureTime: stop.expectedDepartureTime?.toISOString(),
+          })),
+      },
+      departureTime: formData.departureTime.toISOString(),
+      expectedArrivalTime: formData.expectedArrivalTime.toISOString(),
+      price: formData.price,
+      isRecurrenceTemplate: formData.isRecurrenceTemplate,
+    };
+
+    console.log('Creating trip with payload:', JSON.stringify(payload, null, 2));
+
+    const response = await fetchWithAuth(`${API_BASE_URL}/trips`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || `HTTP error ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    
+    // Xử lý response
+    let tripData = responseData;
+    if (responseData.data) {
+      tripData = responseData.data;
+    }
+    
+    console.log('Trip created successfully:', tripData);
+
+    setSubmitSuccess(true);
+    
+    setTimeout(() => {
+      setFormData({
+        companyId: userRole === 'COMPANY_ADMIN' && user?.companyId ? user.companyId : '',
+        vehicleId: null,
+        fromLocationId: null,
+        toLocationId: null,
+        departureTime: dayjs().add(1, 'day').hour(8).minute(0),
+        expectedArrivalTime: dayjs().add(1, 'day').hour(12).minute(0),
+        price: 0,
+        stops: [],
+        isRecurrenceTemplate: false,
+      });
+      setCurrentStep(0);
+      setSubmitSuccess(false);
+      
+      if (onClose) {
+        onClose();
+      } else {
+        navigate('/company/trips');
+      }
+    }, 2000);
+    
+  } catch (error: any) {
+    console.error('Submit error:', error);
+    setSubmitError(error.message || 'Có lỗi xảy ra khi tạo chuyến đi');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleClose = () => {
     if (onClose) {

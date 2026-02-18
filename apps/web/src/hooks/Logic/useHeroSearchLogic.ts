@@ -2,8 +2,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { Location } from '@obtp/shared-types';
-import type { UseHeroSearchLogicProps } from '../Props/layout/HeroSearchProps';
 import { locationApi } from '../../api/service/location/apiLocation';
+
+export interface UseHeroSearchLogicProps {
+  onSearch?: (params: { fromProvince: string; toProvince: string; date?: string }) => void;
+  initialFrom?: Location | null;
+  initialTo?: Location | null;
+}
 
 export function useHeroSearchLogic({
   onSearch,
@@ -35,22 +40,40 @@ export function useHeroSearchLogic({
 
   /* ================= LOAD ALL ================= */
   const loadAllFromLocations = async () => {
-    const res = await locationApi.search('');
-    setFromSuggestions(res);
+    try {
+      const res = await locationApi.search('');
+      setFromSuggestions(Array.isArray(res) ? res : []);
+    } catch (error) {
+      console.error('Error loading from locations:', error);
+      setFromSuggestions([]);
+    }
   };
 
   const loadAllToLocations = async () => {
-    const res = await locationApi.search('');
-    setToSuggestions(res);
+    try {
+      const res = await locationApi.search('');
+      setToSuggestions(Array.isArray(res) ? res : []);
+    } catch (error) {
+      console.error('Error loading to locations:', error);
+      setToSuggestions([]);
+    }
   };
 
   /* ================= AUTOCOMPLETE FROM ================= */
   useEffect(() => {
-    if (!fromText) return;
+    if (!fromText) {
+      setFromSuggestions([]);
+      return;
+    }
 
     const timer = setTimeout(async () => {
-      const res = await locationApi.search(fromText);
-      setFromSuggestions(res);
+      try {
+        const res = await locationApi.search(fromText);
+        setFromSuggestions(Array.isArray(res) ? res : []);
+      } catch (error) {
+        console.error('Error searching from locations:', error);
+        setFromSuggestions([]);
+      }
     }, 300);
 
     return () => clearTimeout(timer);
@@ -58,11 +81,19 @@ export function useHeroSearchLogic({
 
   /* ================= AUTOCOMPLETE TO ================= */
   useEffect(() => {
-    if (!toText) return;
+    if (!toText) {
+      setToSuggestions([]);
+      return;
+    }
 
     const timer = setTimeout(async () => {
-      const res = await locationApi.search(toText);
-      setToSuggestions(res);
+      try {
+        const res = await locationApi.search(toText);
+        setToSuggestions(Array.isArray(res) ? res : []);
+      } catch (error) {
+        console.error('Error searching to locations:', error);
+        setToSuggestions([]);
+      }
     }, 300);
 
     return () => clearTimeout(timer);
@@ -71,14 +102,13 @@ export function useHeroSearchLogic({
   /* ================= SEARCH ================= */
   const handleSearch = () => {
     if (!fromLocation || !toLocation) {
-      alert(t('selectBothLocations'));
+      alert(t('selectBothLocations') || 'Vui lòng chọn cả điểm đi và điểm đến');
       return;
     }
 
     const finalDate = date || new Date().toISOString().split('T')[0];
 
-    // ✅ GỬI PROVINCE – KHỚP SearchPage & SearchResults
-     onSearch?.({
+    onSearch?.({
       fromProvince: fromLocation.province,
       toProvince: toLocation.province,
       date: finalDate,
@@ -87,9 +117,11 @@ export function useHeroSearchLogic({
 
   /* ================= SWAP ================= */
   const handleSwap = () => {
+    // Swap locations
     setFromLocation(toLocation);
     setToLocation(fromLocation);
 
+    // Swap text
     setFromText(
       toLocation ? `${toLocation.name}, ${toLocation.province}` : '',
     );
