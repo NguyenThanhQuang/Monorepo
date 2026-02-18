@@ -28,7 +28,6 @@ export interface AuthUserResponse {
   lastLoginDate?: Date;
 }
 
-
 export interface LoginResponse {
   accessToken: string;
   user: {
@@ -116,9 +115,9 @@ export interface PopularLocationsQuery {
 export interface CreateUserPayload {
   email: string;
   phone: string;
-  password: string; // Có thể optional nếu là luồng invite (tạo password sau)
+  password: string;
   name: string;
-  role?: UserRole; // Legacy DTO allows singular 'role' assignment
+  role?: UserRole;
   companyId?: string;
 }
 
@@ -159,7 +158,7 @@ export interface SanitizedUserResponse {
   isEmailVerified: boolean;
   isBanned: boolean;
   lastLoginDate?: Date;
-    createdAt: Date;
+  createdAt: Date;
 
   totalTrips?: number;
   totalSpent?: number;

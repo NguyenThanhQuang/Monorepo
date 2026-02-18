@@ -139,6 +139,7 @@ async findByIdWithDetails(
     .lean()
     .exec();
 }
+ 
 
   async findManagementTrips(
     filter: QueryFilter<TripDocument>,
@@ -168,6 +169,12 @@ async findByIdWithDetails(
         model: 'Location',
         select: '_id name province'
       })
+    return this.tripModel
+      .find(filter)
+      .populate('companyId')
+      .populate('vehicleId', 'type vehicleNumber totalSeats')
+      .populate('route.fromLocationId', 'name province')
+      .populate('route.toLocationId', 'name province')
       .sort({ departureTime: -1 })
       .lean()
       .exec();
