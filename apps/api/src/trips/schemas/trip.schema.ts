@@ -6,19 +6,19 @@ export type TripDocument = TripDefinition & Document;
 
 @Schema({ timestamps: true, collection: 'trips' })
 export class TripDefinition {
-  @Prop({ type: Types.ObjectId, ref: 'Company', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Company', required: true }) // ref phải khớp với tên model
   companyId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Vehicle', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Vehicle', required: true }) // ref phải khớp với tên model
   vehicleId: Types.ObjectId;
 
   @Prop({
     type: {
-      fromLocationId: { type: Types.ObjectId, ref: 'Location', required: true },
-      toLocationId: { type: Types.ObjectId, ref: 'Location', required: true },
+      fromLocationId: { type: Types.ObjectId, ref: 'Location', required: true }, // ref phải khớp
+      toLocationId: { type: Types.ObjectId, ref: 'Location', required: true }, // ref phải khớp
       stops: [
         {
-          locationId: { type: Types.ObjectId, ref: 'Location', required: true },
+          locationId: { type: Types.ObjectId, ref: 'Location', required: true }, // ref phải khớp
           expectedArrivalTime: { type: Date, required: true },
           expectedDepartureTime: Date,
           status: { type: String, enum: TripStopStatus, default: TripStopStatus.PENDING },
@@ -99,11 +99,13 @@ TripSchema.index({ 'route.fromLocationId': 1, 'route.toLocationId': 1 });
 TripSchema.index({ companyId: 1, departureTime: -1 });
 TripSchema.index({ recurrenceParentId: 1 });
 
-// Middleware để log khi query
-TripSchema.pre('find', function() {
-  console.log('Mongoose Query:', this.getFilter());
-});
+// Middleware để log khi query (chỉ dùng trong development)
+if (process.env.NODE_ENV !== 'production') {
+  TripSchema.pre('find', function() {
+    console.log('Mongoose Query:', this.getFilter());
+  });
 
-TripSchema.pre('findOne', function() {
-  console.log('Mongoose FindOne:', this.getFilter());
-});
+  TripSchema.pre('findOne', function() {
+    console.log('Mongoose FindOne:', this.getFilter());
+  });
+}

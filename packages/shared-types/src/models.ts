@@ -23,24 +23,24 @@
     position?: { row: number; col: number; x?: number; y?: number };
   }
 
-  export interface TripDetailResponse {
-    _id: string;
-    price: number;
-    departureTime: string;
-    expectedArrivalTime: string;
-    companyId: {
-      name: string;
-    };
-    vehicleId: {
-      type: string;
-      totalSeats: number;
-    };
-    route: {
-      fromLocationId: { name: string };
-      toLocationId: { name: string };
-    };
-    seats: TripSeat[];
-  }
+    export interface TripDetailResponse {
+      _id: string;
+      price: number;
+      departureTime: string;
+      expectedArrivalTime: string;
+      companyId: {
+        name: string;
+      };
+      vehicleId: {
+        type: string;
+        totalSeats: number;
+      };
+      route: {
+        fromLocationId: { name: string };
+        toLocationId: { name: string };
+      };
+      seats: TripSeat[];
+    }
 
   export interface UserProfileResponse {
     id: string;

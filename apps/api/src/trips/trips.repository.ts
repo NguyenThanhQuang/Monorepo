@@ -17,66 +17,67 @@ export class TripsRepository {
     private readonly tripModel: Model<TripDocument>,
   ) {}
 
- async create(
-  doc: Partial<TripDefinition>,
-  session?: ClientSession,
-): Promise<TripDocument> {
-  // Tạo bản sao để không modify object gốc
-  const tripData = { ...doc };
-  
-  // Chuyển đổi companyId sang ObjectId nếu là string
-  if (tripData.companyId && typeof tripData.companyId === 'string') {
-    tripData.companyId = new Types.ObjectId(tripData.companyId);
-  }
-  
-  // Chuyển đổi vehicleId sang ObjectId nếu là string
-  if (tripData.vehicleId && typeof tripData.vehicleId === 'string') {
-    tripData.vehicleId = new Types.ObjectId(tripData.vehicleId);
-  }
-  
-  // Xử lý route
-  if (tripData.route) {
-    // Chuyển đổi fromLocationId
-    if (tripData.route.fromLocationId && typeof tripData.route.fromLocationId === 'string') {
-      tripData.route.fromLocationId = new Types.ObjectId(tripData.route.fromLocationId);
+  async create(
+    doc: Partial<TripDefinition>,
+    session?: ClientSession,
+  ): Promise<TripDocument> {
+    // Tạo bản sao để không modify object gốc
+    const tripData = { ...doc };
+    
+    // Chuyển đổi companyId sang ObjectId nếu là string
+    if (tripData.companyId && typeof tripData.companyId === 'string') {
+      tripData.companyId = new Types.ObjectId(tripData.companyId);
     }
     
-    // Chuyển đổi toLocationId
-    if (tripData.route.toLocationId && typeof tripData.route.toLocationId === 'string') {
-      tripData.route.toLocationId = new Types.ObjectId(tripData.route.toLocationId);
+    // Chuyển đổi vehicleId sang ObjectId nếu là string
+    if (tripData.vehicleId && typeof tripData.vehicleId === 'string') {
+      tripData.vehicleId = new Types.ObjectId(tripData.vehicleId);
     }
     
-    // Chuyển đổi stops
-    if (tripData.route.stops && Array.isArray(tripData.route.stops)) {
-      tripData.route.stops = tripData.route.stops.map(stop => {
-        const stopData = { ...stop };
-        if (stopData.locationId && typeof stopData.locationId === 'string') {
-          stopData.locationId = new Types.ObjectId(stopData.locationId);
+    // Xử lý route
+    if (tripData.route) {
+      // Chuyển đổi fromLocationId
+      if (tripData.route.fromLocationId && typeof tripData.route.fromLocationId === 'string') {
+        tripData.route.fromLocationId = new Types.ObjectId(tripData.route.fromLocationId);
+      }
+      
+      // Chuyển đổi toLocationId
+      if (tripData.route.toLocationId && typeof tripData.route.toLocationId === 'string') {
+        tripData.route.toLocationId = new Types.ObjectId(tripData.route.toLocationId);
+      }
+      
+      // Chuyển đổi stops
+      if (tripData.route.stops && Array.isArray(tripData.route.stops)) {
+        tripData.route.stops = tripData.route.stops.map(stop => {
+          const stopData = { ...stop };
+          if (stopData.locationId && typeof stopData.locationId === 'string') {
+            stopData.locationId = new Types.ObjectId(stopData.locationId);
+          }
+          return stopData;
+        });
+      }
+    }
+    
+    // Xử lý seats - đảm bảo bookingId là ObjectId nếu có
+    if (tripData.seats && Array.isArray(tripData.seats)) {
+      tripData.seats = tripData.seats.map(seat => {
+        const seatData = { ...seat };
+        if (seatData.bookingId && typeof seatData.bookingId === 'string') {
+          seatData.bookingId = new Types.ObjectId(seatData.bookingId);
         }
-        return stopData;
+        return seatData;
       });
     }
-  }
-  
-  // Xử lý seats - đảm bảo bookingId là ObjectId nếu có
-  if (tripData.seats && Array.isArray(tripData.seats)) {
-    tripData.seats = tripData.seats.map(seat => {
-      const seatData = { ...seat };
-      if (seatData.bookingId && typeof seatData.bookingId === 'string') {
-        seatData.bookingId = new Types.ObjectId(seatData.bookingId);
-      }
-      return seatData;
-    });
-  }
-  
-  // Xử lý recurrenceParentId
-  if (tripData.recurrenceParentId && typeof tripData.recurrenceParentId === 'string') {
-    tripData.recurrenceParentId = new Types.ObjectId(tripData.recurrenceParentId);
-  }
+    
+    // Xử lý recurrenceParentId
+    if (tripData.recurrenceParentId && typeof tripData.recurrenceParentId === 'string') {
+      tripData.recurrenceParentId = new Types.ObjectId(tripData.recurrenceParentId);
+    }
 
-  const newTrip = new this.tripModel(tripData);
-  return newTrip.save({ session });
-}
+    const newTrip = new this.tripModel(tripData);
+    return newTrip.save({ session });
+  }
+  
   async findById(
     id: string | Types.ObjectId,
     session?: ClientSession,
@@ -104,42 +105,41 @@ export class TripsRepository {
     return this.tripModel.findByIdAndDelete(new Types.ObjectId(id)).exec();
   }
 
-async findByIdWithDetails(
-  id: string | Types.ObjectId,
-): Promise<TripDocument | null> {
-  const objectId = typeof id === 'string' ? new Types.ObjectId(id) : id;
-  
-  return this.tripModel
-    .findById(objectId)
-    .populate({
-      path: 'companyId',
-      model: 'Company',
-      select: '_id name email phone logoUrl status'
-    })
-    .populate({
-      path: 'vehicleId',
-      model: 'Vehicle',
-      select: '_id vehicleNumber type totalSeats status floors seatRows seatColumns aislePositions'
-    })
-    .populate({
-      path: 'route.fromLocationId',
-      model: 'Location',
-      select: '_id name province district address location'
-    })
-    .populate({
-      path: 'route.toLocationId',
-      model: 'Location',
-      select: '_id name province district address location'
-    })
-    .populate({
-      path: 'route.stops.locationId',
-      model: 'Location',
-      select: '_id name province district address location'
-    })
-    .lean()
-    .exec();
-}
- 
+  async findByIdWithDetails(
+    id: string | Types.ObjectId,
+  ): Promise<TripDocument | null> {
+    const objectId = typeof id === 'string' ? new Types.ObjectId(id) : id;
+    
+    return this.tripModel
+      .findById(objectId)
+      .populate({
+        path: 'companyId',
+        model: 'Company', // Sử dụng tên model chính xác
+        select: '_id name email phone logoUrl status'
+      })
+      .populate({
+        path: 'vehicleId',
+        model: 'Vehicle', // Sử dụng tên model chính xác
+        select: '_id vehicleNumber type totalSeats status floors seatRows seatColumns aislePositions'
+      })
+      .populate({
+        path: 'route.fromLocationId',
+        model: 'Location', // Sử dụng tên model chính xác
+        select: '_id name province district address location'
+      })
+      .populate({
+        path: 'route.toLocationId',
+        model: 'Location', // Sử dụng tên model chính xác
+        select: '_id name province district address location'
+      })
+      .populate({
+        path: 'route.stops.locationId',
+        model: 'Location', // Sử dụng tên model chính xác
+        select: '_id name province district address location'
+      })
+      .lean()
+      .exec();
+  }
 
   async findManagementTrips(
     filter: QueryFilter<TripDocument>,
@@ -169,12 +169,6 @@ async findByIdWithDetails(
         model: 'Location',
         select: '_id name province'
       })
-    return this.tripModel
-      .find(filter)
-      .populate('companyId')
-      .populate('vehicleId', 'type vehicleNumber totalSeats')
-      .populate('route.fromLocationId', 'name province')
-      .populate('route.toLocationId', 'name province')
       .sort({ departureTime: -1 })
       .lean()
       .exec();
@@ -310,41 +304,49 @@ async findByIdWithDetails(
       .lean()
       .exec();
   }
- async searchTripsByLocationId(
+
+  async searchTripsByLocationId(
     fromLocationId: string,
     toLocationId: string,
     date: string,
   ) {
     const start = new Date(date);
-
     const end = new Date(date);
-
     end.setDate(end.getDate() + 1);
 
     return this.tripModel
       .find({
-        'route.fromLocationId': new Types.ObjectId(
-          fromLocationId,
-        ),
-
-        'route.toLocationId': new Types.ObjectId(
-          toLocationId,
-        ),
-
+        'route.fromLocationId': new Types.ObjectId(fromLocationId),
+        'route.toLocationId': new Types.ObjectId(toLocationId),
         departureTime: {
           $gte: start,
           $lt: end,
         },
-
         status: 'scheduled',
       })
-
-      .populate('companyId')
-
-      .populate('vehicleId')
-
+      .populate({
+        path: 'companyId',
+        model: 'Company',
+        select: '_id name logoUrl'
+      })
+      .populate({
+        path: 'vehicleId',
+        model: 'Vehicle',
+        select: '_id vehicleNumber type totalSeats amenities'
+      })
+      .populate({
+        path: 'route.fromLocationId',
+        model: 'Location',
+        select: '_id name province district address'
+      })
+      .populate({
+        path: 'route.toLocationId',
+        model: 'Location',
+        select: '_id name province district address'
+      })
       .lean();
   }
+
   async search(filter: any) {
     return this.tripModel
       .find(filter)

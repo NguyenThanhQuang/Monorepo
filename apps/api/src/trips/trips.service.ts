@@ -203,10 +203,40 @@ export class TripsService {
     });
   }
 
+// trips.service.ts - Thêm log để debug
+
 async findOne(id: string): Promise<TripDocument> {
-  const trip = await this.tripsRepository.findByIdWithDetails(id);
-  if (!trip) throw new NotFoundException('Chuyến đi không tồn tại.');
-  return trip;
+  console.log('🔍 TripsService.findOne called with ID:', id);
+  console.log('📏 ID length:', id.length);
+  console.log('🔢 ID is valid ObjectId?', Types.ObjectId.isValid(id));
+  
+  try {
+    // Kiểm tra ID hợp lệ
+    if (!id || !Types.ObjectId.isValid(id)) {
+      console.error('❌ Invalid ObjectId format:', id);
+      throw new NotFoundException('ID chuyến đi không hợp lệ.');
+    }
+    
+    const objectId = new Types.ObjectId(id);
+    console.log('✅ Converted to ObjectId:', objectId.toString());
+    
+    const trip = await this.tripsRepository.findByIdWithDetails(id);
+    
+    if (!trip) {
+      console.error('❌ Trip not found with ID:', id);
+      console.log('   Check if this ID exists in database');
+      throw new NotFoundException('Chuyến đi không tồn tại.');
+    }
+    
+    console.log('✅ Trip found:', trip._id);
+    return trip;
+  } catch (error) {
+    console.error('❌ Error in findOne:', error);
+    if (error instanceof NotFoundException) {
+      throw error;
+    }
+    throw new NotFoundException('Không thể tìm thấy chuyến đi.');
+  }
 }
   async update(
     id: string,

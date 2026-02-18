@@ -12,18 +12,25 @@ import { TripsController } from './trips.controller';
 import { TripsRepository } from './trips.repository';
 import { TripsService } from './trips.service';
 
+// Import cả Definition và Schema
+import { CompanyDefinition, CompanySchema } from '../companies/schemas/company.schema';
+import { VehicleDefinition, VehicleSchema } from '../vehicles/schemas/vehicle.schema';
+import { LocationDefinition, LocationSchema } from '../locations/schemas/location.schema';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: TripDefinition.name, schema: TripSchema },
+      // Đăng ký schema với tên mà populate sẽ dùng - DÙNG SCHEMA, KHÔNG PHẢI CLASS
+      { name: 'Company', schema: CompanySchema }, // Dùng CompanySchema
+      { name: 'Vehicle', schema: VehicleSchema }, // Dùng VehicleSchema
+      { name: 'Location', schema: LocationSchema }, // Dùng LocationSchema
     ]),
     EventEmitterModule.forRoot(),
     forwardRef(() => VehiclesModule),
     forwardRef(() => CompaniesModule),
     forwardRef(() => BookingsModule),
-    // Import trực tiếp để có thể sử dụng trong repository
     LocationsModule,
-    // Không cần VehiclesModule ở đây vì đã forwardRef ở trên
   ],
   controllers: [TripsController],
   providers: [TripsService, TripsRepository, TripSchedulerService],

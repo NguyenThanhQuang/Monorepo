@@ -4,7 +4,7 @@ import axios, {
   type AxiosError,
   type AxiosResponse,
 } from 'axios';
-import type { Trip, Location, Company, Vehicle } from '@obtp/shared-types';
+import type { Trip, Location, Company, Vehicle, TripSeat } from '@obtp/shared-types';
 
 /* ================= BASE URL ================= */
 
@@ -24,9 +24,12 @@ export interface TripResponse {
 }
 
 export interface TripDetailResponse {
-  success: boolean;
-  data: Trip;
-  message?: string;
+  statusCode: number;
+  message: string;
+  data: {
+    success: boolean;
+    data: Trip;  // Trip object nằm ở đây
+  };
 }
 
 export interface TripSearchParams {
@@ -82,7 +85,6 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
 
-      // Log chi tiết lỗi 500 để debug
       if (error.response.status === 500) {
         console.error('Server Error Details:', {
           url: error.config?.url,
@@ -102,42 +104,10 @@ api.interceptors.response.use(
 
 /* ================= VALIDATION FUNCTIONS ================= */
 
-/**
- * Kiểm tra ID có hợp lệ không (MongoDB ObjectId)
- * MongoDB ObjectId là 24 ký tự hex (0-9, a-f)
- */
 const isValidObjectId = (id: string): boolean => {
   if (!id || typeof id !== 'string') return false;
-  
-  // ObjectId chuẩn là 24 ký tự hex
   const objectIdPattern = /^[0-9a-fA-F]{24}$/;
-  
-  // Kiểm tra nếu ID có dấu gạch ngang (UUID format)
-  const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-  
-  return objectIdPattern.test(id) || uuidPattern.test(id);
-};
-
-/**
- * Fix ID nếu thiếu ký tự (thêm '0' vào cuối nếu cần)
- * Chỉ dùng cho debug, không nên dùng trong production
- */
-const fixPossibleObjectId = (id: string): string | null => {
-  if (!id) return null;
-  
-  // Nếu ID có 23 ký tự, thử thêm '0' vào cuối
-  if (id.length === 23 && /^[0-9a-fA-F]{23}$/.test(id)) {
-    console.warn('ID has 23 characters, trying with appended "0":', id + '0');
-    return id + '0';
-  }
-  
-  // Nếu ID có 22 ký tự, thử thêm '00' vào cuối
-  if (id.length === 22 && /^[0-9a-fA-F]{22}$/.test(id)) {
-    console.warn('ID has 22 characters, trying with appended "00":', id + '00');
-    return id + '00';
-  }
-  
-  return null;
+  return objectIdPattern.test(id);
 };
 
 /* ================= API ================= */
@@ -156,7 +126,7 @@ export const tripApi = {
     }
   },
 
-  /* ===== SEARCH BY PROVINCES (USED IN SEARCH PAGE) ===== */
+  /* ===== SEARCH BY PROVINCES ===== */
   async searchByProvinces(fromProvince: string, toProvince: string, date: string): Promise<Trip[]> {
     try {
       const res = await api.get<TripResponse>('/trips', {
@@ -176,7 +146,6 @@ export const tripApi = {
   /* ===== SEARCH BY FROM ===== */
   async searchByFrom(fromId: string): Promise<Trip[]> {
     try {
-      // Validate fromId
       if (!fromId || !isValidObjectId(fromId)) {
         console.error('Invalid fromId format:', fromId);
         return [];
@@ -195,13 +164,11 @@ export const tripApi = {
   /* ===== SEARCH BY ROUTE ===== */
   async searchByRoute(fromId: string, toId?: string): Promise<Trip[]> {
     try {
-      // Validate fromId
       if (!fromId || !isValidObjectId(fromId)) {
         console.error('Invalid fromId format:', fromId);
         return [];
       }
       
-      // Validate toId nếu có
       if (toId && !isValidObjectId(toId)) {
         console.error('Invalid toId format:', toId);
         return [];
@@ -223,7 +190,6 @@ export const tripApi = {
   /* ===== MANAGEMENT ===== */
   async getManagementTrips(companyId?: string): Promise<Trip[]> {
     try {
-      // Validate companyId nếu có
       if (companyId && !isValidObjectId(companyId)) {
         console.error('Invalid companyId format:', companyId);
         return [];
@@ -242,8 +208,16 @@ export const tripApi = {
   /* ===== CREATE ===== */
   async createTrip(payload: any): Promise<Trip | null> {
     try {
-      const res = await api.post<TripDetailResponse>('/trips', payload);
-      return res.data.data;
+      const res = await api.post<any>('/trips', payload);
+      
+      // Kiểm tra cấu trúc response
+      if (res.data && res.data.data && res.data.data.data) {
+        return res.data.data.data;
+      }
+      if (res.data && res.data.data) {
+        return res.data.data;
+      }
+      return res.data || null;
     } catch (error) {
       console.error('Error creating trip:', error);
       return null;
@@ -253,7 +227,6 @@ export const tripApi = {
   /* ===== CANCEL ===== */
   async cancelTrip(id: string): Promise<boolean> {
     try {
-      // Validate ID
       if (!id || !isValidObjectId(id)) {
         console.error('Invalid trip ID format for cancel:', id);
         return false;
@@ -267,83 +240,90 @@ export const tripApi = {
     }
   },
 
-  /* ===== GET BY ID ===== */
-  async getTripById(id: string): Promise<Trip | null> {
-    try {
-      // Kiểm tra ID null/undefined
-      if (!id || id === 'undefined' || id === 'null') {
-        console.error('Invalid trip ID (null/undefined):', id);
-        return null;
-      }
+// trips.api.ts - Sửa hàm getTripById
 
-      console.log('Fetching trip with ID:', id);
-      console.log('ID length:', id.length);
-      console.log('ID is hex:', /^[0-9a-fA-F]+$/.test(id));
-      
-      // Kiểm tra format ID (ObjectId chuẩn 24 ký tự)
-      if (!isValidObjectId(id)) {
-        console.error('Invalid trip ID format - not a valid ObjectId:', id);
-        console.error('Expected: 24 hex characters, got:', id.length, 'characters');
-        
-        // Thử fix ID nếu có thể (chỉ cho debug)
-        const fixedId = fixPossibleObjectId(id);
-        if (fixedId && isValidObjectId(fixedId)) {
-          console.log('Trying with fixed ID:', fixedId);
-          try {
-            const res = await api.get<TripDetailResponse>(`/trips/${fixedId}`);
-            if (res.data.success && res.data.data) {
-              console.log('Success with fixed ID!');
-              return res.data.data;
-            }
-          } catch (fixedError) {
-            console.error('Fixed ID also failed:', fixedError);
-          }
-        }
-        
-        return null;
-      }
+// trips.api.ts - Sửa hàm getTripById
 
-      // Đảm bảo ID không có khoảng trắng
-      const cleanId = id.trim();
-      
-      const res = await api.get<TripDetailResponse>(`/trips/${cleanId}`);
-      
-      if (res.data.success && res.data.data) {
-        return res.data.data;
-      }
-      
-      console.error('Trip not found or invalid response:', res.data);
-      return null;
-    } catch (error) {
-      console.error('Error fetching trip by ID:', error);
-      
-      // Log chi tiết lỗi
-      if (axios.isAxiosError(error)) {
-        console.error('Axios error details:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          url: error.config?.url
-        });
-
-        // Xử lý các mã lỗi cụ thể
-        if (error.response?.status === 404) {
-          console.error('Trip not found with ID:', id);
-          return null;
-        }
-        
-        if (error.response?.status === 500) {
-          console.error('Server error when fetching trip. This might be due to:');
-          console.error('1. Invalid ID format (most likely) - ID should be 24 hex characters');
-          console.error('2. Database connection issue');
-          console.error('3. Missing populated data (company, vehicle, location)');
-          console.error('4. CastError in MongoDB - cannot cast string to ObjectId');
-        }
-      }
-      
+async getTripById(id: string): Promise<Trip | null> {
+  try {
+    // Kiểm tra ID null/undefined
+    if (!id || id === 'undefined' || id === 'null') {
+      console.error('❌ Invalid trip ID (null/undefined):', id);
       return null;
     }
-  },
+
+    console.log('🔍 Fetching trip with ID:', id);
+    console.log('📏 ID length:', id.length);
+    
+    // ObjectId chuẩn phải là 24 ký tự
+    if (id.length !== 24) {
+      console.error('❌ Invalid ID length. Expected 24, got:', id.length);
+      return null;
+    }
+
+    // Kiểm tra format ID
+    const objectIdPattern = /^[0-9a-fA-F]{24}$/;
+    if (!objectIdPattern.test(id)) {
+      console.error('❌ Invalid ID format - not a valid ObjectId:', id);
+      return null;
+    }
+
+    // Đảm bảo ID không có khoảng trắng
+    const cleanId = id.trim();
+    
+    const res = await api.get<any>(`/trips/${cleanId}`);
+    
+    console.log('📦 Response from server:', res.data);
+    
+    // CẤU TRÚC THỰC TẾ: { statusCode, message, data: { success, data: Trip } }
+    // Trip nằm ở res.data.data.data
+    if (res.data?.data?.data) {
+      const tripData = res.data.data.data;
+      
+      // Kiểm tra xem có phải là Trip object không (có id hoặc _id)
+      if (tripData.id || tripData._id) {
+        console.log('✅ Trip found in res.data.data.data');
+        
+        // Chuyển đổi id thành _id để đồng bộ với interface Trip
+        if (tripData.id && !tripData._id) {
+          tripData._id = tripData.id;
+        }
+        
+        return tripData as Trip;
+      }
+    }
+    
+    // Fallback: kiểm tra các cấu trúc khác
+    if (res.data?.data?._id) {
+      console.log('✅ Trip found in res.data.data');
+      return res.data.data as Trip;
+    }
+    
+    if (res.data?._id) {
+      console.log('✅ Trip found directly in response');
+      return res.data as Trip;
+    }
+    
+    console.error('❌ Invalid response structure. Full response:', JSON.stringify(res.data, null, 2));
+    return null;
+  } catch (error) {
+    console.error('❌ Error fetching trip by ID:', error);
+    
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const responseData = error.response?.data;
+      
+      console.error('📊 Axios error details:', {
+        status,
+        statusText: error.response?.statusText,
+        url: error.config?.url,
+        data: responseData
+      });
+    }
+    
+    return null;
+  }
+},
 
   /* ===== GET BY ID WITH FALLBACK ===== */
   async getTripByIdSafe(id: string): Promise<{ trip: Trip | null; error: string | null }> {
@@ -366,10 +346,10 @@ export const tripApi = {
 
 // Helper để lấy company name an toàn
 export const getCompanyName = (trip: Trip | null): string => {
-  if (!trip || !trip.companyId) return 'Nhà xe';
+  if (!trip) return 'Nhà xe';
   
-  if (typeof trip.companyId === 'object' && trip.companyId !== null) {
-    return (trip.companyId as Company).name || 'Nhà xe';
+  if (trip.companyId && typeof trip.companyId === 'object') {
+    return (trip.companyId as any).name || 'Nhà xe';
   }
   
   return 'Nhà xe';
@@ -377,21 +357,32 @@ export const getCompanyName = (trip: Trip | null): string => {
 
 // Helper để lấy company logo an toàn
 export const getCompanyLogo = (trip: Trip | null): string | undefined => {
-  if (!trip || !trip.companyId) return undefined;
+  if (!trip) return undefined;
   
-  if (typeof trip.companyId === 'object' && trip.companyId !== null) {
-    return (trip.companyId as Company).logoUrl;
+  if (trip.companyId && typeof trip.companyId === 'object') {
+    return (trip.companyId as any).logoUrl;
   }
   
   return undefined;
 };
 
+// Helper để lấy company phone
+export const getCompanyPhone = (trip: Trip | null): string => {
+  if (!trip) return '';
+  
+  if (trip.companyId && typeof trip.companyId === 'object') {
+    return (trip.companyId as any).phone || '';
+  }
+  
+  return '';
+};
+
 // Helper để lấy vehicle type an toàn
 export const getVehicleType = (trip: Trip | null): string => {
-  if (!trip || !trip.vehicleId) return 'Xe khách';
+  if (!trip) return 'Xe khách';
   
-  if (typeof trip.vehicleId === 'object' && trip.vehicleId !== null) {
-    return (trip.vehicleId as Vehicle).type || 'Xe khách';
+  if (trip.vehicleId && typeof trip.vehicleId === 'object') {
+    return (trip.vehicleId as any).type || 'Xe khách';
   }
   
   return 'Xe khách';
@@ -399,10 +390,10 @@ export const getVehicleType = (trip: Trip | null): string => {
 
 // Helper để lấy vehicle amenities an toàn
 export const getVehicleAmenities = (trip: Trip | null): string[] => {
-  if (!trip || !trip.vehicleId) return [];
+  if (!trip) return [];
   
-  if (typeof trip.vehicleId === 'object' && trip.vehicleId !== null) {
-    return (trip.vehicleId as Vehicle).amenities || [];
+  if (trip.vehicleId && typeof trip.vehicleId === 'object') {
+    return (trip.vehicleId as any).amenities || [];
   }
   
   return [];
@@ -410,10 +401,33 @@ export const getVehicleAmenities = (trip: Trip | null): string[] => {
 
 // Helper để lấy from location name an toàn
 export const getFromLocationName = (trip: Trip | null): string => {
-  if (!trip || !trip.route?.fromLocationId) return '';
+  if (!trip) return '';
   
-  if (typeof trip.route.fromLocationId === 'object' && trip.route.fromLocationId !== null) {
-    return (trip.route.fromLocationId as Location).name || '';
+  if (trip.route?.fromLocationId && typeof trip.route.fromLocationId === 'object') {
+    return (trip.route.fromLocationId as any).name || '';
+  }
+  
+  return '';
+};
+
+// Helper để lấy from location province
+export const getFromLocationProvince = (trip: Trip | null): string => {
+  if (!trip) return '';
+  
+  if (trip.route?.fromLocationId && typeof trip.route.fromLocationId === 'object') {
+    return (trip.route.fromLocationId as any).province || '';
+  }
+  
+  return '';
+};
+
+// Helper để lấy from location address
+export const getFromLocationAddress = (trip: Trip | null): string => {
+  if (!trip) return '';
+  
+  if (trip.route?.fromLocationId && typeof trip.route.fromLocationId === 'object') {
+    const location = trip.route.fromLocationId as any;
+    return location.fullAddress || location.address || '';
   }
   
   return '';
@@ -421,13 +435,69 @@ export const getFromLocationName = (trip: Trip | null): string => {
 
 // Helper để lấy to location name an toàn
 export const getToLocationName = (trip: Trip | null): string => {
-  if (!trip || !trip.route?.toLocationId) return '';
+  if (!trip) return '';
   
-  if (typeof trip.route.toLocationId === 'object' && trip.route.toLocationId !== null) {
-    return (trip.route.toLocationId as Location).name || '';
+  if (trip.route?.toLocationId && typeof trip.route.toLocationId === 'object') {
+    return (trip.route.toLocationId as any).name || '';
   }
   
   return '';
+};
+
+// Helper để lấy to location province
+export const getToLocationProvince = (trip: Trip | null): string => {
+  if (!trip) return '';
+  
+  if (trip.route?.toLocationId && typeof trip.route.toLocationId === 'object') {
+    return (trip.route.toLocationId as any).province || '';
+  }
+  
+  return '';
+};
+
+// Helper để lấy to location address
+export const getToLocationAddress = (trip: Trip | null): string => {
+  if (!trip) return '';
+  
+  if (trip.route?.toLocationId && typeof trip.route.toLocationId === 'object') {
+    const location = trip.route.toLocationId as any;
+    return location.fullAddress || location.address || '';
+  }
+  
+  return '';
+};
+
+// Helper để lấy tổng số ghế
+export const getTotalSeats = (trip: Trip | null): number => {
+  if (!trip) return 0;
+  
+  if (trip.vehicleId && typeof trip.vehicleId === 'object') {
+    return (trip.vehicleId as any).totalSeats || trip.seats?.length || 0;
+  }
+  
+  return trip.seats?.length || 0;
+};
+
+// Helper để lấy biển số xe
+export const getVehicleNumber = (trip: Trip | null): string => {
+  if (!trip) return '';
+  
+  if (trip.vehicleId && typeof trip.vehicleId === 'object') {
+    return (trip.vehicleId as any).vehicleNumber || '';
+  }
+  
+  return '';
+};
+
+// Helper để lấy số tầng xe
+export const getVehicleFloors = (trip: Trip | null): number => {
+  if (!trip) return 1;
+  
+  if (trip.vehicleId && typeof trip.vehicleId === 'object') {
+    return (trip.vehicleId as any).floors || 1;
+  }
+  
+  return 1;
 };
 
 // Helper để lấy số ghế trống
@@ -486,11 +556,6 @@ export const isTripActive = (trip: Trip | null): boolean => {
 // Helper để kiểm tra ID hợp lệ
 export const isValidTripId = (id: string): boolean => {
   return isValidObjectId(id);
-};
-
-// Helper để fix ID nếu có thể
-export const fixTripId = (id: string): string | null => {
-  return fixPossibleObjectId(id);
 };
 
 /* ================= LEGACY SUPPORT ================= */
