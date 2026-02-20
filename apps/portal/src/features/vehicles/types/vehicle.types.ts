@@ -1,6 +1,5 @@
-// src/features/vehicles/types/vehicle.types.ts
 import type { VehicleStatus } from "@obtp/shared-types";
-export { VehicleStatus } from "@obtp/shared-types"; // Re-export enum
+export { VehicleStatus } from "@obtp/shared-types";
 
 export interface VehiclePayload {
   companyId: string;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { UserRole, type LoginResponse } from "@obtp/shared-types";
-import { AdminLogin } from "../../pages/admin/AdminLogin";
-import { loginApi } from "../../api/service/auth/auth.api";
+import { AdminLogin } from "../../components/auth/AuthLayout";
+
 
 
 

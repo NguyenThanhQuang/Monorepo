@@ -21,35 +21,38 @@ export class TripsRepository {
     doc: Partial<TripDefinition>,
     session?: ClientSession,
   ): Promise<TripDocument> {
-    // Tạo bản sao để không modify object gốc
     const tripData = { ...doc };
-    
-    // Chuyển đổi companyId sang ObjectId nếu là string
+
     if (tripData.companyId && typeof tripData.companyId === 'string') {
       tripData.companyId = new Types.ObjectId(tripData.companyId);
     }
-    
-    // Chuyển đổi vehicleId sang ObjectId nếu là string
+
     if (tripData.vehicleId && typeof tripData.vehicleId === 'string') {
       tripData.vehicleId = new Types.ObjectId(tripData.vehicleId);
     }
-    
-    // Xử lý route
+
     if (tripData.route) {
-      // Chuyển đổi fromLocationId
-      if (tripData.route.fromLocationId && typeof tripData.route.fromLocationId === 'string') {
-        tripData.route.fromLocationId = new Types.ObjectId(tripData.route.fromLocationId);
+      if (
+        tripData.route.fromLocationId &&
+        typeof tripData.route.fromLocationId === 'string'
+      ) {
+        tripData.route.fromLocationId = new Types.ObjectId(
+          tripData.route.fromLocationId,
+        );
       }
-      
-      // Chuyển đổi toLocationId
-      if (tripData.route.toLocationId && typeof tripData.route.toLocationId === 'string') {
-        tripData.route.toLocationId = new Types.ObjectId(tripData.route.toLocationId);
+
+      if (
+        tripData.route.toLocationId &&
+        typeof tripData.route.toLocationId === 'string'
+      ) {
+        tripData.route.toLocationId = new Types.ObjectId(
+          tripData.route.toLocationId,
+        );
       }
-      
-      // Chuyển đổi stops
+
       if (tripData.route.stops && Array.isArray(tripData.route.stops)) {
-        tripData.route.stops = tripData.route.stops.map(stop => {
-          const stopData = { ...stop };
+        tripData.route.stops = tripData.route.stops.map((stop) => {
+          const stopData = { ...stop }; // Tạo bản sao cho từng stop item
           if (stopData.locationId && typeof stopData.locationId === 'string') {
             stopData.locationId = new Types.ObjectId(stopData.locationId);
           }
@@ -57,10 +60,9 @@ export class TripsRepository {
         });
       }
     }
-    
-    // Xử lý seats - đảm bảo bookingId là ObjectId nếu có
+
     if (tripData.seats && Array.isArray(tripData.seats)) {
-      tripData.seats = tripData.seats.map(seat => {
+      tripData.seats = tripData.seats.map((seat) => {
         const seatData = { ...seat };
         if (seatData.bookingId && typeof seatData.bookingId === 'string') {
           seatData.bookingId = new Types.ObjectId(seatData.bookingId);
@@ -68,16 +70,20 @@ export class TripsRepository {
         return seatData;
       });
     }
-    
-    // Xử lý recurrenceParentId
-    if (tripData.recurrenceParentId && typeof tripData.recurrenceParentId === 'string') {
-      tripData.recurrenceParentId = new Types.ObjectId(tripData.recurrenceParentId);
+
+    if (
+      tripData.recurrenceParentId &&
+      typeof tripData.recurrenceParentId === 'string'
+    ) {
+      tripData.recurrenceParentId = new Types.ObjectId(
+        tripData.recurrenceParentId,
+      );
     }
 
     const newTrip = new this.tripModel(tripData);
     return newTrip.save({ session });
   }
-  
+
   async findById(
     id: string | Types.ObjectId,
     session?: ClientSession,
@@ -109,33 +115,34 @@ export class TripsRepository {
     id: string | Types.ObjectId,
   ): Promise<TripDocument | null> {
     const objectId = typeof id === 'string' ? new Types.ObjectId(id) : id;
-    
+
     return this.tripModel
       .findById(objectId)
       .populate({
         path: 'companyId',
         model: 'Company', // Sử dụng tên model chính xác
-        select: '_id name email phone logoUrl status'
+        select: '_id name email phone logoUrl status',
       })
       .populate({
         path: 'vehicleId',
         model: 'Vehicle', // Sử dụng tên model chính xác
-        select: '_id vehicleNumber type totalSeats status floors seatRows seatColumns aislePositions'
+        select:
+          '_id vehicleNumber type totalSeats status floors seatRows seatColumns aislePositions',
       })
       .populate({
         path: 'route.fromLocationId',
         model: 'Location', // Sử dụng tên model chính xác
-        select: '_id name province district address location'
+        select: '_id name province district address location',
       })
       .populate({
         path: 'route.toLocationId',
         model: 'Location', // Sử dụng tên model chính xác
-        select: '_id name province district address location'
+        select: '_id name province district address location',
       })
       .populate({
         path: 'route.stops.locationId',
         model: 'Location', // Sử dụng tên model chính xác
-        select: '_id name province district address location'
+        select: '_id name province district address location',
       })
       .lean()
       .exec();
@@ -145,29 +152,32 @@ export class TripsRepository {
     filter: QueryFilter<TripDocument>,
   ): Promise<TripDocument[]> {
     // Log filter để debug
-    console.log('Finding management trips with filter:', JSON.stringify(filter));
-    
+    console.log(
+      'Finding management trips with filter:',
+      JSON.stringify(filter),
+    );
+
     return this.tripModel
       .find(filter)
       .populate({
         path: 'companyId',
         model: 'Company',
-        select: '_id name email phone logoUrl'
+        select: '_id name email phone logoUrl',
       })
       .populate({
         path: 'vehicleId',
         model: 'Vehicle',
-        select: '_id vehicleNumber type totalSeats'
+        select: '_id vehicleNumber type totalSeats',
       })
       .populate({
         path: 'route.fromLocationId',
         model: 'Location',
-        select: '_id name province'
+        select: '_id name province',
       })
       .populate({
         path: 'route.toLocationId',
         model: 'Location',
-        select: '_id name province'
+        select: '_id name province',
       })
       .sort({ departureTime: -1 })
       .lean()
@@ -182,11 +192,11 @@ export class TripsRepository {
       })
       .populate({
         path: 'companyId',
-        model: 'Company'
+        model: 'Company',
       })
       .populate({
         path: 'vehicleId',
-        model: 'Vehicle'
+        model: 'Vehicle',
       })
       .lean()
       .exec();
@@ -282,8 +292,9 @@ export class TripsRepository {
     parentId: string | Types.ObjectId,
     date: Date,
   ): Promise<TripDocument | null> {
-    const objectId = typeof parentId === 'string' ? new Types.ObjectId(parentId) : parentId;
-    
+    const objectId =
+      typeof parentId === 'string' ? new Types.ObjectId(parentId) : parentId;
+
     return this.tripModel
       .findOne({
         recurrenceParentId: objectId,
@@ -298,7 +309,7 @@ export class TripsRepository {
     session?: ClientSession,
   ): Promise<TripDocument | null> {
     const objectId = typeof id === 'string' ? new Types.ObjectId(id) : id;
-    
+
     return this.tripModel
       .findByIdAndUpdate(objectId, updateData, { new: true, session })
       .lean()
@@ -327,22 +338,22 @@ export class TripsRepository {
       .populate({
         path: 'companyId',
         model: 'Company',
-        select: '_id name logoUrl'
+        select: '_id name logoUrl',
       })
       .populate({
         path: 'vehicleId',
         model: 'Vehicle',
-        select: '_id vehicleNumber type totalSeats amenities'
+        select: '_id vehicleNumber type totalSeats amenities',
       })
       .populate({
         path: 'route.fromLocationId',
         model: 'Location',
-        select: '_id name province district address'
+        select: '_id name province district address',
       })
       .populate({
         path: 'route.toLocationId',
         model: 'Location',
-        select: '_id name province district address'
+        select: '_id name province district address',
       })
       .lean();
   }
@@ -352,15 +363,15 @@ export class TripsRepository {
       .find(filter)
       .populate({
         path: 'route.fromLocationId',
-        model: 'Location'
+        model: 'Location',
       })
       .populate({
         path: 'route.toLocationId',
-        model: 'Location'
+        model: 'Location',
       })
       .populate({
         path: 'companyId',
-        model: 'Company'
+        model: 'Company',
       })
       .sort({ departureTime: 1 })
       .lean()
@@ -378,22 +389,22 @@ export class TripsRepository {
       .populate({
         path: 'companyId',
         model: 'Company',
-        select: '_id name logoUrl'
+        select: '_id name logoUrl',
       })
       .populate({
         path: 'vehicleId',
         model: 'Vehicle',
-        select: '_id vehicleNumber type totalSeats'
+        select: '_id vehicleNumber type totalSeats',
       })
       .populate({
         path: 'route.fromLocationId',
         model: 'Location',
-        select: '_id name province'
+        select: '_id name province',
       })
       .populate({
         path: 'route.toLocationId',
         model: 'Location',
-        select: '_id name province'
+        select: '_id name province',
       })
       .sort({ departureTime: 1 })
       .lean()
@@ -410,22 +421,22 @@ export class TripsRepository {
       .populate({
         path: 'companyId',
         model: 'Company',
-        select: '_id name logoUrl'
+        select: '_id name logoUrl',
       })
       .populate({
         path: 'vehicleId',
         model: 'Vehicle',
-        select: '_id vehicleNumber type totalSeats amenities'
+        select: '_id vehicleNumber type totalSeats amenities',
       })
       .populate({
         path: 'route.fromLocationId',
         model: 'Location',
-        select: '_id name province'
+        select: '_id name province',
       })
       .populate({
         path: 'route.toLocationId',
         model: 'Location',
-        select: '_id name province'
+        select: '_id name province',
       })
       .sort({ departureTime: 1 })
       .lean()

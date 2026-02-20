@@ -43,7 +43,7 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
 
       // ✅ Sử dụng auth context để login
       login(accessToken, {
-        name:user.name,
+        name: user.name,
         id: user.id,
         email: user.email,
         roles: user.roles,
@@ -62,14 +62,6 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-blue-500 flex items-center justify-center p-4">
       <div className="relative w-full max-w-md">
-        <button
-          onClick={onBack}
-          className="mb-4 flex items-center space-x-2 text-white"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>{t("backToHome")}</span>
-        </button>
-
         <div className="bg-white rounded-3xl shadow-2xl p-8">
           {/* Logo */}
           <div className="text-center mb-8">

@@ -3,7 +3,6 @@ export enum SortOrder {
   DESC = "desc",
 }
 
-// AUTH & USERS ENUMS
 export enum UserRole {
   ADMIN = "admin",
   USER = "user",
@@ -68,7 +67,6 @@ export enum BookingStatus {
   EXPIRED = "expired", // Hết hạn giữ chỗ mà không thanh toán
 }
 
-// Payment Related Enums
 export enum PaymentMethod {
   PAYOS = "payos",
   CASH = "cash",

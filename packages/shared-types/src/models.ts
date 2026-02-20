@@ -8,7 +8,6 @@
     type: "Point";
     coordinates: [number, number];
   }
-  // src/pages/ticket-lookup/types.ts
 
   export interface TicketLookupForm {
     identifier: string;
