@@ -6,10 +6,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      // 1. Alias nội bộ
       "@": path.resolve(__dirname, "./src"),
 
-      // 2. Ép Vite đọc code nguồn của packages (Force Resolution)
       "@obtp/shared-types": path.resolve(
         __dirname,
         "../../packages/shared-types/src/index.ts",
@@ -29,7 +27,6 @@ export default defineConfig({
       "@obtp/ui": path.resolve(__dirname, "../../packages/ui/src/index.ts"),
     },
   },
-  // Tối ưu để tránh Vite cache sai code cũ
   optimizeDeps: {
     exclude: [
       "@obtp/shared-types",
