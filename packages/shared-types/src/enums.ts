@@ -3,12 +3,12 @@ export enum SortOrder {
   DESC = "desc",
 }
 
-export enum UserRole {
-  ADMIN = "admin",
-  USER = "user",
-  STAFF = "staff",
-  COMPANY_ADMIN = "company_admin",
-}
+  export enum UserRole {
+    ADMIN = "admin",
+    USER = "user",
+    STAFF = "staff",
+    COMPANY_ADMIN = "company_admin",
+  }
 
 export enum CompanyStatus {
   ACTIVE = "active",

@@ -43,7 +43,15 @@ const translations: Record<Language, Record<string, string>> = {
       popularDestinations: 'Điểm đến phổ biến',
       tripsPerDay: 'chuyến/ngày',
       from: 'Từ',
-    
+      selectDepartureFirst: 'Vui lòng chọn điểm đi',
+  selectDestinationFirst: 'Vui lòng chọn điểm đến',
+  sameLocation: 'Điểm đi và điểm đến không thể giống nhau',
+  searching: 'Đang tìm kiếm...',
+  searchSuccess: 'Tìm kiếm thành công!',
+  searchError: 'Có lỗi xảy ra khi tìm kiếm',
+  swapSuccess: 'Đã hoán đổi điểm đi và điểm đến',
+  noLocationsToSwap: 'Chưa có địa điểm để hoán đổi',
+  errorLoadingLocations: 'Không thể tải danh sách địa điểm',
       // Features
       features: 'Tại Sao Chọn Chúng Tôi',
       feature1Title: 'Đặt Vé Nhanh',

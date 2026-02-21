@@ -198,7 +198,7 @@ export function Auth({ onClose, onLoginSuccess }: AuthProps) {
                 (logic.mode === 'register' &&
                   (!isPasswordValid || !isPasswordMatch))
               }
-              className="w-full py-4 bg-gradient-to-r from-blue-600 to-teal-500 text-white rounded-2xl disabled:opacity-50"
+              className="w-full py-4 bg-gradient-to-r from-blue-600 to-teal-500 text-white rounded-2xl disabled:opacity-50 hover:from-blue-700 hover:to-teal-600 transition-all duration-300"
             >
               {logic.loading
                 ? t('loading')
@@ -290,7 +290,7 @@ function Input({
 
       <input
         {...props}
-        className="w-full pl-12 pr-12 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+        className="w-full pl-12 pr-12 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
       />
 
       {rightIcon && (

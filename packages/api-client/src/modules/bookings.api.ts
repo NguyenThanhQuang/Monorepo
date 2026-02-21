@@ -1,6 +1,7 @@
 import { http } from "../core/http-client";
 import {
   Booking,
+  BookingUI,
   ConfirmBookingPayload,
   CreateBookingPayload,
   LookupBookingPayload,
@@ -14,6 +15,24 @@ interface ApiResponse<T> {
 }
 
 export const bookingsApi = {
+  // Lấy tất cả bookings (admin)
+  getAll: async (): Promise<BookingUI[]> => {
+    const response = await http.get<BookingUI[]>("/bookings");
+    return response ?? [];
+  },
+
+  // Lấy bookings của user hiện tại
+  getMyBookings: async (): Promise<Booking[]> => {
+    const response = await http.get<Booking[]>("/users/me/bookings");
+    return response ?? [];
+  },
+
+  // Lấy bookings của company (company admin)
+  getCompanyBookings: async (): Promise<Booking[]> => {
+    const response = await http.get<Booking[]>("/bookings/company");
+    return response ?? [];
+  },
+
   createHold: async (payload: CreateBookingPayload) => {
     const response = await http.post<ApiResponse<Booking>>("/bookings/hold", payload);
     return response.data;
@@ -38,12 +57,6 @@ export const bookingsApi = {
       payload
     );
     return response.data;
-  },
-
-  getCompanyBookings: async (): Promise<Booking[]> => {
-    const response = await http.get<Booking[]>("/bookings/company");
-    // Response trực tiếp là mảng Booking, không phải ApiResponse
-    return response ?? [];
   },
 
   getById: async (id: string) => {
