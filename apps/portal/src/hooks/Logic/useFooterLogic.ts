@@ -1,4 +1,4 @@
-import { useLanguage } from "../../contexts/LanguageContext";
+import { useLanguage } from "../../../../admin/src/contexts/LanguageContext";
 import type { FooterProps } from "../Props/layout/FooterProps";
 
 export function useFooterLogic({ onNavigate }: FooterProps = {}) {

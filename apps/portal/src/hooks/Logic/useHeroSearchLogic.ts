@@ -1,6 +1,6 @@
 // src/hooks/Logic/useHeroSearchLogic.ts
 import { useEffect, useRef, useState } from 'react';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '../../../../admin/src/contexts/LanguageContext';
 import type { Location } from '@obtp/shared-types';
 import type { UseHeroSearchLogicProps } from '../Props/layout/HeroSearchProps';
 import { locationApi } from '../../api/service/location/apiLocation';

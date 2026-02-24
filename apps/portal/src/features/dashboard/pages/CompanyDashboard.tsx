@@ -1,5 +1,5 @@
 import { FileText, TrendingUp, Calendar, Download, DollarSign } from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../../../admin/src/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { ReportPeriod, type Booking, BookingStatus, PaymentStatus } from "@obtp/shared-types";
 import * as XLSX from 'xlsx';

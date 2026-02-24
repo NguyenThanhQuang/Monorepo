@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '../../../../admin/src/contexts/LanguageContext';
 
 export function useContactPageLogic() {
   const { t } = useLanguage();

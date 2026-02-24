@@ -7,8 +7,8 @@ import {
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import "dayjs/locale/vi";
-import { AuthProvider, useAuth } from "../contexts/AuthContext";
-import { LanguageProvider } from "../contexts/LanguageContext";
+import { AuthProvider, useAuth } from "../../../admin/src/contexts/AuthContext";
+import { LanguageProvider } from "../../../admin/src/contexts/LanguageContext";
 import LoginPage from "../components/layout/LoginPage";
 import { CompanyDashboard } from "../features/dashboard/pages/CompanyDashboard";
 import CompanyVehiclesPage from "../features/vehicles/pages/CompanyVehiclesPage";

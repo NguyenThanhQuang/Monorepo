@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '../../../../admin/src/contexts/LanguageContext';
 import type { CompanySettings, NotificationSettings, PaymentSettings, PricingSettings, SecuritySettings, SettingsTab } from '@obtp/shared-types';
 
 export function useSettingsPageLogic() {

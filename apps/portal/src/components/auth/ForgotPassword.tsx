@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Mail, CheckCircle, ArrowLeft } from "lucide-react";
 
-import { useLanguage } from "../../contexts/LanguageContext";
+import { useLanguage } from "../../../../admin/src/contexts/LanguageContext";
 import { authApi } from "@obtp/api-client";
 
 interface ForgotPasswordModalProps {

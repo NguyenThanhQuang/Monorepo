@@ -14,7 +14,7 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../../../admin/src/contexts/AuthContext';
 import { useTheme } from '../../../app/providers';
 
 interface CompanyLayoutProps {

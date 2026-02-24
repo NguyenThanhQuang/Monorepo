@@ -21,18 +21,44 @@ export const bookingsApi = {
     return response ?? [];
   },
 
-  // Lấy bookings của user hiện tại
-  getMyBookings: async (): Promise<Booking[]> => {
-    const response = await http.get<Booking[]>("/users/me/bookings");
-    return response ?? [];
-  },
 
   // Lấy bookings của company (company admin)
   getCompanyBookings: async (): Promise<Booking[]> => {
     const response = await http.get<Booking[]>("/bookings/company");
     return response ?? [];
   },
+// Trong file bookings.api.ts, thêm method này nếu chưa có:
 
+getMyBookings: async (): Promise<Booking[]> => {
+    try {
+      const response = await http.get<any>("/users/me/bookings");
+      
+      console.log('Raw response:', response);
+      
+      // Xử lý response
+      if (!response) return [];
+      
+      // Nếu response có cấu trúc { data: [...] }
+      if (response.data && Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      // Nếu response trực tiếp là array
+      if (Array.isArray(response)) {
+        return response;
+      }
+      
+      // Nếu response có cấu trúc { statusCode, message, data }
+      if (response.statusCode && response.data && Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error fetching my bookings:', error);
+      throw error;
+    }
+  },
   createHold: async (payload: CreateBookingPayload) => {
     const response = await http.post<ApiResponse<Booking>>("/bookings/hold", payload);
     return response.data;

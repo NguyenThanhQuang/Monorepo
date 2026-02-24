@@ -1,7 +1,7 @@
 // src/features/vehicles/hooks/useCompanyVehicles.ts
 import { useEffect, useMemo, useState } from "react";
 import { companyVehicleApi } from "../services/companyVehicle.api";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../../../admin/src/contexts/AuthContext";
 import type { Vehicle } from "@obtp/shared-types";
 import { VehicleStatus } from "@obtp/shared-types";
 import type { VehiclePayload } from "../types/vehicle.types";

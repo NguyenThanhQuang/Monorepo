@@ -8,7 +8,7 @@ import type {
   VehicleResponse,
   VehicleStatus,
 } from '@obtp/shared-types';
-import { useLanguage } from '../../../contexts/LanguageContext';
+import { useLanguage } from '../../../../../admin/src/contexts/LanguageContext';
 import { vehiclesApi } from '../services/companyVehicle.api';
 
 interface Props {

@@ -24,7 +24,7 @@ import { useNavigate } from 'react-router-dom';
 
 import type { AddTripFormState, LocationData, Company, Vehicle, Trip } from '@obtp/shared-types';
 import { CompanyStatus, VehicleStatus } from '@obtp/shared-types';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../../../admin/src/contexts/AuthContext';
 import BasicInfoStep from './BasicInfoStep';
 import ScheduleStep from './ScheduleStep';
 import PricingStep from './PricingStep';

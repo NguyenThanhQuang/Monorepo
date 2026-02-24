@@ -1,4 +1,4 @@
-import type { BookingUI, ConfirmBookingPayload, CreateBookingPayload, LookupBookingPayload } from "@obtp/shared-types";
+import type { Booking, BookingUI, ConfirmBookingPayload, CreateBookingPayload, LookupBookingPayload } from "@obtp/shared-types";
 import api from "../../../../../portal/src/api/api";
 
 
@@ -26,8 +26,35 @@ export const bookingsApi = {
     return api.post('/bookings/lookup', payload);
   },
 
-  getMyBookings() {
-    return api.get('/users/me/bookings');
+getMyBookings: async (): Promise<Booking[]> => {
+    try {
+      const response = await api.get<any>("/users/me/bookings");
+      
+      console.log('Raw response:', response);
+      
+      // Xử lý response
+      if (!response) return [];
+      
+      // Nếu response có cấu trúc { data: [...] }
+      if (response.data && Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      // Nếu response trực tiếp là array
+      if (Array.isArray(response)) {
+        return response;
+      }
+      
+      // Nếu response có cấu trúc { statusCode, message, data }
+      if (response.statusCode && response.data && Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error fetching my bookings:', error);
+      throw error;
+    }
   },
   getCompanyBookings() {
   return api.get('/bookings/company');

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../../api/api';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useLanguage } from '../../../../admin/src/contexts/LanguageContext';
 import type { RouteManagementTrip, TripStatusUI } from '@obtp/shared-types';
 
 export function useRouteManagementLogic() {

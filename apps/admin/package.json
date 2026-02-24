@@ -15,16 +15,17 @@
     "@obtp/business-logic": "workspace:*",
     "@obtp/shared-types": "workspace:*",
     "@obtp/validation": "workspace:*",
+    "@types/file-saver": "^2.0.7",
+    "file-saver": "^2.0.5",
     "lucide-react": "^0.563.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router-dom": "^7.13.0"
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.13.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@obtp/business-logic": "workspace:*",
-    "@obtp/shared-types": "workspace:*",
-    "@obtp/validation": "workspace:*",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
