@@ -1,4 +1,4 @@
-// api-client/index.ts
+import { adminApi } from "./modules/admin.api";
 import { authApi } from "./modules/auth.api";
 import { bookingsApi } from "./modules/bookings.api";
 import { companiesApi } from "./modules/companies.api";
@@ -11,19 +11,16 @@ import { reviewsApi } from "./modules/reviews.api";
 import { tripsApi } from "./modules/trips.api";
 import { usersApi } from "./modules/users.api";
 import { vehiclesApi } from "./modules/vehicles.api";
-import { adminApi } from "./modules/admin.api";
 
-// Export types
-export type { 
+export type {
   CompanyRevenueStats,
-  RevenueFilterParams,
   DashboardStats,
-  RecentActivity 
+  RecentActivity,
+  RevenueFilterParams,
 } from "./modules/admin.api";
 
 export type { ApiErrorResponse } from "@obtp/shared-types";
 
-// Export dạng Single Namespace 'api'
 export const api = {
   auth: authApi,
   users: usersApi,
@@ -40,8 +37,8 @@ export const api = {
   admin: adminApi,
 };
 
-// Export lẻ từng cái
 export {
+  adminApi,
   authApi,
   bookingsApi,
   companiesApi,
@@ -49,10 +46,9 @@ export {
   locationsApi,
   mapsApi,
   paymentsApi,
+  revenueApi,
   reviewsApi,
   tripsApi,
   usersApi,
   vehiclesApi,
-  revenueApi,
-  adminApi,
 };

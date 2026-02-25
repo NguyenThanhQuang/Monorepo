@@ -5,6 +5,14 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+<<<<<<< HEAD
+import { AppProviders } from "./providers";
+import { useAuthStore } from "../core/auth/auth-store";
+import { LoginPage } from "../features/auth/pages/LoginPage";
+import { VehiclePage } from "../features/vehicles/pages/VehiclePage";
+import { MainLayout } from "../shared/layouts/MainLayout";
+import { TripPage } from "../features/trips/pages/TripPage";
+=======
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import "dayjs/locale/vi";
@@ -18,21 +26,23 @@ import { ThemeProvider } from "./providers";
 import AddTripContainer from "../features/trips/add-trip/AddTripContainer";
 import { CompanyLayout } from "../features/dashboard/pages/CompanyLayout";
 import { CompanyReviewsPage } from "../features/review/page/CompanyReviewsPage";
+<<<<<<< Updated upstream
+=======
+>>>>>>> 32feb224b957b859f238162e10394d2e6005c761
+>>>>>>> Stashed changes
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+const ProtectedRoute = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!user.roles?.includes("company_admin")) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <CompanyLayout>{children}</CompanyLayout>;
+  return <MainLayout />;
 };
 
+<<<<<<< HEAD
+=======
 function AppContent() {
   return (
     <Router>
@@ -99,17 +109,34 @@ function AppContent() {
   );
 }
 
+>>>>>>> 32feb224b957b859f238162e10394d2e6005c761
 function App() {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="vi">
-            <AppContent />
-          </LocalizationProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <AppProviders>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route
+              path="/dashboard"
+              element={
+                <div className="p-8">
+                  <h1 className="text-2xl font-bold">
+                    Chào mừng quay trở lại!
+                  </h1>
+                  <p className="text-gray-500 mt-2 text-sm">
+                    Dashboard đang được cập nhật dữ liệu từ hệ thống...
+                  </p>
+                </div>
+              }
+            />
+            <Route path="/vehicles" element={<VehiclePage />} />
+            <Route path="/trips" element={<TripPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Router>
+    </AppProviders>
   );
 }
 

@@ -26,12 +26,12 @@ export const CreateTripSchema = z
       }),
       stops: z.array(TripStopSchema).optional(),
     }),
-    departureTime: z
-      .string()
-      .datetime({ message: "Thời gian khởi hành không hợp lệ" }),
-    expectedArrivalTime: z
-      .string()
-      .datetime({ message: "Thời gian đến không hợp lệ" }),
+    departureTime: z.string().refine((val) => !isNaN(Date.parse(val)), {
+      message: "Thời gian khởi hành không hợp lệ",
+    }),
+    expectedArrivalTime: z.string().refine((val) => !isNaN(Date.parse(val)), {
+      message: "Thời gian đến không hợp lệ",
+    }),
     price: z.coerce.number().min(0, "Giá vé không thể là số âm"),
     isRecurrenceTemplate: z.boolean().optional().default(false),
   })

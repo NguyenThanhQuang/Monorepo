@@ -11,28 +11,25 @@ export default defineConfig({
 
       "@obtp/shared-types": path.resolve(
         __dirname,
-        "../../packages/shared-types/src"
+        "../../packages/shared-types/src",
       ),
 
       "@obtp/validation": path.resolve(
         __dirname,
-        "../../packages/validation/src"
+        "../../packages/validation/src",
       ),
 
       "@obtp/business-logic": path.resolve(
         __dirname,
-        "../../packages/business-logic/src"
+        "../../packages/business-logic/src",
       ),
 
       "@obtp/api-client": path.resolve(
         __dirname,
-        "../../packages/api-client/src"
+        "../../packages/api-client/src",
       ),
 
-      "@obtp/ui": path.resolve(
-        __dirname,
-        "../../packages/ui/src"
-      ),
+      "@obtp/ui": path.resolve(__dirname, "../../packages/ui/src"),
     },
   },
 
@@ -44,5 +41,10 @@ export default defineConfig({
       "@obtp/api-client",
       "@obtp/ui",
     ],
+  },
+
+  define: {
+    "process.env": {},
+    global: "window",
   },
 });
