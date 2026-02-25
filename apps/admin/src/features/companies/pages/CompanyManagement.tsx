@@ -29,11 +29,11 @@ import toast from 'react-hot-toast';
 import { CreateCompanyModal } from '../components/CreateCompanyModal';
 import { EditCompanyModal } from '../components/EditCompanyModal';
 import { CompanyDetailModal } from '../components/CompanyDetailModal';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { ConfirmActionModal } from '../components/ConfirmActionModal';
 
-// Modal components
-
 export function CompanyManagement() {
+  const { t } = useLanguage();
   const [companies, setCompanies] = useState<CompanyStatsResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,12 +59,11 @@ export function CompanyManagement() {
       setLoading(true);
       setError(null);
       const response = await companiesApi.getAllWithStats();
-      // API trả về mảng CompanyStatsResponse[]
       setCompanies(response);
     } catch (err: any) {
       console.error('Error fetching companies:', err);
-      setError(err.response?.data?.message || 'Không thể tải danh sách nhà xe');
-      toast.error('Không thể tải danh sách nhà xe');
+      setError(err.response?.data?.message || t('errorFetchingCompanies'));
+      toast.error(t('errorFetchingCompanies'));
     } finally {
       setLoading(false);
     }
@@ -74,9 +73,7 @@ export function CompanyManagement() {
     try {
       setActionLoading(true);
       const response = await companiesApi.create(data);
-      // API create trả về CompanyResponse
       if (response) {
-        // Tạm thời tạo stats mặc định cho company mới
         const newCompany: CompanyStatsResponse = {
           ...response,
           totalTrips: 0,
@@ -84,12 +81,12 @@ export function CompanyManagement() {
           averageRating: null
         };
         setCompanies(prev => [...prev, newCompany]);
-        toast.success('Tạo nhà xe thành công');
+        toast.success(t('successCreateCompany'));
       }
       setShowCreateModal(false);
     } catch (err: any) {
       console.error('Error creating company:', err);
-      toast.error(err.response?.data?.message || 'Không thể tạo nhà xe');
+      toast.error(err.response?.data?.message || t('errorCreateCompany'));
     } finally {
       setActionLoading(false);
     }
@@ -99,11 +96,9 @@ export function CompanyManagement() {
     try {
       setActionLoading(true);
       const response = await companiesApi.update(id, data);
-      // API update trả về CompanyResponse
       if (response) {
         setCompanies(prev => prev.map(c => {
           if (c.id === id) {
-            // Giữ lại các stats cũ, chỉ cập nhật thông tin cơ bản
             return {
               ...c,
               ...response,
@@ -114,12 +109,12 @@ export function CompanyManagement() {
           }
           return c;
         }));
-        toast.success('Cập nhật nhà xe thành công');
+        toast.success(t('successUpdateCompany'));
       }
       setShowEditModal(false);
     } catch (err: any) {
       console.error('Error updating company:', err);
-      toast.error(err.response?.data?.message || 'Không thể cập nhật nhà xe');
+      toast.error(err.response?.data?.message || t('errorUpdateCompany'));
     } finally {
       setActionLoading(false);
     }
@@ -135,10 +130,10 @@ export function CompanyManagement() {
         c.id === selectedCompany.id ? { ...c, status: CompanyStatus.SUSPENDED } : c
       ));
       setShowSuspendModal(false);
-      toast.success('Đã tạm ngưng nhà xe');
+      toast.success(t('successSuspendCompany'));
     } catch (err: any) {
       console.error('Error suspending company:', err);
-      toast.error(err.response?.data?.message || 'Không thể tạm ngưng nhà xe');
+      toast.error(err.response?.data?.message || t('errorSuspendCompany'));
     } finally {
       setActionLoading(false);
       setSelectedCompany(null);
@@ -155,10 +150,10 @@ export function CompanyManagement() {
         c.id === selectedCompany.id ? { ...c, status: CompanyStatus.ACTIVE } : c
       ));
       setShowActivateModal(false);
-      toast.success('Đã kích hoạt nhà xe');
+      toast.success(t('successActivateCompany'));
     } catch (err: any) {
       console.error('Error activating company:', err);
-      toast.error(err.response?.data?.message || 'Không thể kích hoạt nhà xe');
+      toast.error(err.response?.data?.message || t('errorActivateCompany'));
     } finally {
       setActionLoading(false);
       setSelectedCompany(null);
@@ -167,28 +162,28 @@ export function CompanyManagement() {
 
   const statusConfig = {
     [CompanyStatus.ACTIVE]: { 
-      label: 'Đang hoạt động', 
+      label: t('companyStatusActive'), 
       color: 'bg-green-500',
       textColor: 'text-green-700 dark:text-green-400',
       bgColor: 'bg-green-100 dark:bg-green-900/30',
       icon: CheckCircle 
     },
     [CompanyStatus.PENDING]: { 
-      label: 'Chờ duyệt', 
+      label: t('companyStatusPending'), 
       color: 'bg-yellow-500',
       textColor: 'text-yellow-700 dark:text-yellow-400',
       bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
       icon: Clock 
     },
     [CompanyStatus.SUSPENDED]: { 
-      label: 'Tạm ngưng', 
+      label: t('companyStatusSuspended'), 
       color: 'bg-red-500',
       textColor: 'text-red-700 dark:text-red-400',
       bgColor: 'bg-red-100 dark:bg-red-900/30',
       icon: Ban 
     },
     [CompanyStatus.INACTIVE]: { 
-      label: 'Ngừng hoạt động', 
+      label: t('companyStatusInactive'), 
       color: 'bg-gray-500',
       textColor: 'text-gray-700 dark:text-gray-400',
       bgColor: 'bg-gray-100 dark:bg-gray-900/30',
@@ -207,19 +202,19 @@ export function CompanyManagement() {
   });
 
   const formatCurrency = (amount: number) => {
-    if (!amount) return '0đ';
+    if (!amount) return '0₫';
     if (amount >= 1000000000) {
-      return `${(amount / 1000000000).toFixed(1)} tỷ`;
+      return `${(amount / 1000000000).toFixed(1)} ${t('billion')}`;
     }
     if (amount >= 1000000) {
-      return `${(amount / 1000000).toFixed(1)} triệu`;
+      return `${(amount / 1000000).toFixed(1)} ${t('million')}`;
     }
-    return amount.toLocaleString('vi-VN') + 'đ';
+    return amount.toLocaleString('vi-VN') + '₫';
   };
 
   const formatDate = (dateString: string | Date) => {
     const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-    return date.toLocaleDateString('vi-VN', {
+    return date.toLocaleDateString(t('locale') === 'vi' ? 'vi-VN' : 'en-US', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
@@ -227,9 +222,7 @@ export function CompanyManagement() {
   };
 
   const getStats = () => {
-    // Tính toán số lượng xe ước tính (giả sử mỗi chuyến dùng 1 xe khác nhau)
     const totalVehicles = companies.reduce((sum, c) => {
-      // Nếu có totalTrips, ước tính mỗi xe chạy khoảng 10 chuyến/tháng
       return sum + (c.totalTrips ? Math.ceil(c.totalTrips / 10) : 0);
     }, 0);
 
@@ -265,7 +258,7 @@ export function CompanyManagement() {
           className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
-          <span>Thử lại</span>
+          <span>{t('retry')}</span>
         </button>
       </div>
     );
@@ -279,10 +272,10 @@ export function CompanyManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-            Quản lý nhà xe
+            {t('companyManagement')}
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Quản lý thông tin và trạng thái các nhà xe trên hệ thống
+            {t('companyManagementDesc')}
           </p>
         </div>
         <button
@@ -290,7 +283,7 @@ export function CompanyManagement() {
           className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all"
         >
           <Plus className="w-4 h-4" />
-          <span>Thêm nhà xe</span>
+          <span>{t('addCompany')}</span>
         </button>
       </div>
 
@@ -302,7 +295,7 @@ export function CompanyManagement() {
               <Building2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Tổng số nhà xe</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('totalCompanies')}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
         </div>
 
@@ -312,7 +305,7 @@ export function CompanyManagement() {
               <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Đang hoạt động</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('activeCompanies')}</p>
           <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</p>
         </div>
 
@@ -322,7 +315,7 @@ export function CompanyManagement() {
               <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Chờ duyệt</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('pendingCompanies')}</p>
           <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.pending}</p>
         </div>
 
@@ -332,7 +325,7 @@ export function CompanyManagement() {
               <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Tổng doanh thu</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('totalRevenue')}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalRevenue)}</p>
         </div>
       </div>
@@ -346,7 +339,7 @@ export function CompanyManagement() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo tên, email, mã nhà xe..."
+              placeholder={t('searchCompanies')}
               className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white"
             />
           </div>
@@ -357,17 +350,17 @@ export function CompanyManagement() {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white"
             >
-              <option value="all">Tất cả trạng thái</option>
-              <option value={CompanyStatus.ACTIVE}>Đang hoạt động</option>
-              <option value={CompanyStatus.PENDING}>Chờ duyệt</option>
-              <option value={CompanyStatus.SUSPENDED}>Tạm ngưng</option>
-              <option value={CompanyStatus.INACTIVE}>Ngừng hoạt động</option>
+              <option value="all">{t('allStatus')}</option>
+              <option value={CompanyStatus.ACTIVE}>{t('companyStatusActive')}</option>
+              <option value={CompanyStatus.PENDING}>{t('companyStatusPending')}</option>
+              <option value={CompanyStatus.SUSPENDED}>{t('companyStatusSuspended')}</option>
+              <option value={CompanyStatus.INACTIVE}>{t('companyStatusInactive')}</option>
             </select>
           </div>
           <button
             onClick={fetchCompanies}
             className="p-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-            title="Làm mới"
+            title={t('refresh')}
           >
             <RefreshCw className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
@@ -381,31 +374,31 @@ export function CompanyManagement() {
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Nhà xe
+                  {t('company')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Liên hệ
+                  {t('contact')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Địa chỉ
+                  {t('address')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Thống kê
+                  {t('stats')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Doanh thu
+                  {t('revenue')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Đánh giá
+                  {t('rating')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Trạng thái
+                  {t('status')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Ngày đăng ký
+                  {t('joinDate')}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Thao tác
+                  {t('actions')}
                 </th>
               </tr>
             </thead>
@@ -427,7 +420,7 @@ export function CompanyManagement() {
                               {company.name}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                              Mã: {company.code}
+                              {t('code')}: {company.code}
                             </div>
                           </div>
                         </div>
@@ -457,14 +450,13 @@ export function CompanyManagement() {
                           <div className="flex items-center space-x-2 text-sm">
                             <Bus className="w-4 h-4 text-gray-400" />
                             <span className="text-gray-600 dark:text-gray-400">
-                              {company.totalTrips || 0} chuyến
+                              {company.totalTrips || 0} {t('trips')}
                             </span>
                           </div>
                           <div className="flex items-center space-x-2 text-sm">
                             <Users className="w-4 h-4 text-gray-400" />
                             <span className="text-gray-600 dark:text-gray-400">
-                              {/* Tạm thời không hiển thị totalBookings vì không có trong type */}
-                              - lượt
+                              -
                             </span>
                           </div>
                         </div>
@@ -507,7 +499,7 @@ export function CompanyManagement() {
                               setShowDetailModal(true);
                             }}
                             className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg text-purple-600 dark:text-purple-400 transition-colors"
-                            title="Xem chi tiết"
+                            title={t('viewDetails')}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -517,7 +509,7 @@ export function CompanyManagement() {
                               setShowEditModal(true);
                             }}
                             className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400 transition-colors"
-                            title="Chỉnh sửa"
+                            title={t('edit')}
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
@@ -528,7 +520,7 @@ export function CompanyManagement() {
                                 setShowSuspendModal(true);
                               }}
                               className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400 transition-colors"
-                              title="Tạm ngưng"
+                              title={t('suspend')}
                             >
                               <Ban className="w-4 h-4" />
                             </button>
@@ -539,7 +531,7 @@ export function CompanyManagement() {
                                 setShowActivateModal(true);
                               }}
                               className="p-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400 transition-colors"
-                              title="Kích hoạt"
+                              title={t('activate')}
                             >
                               <CheckCircle className="w-4 h-4" />
                             </button>
@@ -555,13 +547,13 @@ export function CompanyManagement() {
                     <div className="flex flex-col items-center justify-center">
                       <Building2 className="w-12 h-12 text-gray-400 mb-4" />
                       <p className="text-gray-500 dark:text-gray-400 mb-2">
-                        Không tìm thấy nhà xe nào
+                        {t('noCompaniesFound')}
                       </p>
                       <button
                         onClick={() => setShowCreateModal(true)}
                         className="text-purple-600 hover:text-purple-700 font-medium"
                       >
-                        Thêm nhà xe mới
+                        {t('addCompany')}
                       </button>
                     </div>
                   </td>
@@ -571,12 +563,12 @@ export function CompanyManagement() {
           </table>
         </div>
         
-        {/* Pagination (simplified) */}
+        {/* Footer */}
         {filteredCompanies.length > 0 && (
           <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Hiển thị <span className="font-medium">{filteredCompanies.length}</span> /{' '}
-              <span className="font-medium">{companies.length}</span> nhà xe
+              {t('showing')} <span className="font-medium">{filteredCompanies.length}</span> {t('of')}{' '}
+              <span className="font-medium">{companies.length}</span> {t('companies')}
             </p>
           </div>
         )}
@@ -614,36 +606,37 @@ export function CompanyManagement() {
             }}
             company={selectedCompany}
           />
+// Trong CompanyManagement.tsx, sửa phần ConfirmActionModal
 
-          <ConfirmActionModal
-            isOpen={showSuspendModal}
-            onClose={() => {
-              setShowSuspendModal(false);
-              setSelectedCompany(null);
-            }}
-            onConfirm={handleSuspendCompany}
-            title="Tạm ngưng nhà xe"
-            message={`Bạn có chắc chắn muốn tạm ngưng nhà xe "${selectedCompany.name}"? Nhà xe sẽ không thể thực hiện các giao dịch mới.`}
-            confirmText="Tạm ngưng"
-            cancelText="Hủy"
-            type="danger"
-            loading={actionLoading}
-          />
+<ConfirmActionModal
+  isOpen={showSuspendModal}
+  onClose={() => {
+    setShowSuspendModal(false);
+    setSelectedCompany(null);
+  }}
+  onConfirm={handleSuspendCompany}
+  title={t('confirmSuspend')}
+  message={t('confirmSuspendMessage').replace('{companyName}', selectedCompany.name)}
+  confirmText={t('suspend')}
+  cancelText={t('cancel')}
+  type="danger"
+  loading={actionLoading}
+/>
 
-          <ConfirmActionModal
-            isOpen={showActivateModal}
-            onClose={() => {
-              setShowActivateModal(false);
-              setSelectedCompany(null);
-            }}
-            onConfirm={handleActivateCompany}
-            title="Kích hoạt nhà xe"
-            message={`Bạn có chắc chắn muốn kích hoạt lại nhà xe "${selectedCompany.name}"?`}
-            confirmText="Kích hoạt"
-            cancelText="Hủy"
-            type="success"
-            loading={actionLoading}
-          />
+<ConfirmActionModal
+  isOpen={showActivateModal}
+  onClose={() => {
+    setShowActivateModal(false);
+    setSelectedCompany(null);
+  }}
+  onConfirm={handleActivateCompany}
+  title={t('confirmActivate')}
+  message={t('confirmActivateMessage').replace('{companyName}', selectedCompany.name)}
+  confirmText={t('activate')}
+  cancelText={t('cancel')}
+  type="success"
+  loading={actionLoading}
+/>
         </>
       )}
     </div>

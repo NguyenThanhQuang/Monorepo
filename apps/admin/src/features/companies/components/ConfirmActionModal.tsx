@@ -1,5 +1,6 @@
 // src/components/common/ConfirmActionModal.tsx
 import { X, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface ConfirmActionModalProps {
   isOpen: boolean;
@@ -19,11 +20,13 @@ export function ConfirmActionModal({
   onConfirm,
   title,
   message,
-  confirmText = 'Xác nhận',
-  cancelText = 'Hủy',
+  confirmText,
+  cancelText,
   type = 'danger',
   loading = false
 }: ConfirmActionModalProps) {
+  const { t } = useLanguage();
+
   if (!isOpen) return null;
 
   const config = {
@@ -50,7 +53,7 @@ export function ConfirmActionModal({
     }
   };
 
-  const { icon: Icon, iconColor, bgColor, buttonColor, borderColor } = config[type];
+  const { icon: Icon, iconColor, bgColor, buttonColor } = config[type];
 
   const handleConfirm = async () => {
     await onConfirm();
@@ -88,7 +91,7 @@ export function ConfirmActionModal({
             className="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             disabled={loading}
           >
-            {cancelText}
+            {cancelText || t('cancel')}
           </button>
           <button
             onClick={handleConfirm}
@@ -96,7 +99,7 @@ export function ConfirmActionModal({
             className={`flex items-center space-x-2 px-6 py-2.5 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${buttonColor}`}
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>{loading ? 'Đang xử lý...' : confirmText}</span>
+            <span>{loading ? t('processing') : (confirmText || t('confirm'))}</span>
           </button>
         </div>
       </div>

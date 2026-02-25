@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { X, Upload, Loader2 } from 'lucide-react';
 import type { CreateCompanyPayload } from '@obtp/shared-types';
 import { CompanyStatus } from '@obtp/shared-types';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface CreateCompanyModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface CreateCompanyModalProps {
 }
 
 export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: CreateCompanyModalProps) {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<CreateCompanyPayload>({
     name: '',
     code: '',
@@ -34,41 +36,41 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Tên nhà xe không được để trống';
+      newErrors.name = t('errorCompanyNameRequired');
     }
 
     if (!formData.code.trim()) {
-      newErrors.code = 'Mã nhà xe không được để trống';
+      newErrors.code = t('errorCompanyCodeRequired');
     } else if (!/^[A-Z0-9]+$/.test(formData.code)) {
-      newErrors.code = 'Mã nhà xe chỉ chứa chữ hoa và số';
+      newErrors.code = t('errorCompanyCodeFormat');
     }
 
     if (!formData.email?.trim()) {
-      newErrors.email = 'Email không được để trống';
+      newErrors.email = t('errorEmailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email không hợp lệ';
+      newErrors.email = t('errorEmailInvalid');
     }
 
     if (!formData.phone?.trim()) {
-      newErrors.phone = 'Số điện thoại không được để trống';
+      newErrors.phone = t('errorPhoneRequired');
     } else if (!/^(0|\+84)[3-9][0-9]{8}$/.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Số điện thoại không hợp lệ';
+      newErrors.phone = t('errorPhoneInvalid');
     }
 
     if (!formData.adminName.trim()) {
-      newErrors.adminName = 'Tên quản trị viên không được để trống';
+      newErrors.adminName = t('errorAdminNameRequired');
     }
 
     if (!formData.adminEmail.trim()) {
-      newErrors.adminEmail = 'Email quản trị viên không được để trống';
+      newErrors.adminEmail = t('errorAdminEmailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.adminEmail)) {
-      newErrors.adminEmail = 'Email không hợp lệ';
+      newErrors.adminEmail = t('errorEmailInvalid');
     }
 
     if (!formData.adminPhone.trim()) {
-      newErrors.adminPhone = 'Số điện thoại quản trị viên không được để trống';
+      newErrors.adminPhone = t('errorAdminPhoneRequired');
     } else if (!/^(0|\+84)[3-9][0-9]{8}$/.test(formData.adminPhone.replace(/\s/g, ''))) {
-      newErrors.adminPhone = 'Số điện thoại không hợp lệ';
+      newErrors.adminPhone = t('errorPhoneInvalid');
     }
 
     setErrors(newErrors);
@@ -99,7 +101,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
       <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Thêm nhà xe mới
+            {t('addNewCompany')}
           </h2>
           <button
             onClick={onClose}
@@ -113,12 +115,12 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
           {/* Thông tin nhà xe */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Thông tin nhà xe
+              {t('companyInformation')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tên nhà xe <span className="text-red-500">*</span>
+                  {t('companyName')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -127,7 +129,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white ${
                     errors.name ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'
                   }`}
-                  placeholder="VD: Phương Trang"
+                  placeholder={t('companyNamePlaceholder')}
                 />
                 {errors.name && (
                   <p className="mt-1 text-sm text-red-500">{errors.name}</p>
@@ -136,7 +138,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Mã nhà xe <span className="text-red-500">*</span>
+                  {t('companyCode')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -145,7 +147,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white uppercase ${
                     errors.code ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'
                   }`}
-                  placeholder="VD: FUTA"
+                  placeholder={t('companyCodePlaceholder')}
                 />
                 {errors.code && (
                   <p className="mt-1 text-sm text-red-500">{errors.code}</p>
@@ -154,7 +156,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Email <span className="text-red-500">*</span>
+                  {t('email')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -163,7 +165,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white ${
                     errors.email ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'
                   }`}
-                  placeholder="contact@company.com"
+                  placeholder={t('emailPlaceholder')}
                 />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-500">{errors.email}</p>
@@ -172,7 +174,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Số điện thoại <span className="text-red-500">*</span>
+                  {t('phone')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -181,7 +183,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white ${
                     errors.phone ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'
                   }`}
-                  placeholder="0901234567"
+                  placeholder={t('phonePlaceholder')}
                 />
                 {errors.phone && (
                   <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
@@ -190,33 +192,33 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Địa chỉ
+                  {t('address')}
                 </label>
                 <input
                   type="text"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white"
-                  placeholder="Địa chỉ công ty"
+                  placeholder={t('addressPlaceholder')}
                 />
               </div>
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Mô tả
+                  {t('description')}
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white"
-                  placeholder="Mô tả về nhà xe..."
+                  placeholder={t('descriptionPlaceholder')}
                 />
               </div>
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Logo URL
+                  {t('logoUrl')}
                 </label>
                 <div className="flex items-center space-x-2">
                   <input
@@ -224,7 +226,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
                     value={formData.logoUrl}
                     onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
                     className="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white"
-                    placeholder="https://example.com/logo.png"
+                    placeholder={t('logoUrlPlaceholder')}
                   />
                   <button
                     type="button"
@@ -240,12 +242,12 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
           {/* Thông tin quản trị viên */}
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Thông tin quản trị viên
+              {t('adminInformation')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Họ tên <span className="text-red-500">*</span>
+                  {t('adminName')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -254,7 +256,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white ${
                     errors.adminName ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'
                   }`}
-                  placeholder="Nguyễn Văn A"
+                  placeholder={t('adminNamePlaceholder')}
                 />
                 {errors.adminName && (
                   <p className="mt-1 text-sm text-red-500">{errors.adminName}</p>
@@ -263,7 +265,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Email <span className="text-red-500">*</span>
+                  {t('email')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -272,7 +274,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white ${
                     errors.adminEmail ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'
                   }`}
-                  placeholder="admin@company.com"
+                  placeholder={t('emailPlaceholder')}
                 />
                 {errors.adminEmail && (
                   <p className="mt-1 text-sm text-red-500">{errors.adminEmail}</p>
@@ -281,7 +283,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Số điện thoại <span className="text-red-500">*</span>
+                  {t('phone')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -290,7 +292,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white ${
                     errors.adminPhone ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'
                   }`}
-                  placeholder="0901234567"
+                  placeholder={t('phonePlaceholder')}
                 />
                 {errors.adminPhone && (
                   <p className="mt-1 text-sm text-red-500">{errors.adminPhone}</p>
@@ -307,7 +309,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
               className="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               disabled={loading}
             >
-              Hủy
+              {t('cancel')}
             </button>
             <button
               type="submit"
@@ -315,7 +317,7 @@ export function CreateCompanyModal({ isOpen, onClose, onSubmit, loading }: Creat
               className="flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{loading ? 'Đang xử lý...' : 'Tạo nhà xe'}</span>
+              <span>{loading ? t('processing') : t('createCompany')}</span>
             </button>
           </div>
         </form>

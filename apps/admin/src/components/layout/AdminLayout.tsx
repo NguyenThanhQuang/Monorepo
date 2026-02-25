@@ -17,9 +17,11 @@ import {
   Moon,
   Shield,
   Ticket,
-  DollarSign
+  DollarSign,
+  Globe // Thêm icon Globe
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext'; // Import useLanguage
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -29,6 +31,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { language, toggleLanguage, t } = useLanguage(); // Sử dụng useLanguage
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -53,47 +56,47 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const menuItems = [
     {
       path: '/admin/dashboard',
-      name: 'Tổng quan',
+      name: t('dashboard'), // Sử dụng translation
       icon: <LayoutDashboard className="w-5 h-5" />,
     },
     {
       path: '/admin/revenue',
-      name: 'Doanh thu',
+      name: t('revenue'), // Sử dụng translation
       icon: <TrendingUp className="w-5 h-5" />,
     },
     {
       path: '/admin/companies',
-      name: 'Quản lý nhà xe',
+      name: t('companyManagement'), // Sử dụng translation
       icon: <Building2 className="w-5 h-5" />,
     },
     {
       path: '/admin/users',
-      name: 'Quản lý người dùng',
+      name: t('userManagement'), // Sử dụng translation
       icon: <Users className="w-5 h-5" />,
     },
     {
       path: '/admin/vehicles',
-      name: 'Quản lý xe',
+      name: t('vehicleManagement'), // Sử dụng translation
       icon: <Bus className="w-5 h-5" />,
     },
     {
       path: '/admin/trips',
-      name: 'Quản lý chuyến đi',
+      name: t('tripManagement'), // Sử dụng translation
       icon: <Calendar className="w-5 h-5" />,
     },
     {
       path: '/admin/bookings',
-      name: 'Quản lý vé',
+      name: t('bookingManagement'), // Sử dụng translation
       icon: <Ticket className="w-5 h-5" />,
     },
     {
       path: '/admin/finance',
-      name: 'Tài chính',
+      name: t('finance'), // Sử dụng translation
       icon: <DollarSign className="w-5 h-5" />,
     },
     {
       path: '/admin/settings',
-      name: 'Cài đặt',
+      name: t('settings'), // Sử dụng translation
       icon: <Settings className="w-5 h-5" />,
     },
   ];
@@ -135,7 +138,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             {sidebarOpen && (
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
-                Admin Panel
+                {t('adminPanel')}
               </span>
             )}
           </div>
@@ -185,6 +188,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Bottom Section */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl">
+          {/* Language Toggle - Thêm nút chuyển ngôn ngữ */}
+          <button
+            onClick={toggleLanguage}
+            className={`
+              w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 mb-2
+              text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50
+              ${!sidebarOpen && 'justify-center'}
+            `}
+          >
+            <Globe className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            {sidebarOpen && (
+              <span className="ml-3 font-medium">
+                {language === 'vi' ? 'English' : 'Tiếng Việt'}
+              </span>
+            )}
+          </button>
+
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -201,7 +221,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             )}
             {sidebarOpen && (
               <span className="ml-3 font-medium">
-                {theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
+                {theme === 'light' ? t('darkTheme') : t('lightTheme')}
               </span>
             )}
           </button>
@@ -214,7 +234,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             {sidebarOpen && (
               <div className="ml-3 flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {user?.name || 'Admin'}
+                  {user?.name || t('admin')}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {user?.email || ''}
@@ -232,7 +252,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             `}
           >
             <LogOut className="w-4 h-4" />
-            {sidebarOpen && <span className="ml-3">Đăng xuất</span>}
+            {sidebarOpen && <span className="ml-3">{t('logout')}</span>}
           </button>
         </div>
       </aside>
@@ -254,18 +274,28 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
           </button>
           <div className="ml-4 text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
-            Admin Panel
+            {t('adminPanel')}
           </div>
-          <button
-            onClick={toggleTheme}
-            className="ml-auto p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            {theme === 'light' ? (
-              <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            ) : (
-              <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            )}
-          </button>
+          
+          {/* Mobile Language & Theme Toggles */}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={toggleLanguage}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Globe className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              {theme === 'light' ? (
+                <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              ) : (
+                <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Content Area */}
