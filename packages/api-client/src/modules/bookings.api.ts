@@ -21,15 +21,14 @@ export const bookingsApi = {
     return response ?? [];
   },
 
-
   // Lấy bookings của company (company admin)
   getCompanyBookings: async (): Promise<Booking[]> => {
     const response = await http.get<Booking[]>("/bookings/company");
     return response ?? [];
   },
-// Trong file bookings.api.ts, thêm method này nếu chưa có:
 
-getMyBookings: async (): Promise<Booking[]> => {
+  // Lấy bookings của user hiện tại
+  getMyBookings: async (): Promise<Booking[]> => {
     try {
       const response = await http.get<any>("/users/me/bookings");
       
@@ -59,6 +58,7 @@ getMyBookings: async (): Promise<Booking[]> => {
       throw error;
     }
   },
+
   createHold: async (payload: CreateBookingPayload) => {
     const response = await http.post<ApiResponse<Booking>>("/bookings/hold", payload);
     return response.data;
