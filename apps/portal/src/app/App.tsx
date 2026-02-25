@@ -9,6 +9,7 @@ import { useAuthStore } from "../core/auth/auth-store";
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { VehiclePage } from "../features/vehicles/pages/VehiclePage";
 import { MainLayout } from "../shared/layouts/MainLayout";
+import { TripPage } from "../features/trips/pages/TripPage";
 
 const ProtectedRoute = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -42,6 +43,7 @@ function App() {
             />
 
             <Route path="/vehicles" element={<VehiclePage />} />
+            <Route path="/trips" element={<TripPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
