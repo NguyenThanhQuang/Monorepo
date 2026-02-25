@@ -1,7 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "./auth/auth-store";
 
-// Lấy base URL từ biến môi trường hoặc fallback
 const API_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api/v1";
 
@@ -18,6 +17,10 @@ portalClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  const lang = localStorage.getItem("portal_lang") || "vi";
+  config.headers["Accept-Language"] = lang;
+
   return config;
 });
 
@@ -27,7 +30,7 @@ portalClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().logout();
-      window.location.href = "/login"; // Force redirect về login
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   },
