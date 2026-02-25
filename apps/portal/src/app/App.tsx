@@ -1,3 +1,4 @@
+// src/app/App.tsx
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,6 +17,7 @@ import { RouteManagement } from "../features/trips/pages/RouteManagement";
 import { ThemeProvider } from "./providers";
 import AddTripContainer from "../features/trips/add-trip/AddTripContainer";
 import { CompanyLayout } from "../features/dashboard/pages/CompanyLayout";
+import { CompanyReviewsPage } from "../features/review/page/CompanyReviewsPage";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -78,6 +80,15 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <AddTripContainer />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/company/reviews"
+          element={
+            <ProtectedRoute>
+              <CompanyReviewsPage />
             </ProtectedRoute>
           }
         />

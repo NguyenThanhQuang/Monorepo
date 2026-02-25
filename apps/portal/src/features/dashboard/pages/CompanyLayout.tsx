@@ -1,5 +1,5 @@
 // src/components/layout/CompanyLayout.tsx
-import {  useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -13,9 +13,12 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Star,
+  Globe,
 } from 'lucide-react';
 import { useAuth } from '../../../../../admin/src/contexts/AuthContext';
 import { useTheme } from '../../../app/providers';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface CompanyLayoutProps {
   children: ReactNode;
@@ -26,6 +29,7 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { language, toggleLanguage, t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -36,27 +40,32 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
   const menuItems = [
     {
       path: '/company/dashboard',
-      name: 'Dashboard',
+      name: t('dashboard'),
       icon: <LayoutDashboard className="w-5 h-5" />,
     },
     {
       path: '/company/vehicles',
-      name: 'Quản lý xe',
+      name: t('vehicleManagement'),
       icon: <Bus className="w-5 h-5" />,
     },
     {
       path: '/company/trips',
-      name: 'Quản lý chuyến đi',
+      name: t('routeManagement'),
       icon: <Calendar className="w-5 h-5" />,
     },
     {
       path: '/company/drivers',
-      name: 'Quản lý tài xế',
+      name: t('driverManagement'),
       icon: <Users className="w-5 h-5" />,
     },
     {
+      path: '/company/reviews',
+      name: t('reviewManagement'),
+      icon: <Star className="w-5 h-5" />,
+    },
+    {
       path: '/company/settings',
-      name: 'Cài đặt',
+      name: t('settings'),
       icon: <Settings className="w-5 h-5" />,
     },
   ];
@@ -147,6 +156,23 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
 
         {/* Bottom Section */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl">
+          {/* Language Toggle */}
+          <button
+            onClick={toggleLanguage}
+            className={`
+              w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 mb-2
+              text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50
+              ${!sidebarOpen && 'justify-center'}
+            `}
+          >
+            <Globe className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            {sidebarOpen && (
+              <span className="ml-3 font-medium">
+                {language === 'vi' ? 'English' : 'Tiếng Việt'}
+              </span>
+            )}
+          </button>
+
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -163,7 +189,7 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
             )}
             {sidebarOpen && (
               <span className="ml-3 font-medium">
-                {theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
+                {theme === 'light' ? t('darkTheme') : t('lightTheme')}
               </span>
             )}
           </button>
@@ -176,7 +202,7 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
             {sidebarOpen && (
               <div className="ml-3 flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {user?.name || 'User'}
+                  {user?.name || t('user')}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {user?.email || ''}
@@ -194,7 +220,7 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
             `}
           >
             <LogOut className="w-4 h-4" />
-            {sidebarOpen && <span className="ml-3">Đăng xuất</span>}
+            {sidebarOpen && <span className="ml-3">{t('logout')}</span>}
           </button>
         </div>
       </aside>
@@ -218,16 +244,24 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
           <div className="ml-4 text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
             OBTP
           </div>
-          <button
-            onClick={toggleTheme}
-            className="ml-auto p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            {theme === 'light' ? (
-              <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            ) : (
-              <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            )}
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={toggleLanguage}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Globe className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              {theme === 'light' ? (
+                <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              ) : (
+                <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Content Area */}
