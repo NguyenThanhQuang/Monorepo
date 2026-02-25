@@ -37,45 +37,32 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
   return (
     <>
-      {/* ================================== */}
-      {/* 1. LAYER ẢO CHỞ NGÀY NHUỐM BÓNG MỜ CHỈ ÁP DỤNG TRÊN PHONE & TABLET KHI BẤM MENU TỪ HAMBURGER.*/}
       <div
         className={cn(
           "fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm lg:hidden",
-          isOpen ? "block" : "hidden", // Dấu nhẹm nó luôn nếu trên pc
+          isOpen ? "block" : "hidden",
         )}
-        onClick={onClose} // Nếu thò tay click nền mù -> Hụp menu
+        onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* ================================== */}
-      {/* 2. CHÚ SIDEBAR "QUÂN ĐOÀN" NÈ! DÙ CỐ THẾ NÀO TA CŨNG PHẢI FLEXBOX ĐỂ KO CÃI LOGIC 
-           Nếu Mobile -> Nó thành "tách mình bóc màng fixed vào góc trài ngả ra" 
-           Còn nếu Destop -> "Cột đứng đàng hoàng kềm chiều rộng vững như non tĩnh". 
-      */}
       <aside
         className={cn(
-          /* Mấu chốt làm đẹp nề */
           "flex flex-col bg-slate-900 border-r border-slate-800 transition-all duration-300 ease-in-out shrink-0 text-slate-300",
 
-          /* CHỈ TRONG MOBILE / CỬA SỔ NHỎ: Tôi trốn mình kiểu `Fixed`, đóng mở xấp qua viền theo props lg*/
           "fixed z-50 h-full w-64 top-0 left-0",
           isOpen
             ? "translate-x-0"
             : "-translate-x-full lg:translate-x-0 lg:static lg:h-screen lg:z-auto",
         )}
       >
-        {/* LOGO GỐC SIDEBAR: BĂM GẬY CHE CHỐN CÁCH BIỆT MOBILE / LOGO PC */}
         <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-slate-800 bg-slate-900/50">
-          {/* Biểu Tượng App Đơn*/}
           <div className="flex gap-2.5 items-center justify-center pointer-events-none select-none text-blue-500 font-extrabold text-2xl uppercase tracking-tighter">
-            {/* Thổi miếng Gadian bóng chẻ Text... */}
             <span className="bg-gradient-to-tr from-sky-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-md">
               OBTP APP
             </span>
           </div>
 
-          {/* Mobile-Dànhêng nút thoát lặn tắt Sidebar */}
           <button
             onClick={onClose}
             className="lg:hidden p-1.5 -mr-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition focus:outline-none"
@@ -85,9 +72,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           </button>
         </div>
 
-        {/* KHÔNG GIAN MAIN NENU LINKS CỦA CHÚNG TA (Cắt Khỏi Logo và Bottom/Ngang Chót). Cho overflow cuộn đỡ rộp rớt màn hình bé xíu. */}
         <nav className="flex-1 overflow-y-auto space-y-1 p-4 select-none">
-          {/* Chặn Lái Header Xoay */}
           <h2 className="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-4 mt-2 px-3 opacity-80 pointer-events-none">
             Hành Tích Admin
           </h2>
@@ -99,13 +84,12 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               onClick={() => {
                 if (window.innerWidth < 1024) onClose();
               }}
-              // React Router Auto pass qua Nav Link props. Ta mix vào biến "Active/is-thường".  Lưu y có chênh nhẹm do Icon...
               className={({ isActive }) =>
                 cn(
                   "group flex items-center gap-3 px-3 py-2.5 my-1 rounded-xl text-sm font-semibold transition-all shadow-none relative overflow-hidden",
                   isActive
-                    ? "bg-gradient-to-r from-blue-600/95 to-indigo-600/90 text-white !shadow-lg shadow-blue-900/20" // Menu đc Bôi Tượng / Sang trọng / Bóng đàng..
-                    : "hover:bg-slate-800 hover:text-slate-50", // Hoàn Mỹ bình tâm, không đánh mờ gắt quÁ.
+                    ? "bg-gradient-to-r from-blue-600/95 to-indigo-600/90 text-white !shadow-lg shadow-blue-900/20"
+                    : "hover:bg-slate-800 hover:text-slate-50",
                 )
               }
             >
@@ -120,7 +104,6 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           ))}
         </nav>
 
-        {/* THE FINAL STACK LOG-OUT FOOTER THÁNG LÃI TAI*/}
         <div className="shrink-0 border-t border-slate-800/60 p-4">
           <button
             onClick={() => setShowLogoutConfirm(true)}
@@ -132,7 +115,6 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         </div>
       </aside>
 
-      {/* --- CỤM CONFIRM (Khôn) TỘC GIÚP - THÒ LÒ ĐẠO 1 ---*/}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
@@ -142,7 +124,6 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
           <div className="relative bg-white w-full max-w-sm rounded-2xl p-6 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-100">
             <div className="flex gap-4 sm:flex-row flex-col">
-              {/* Ẻm Đồ Icoon Khè  ...*/}
               <div className="h-10 w-10 shrink-0 bg-rose-100 flex items-center justify-center rounded-full mx-auto sm:mx-0">
                 <LogOut className="text-rose-500 h-5 w-5" strokeWidth={2.5} />
               </div>
