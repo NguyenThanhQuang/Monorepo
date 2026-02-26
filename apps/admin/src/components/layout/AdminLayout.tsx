@@ -18,7 +18,8 @@ import {
   Shield,
   Ticket,
   DollarSign,
-  Globe // Thêm icon Globe
+  Globe, // Thêm icon Globe
+  MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext'; // Import useLanguage
@@ -53,53 +54,44 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
-  const menuItems = [
-    {
-      path: '/admin/dashboard',
-      name: t('dashboard'), // Sử dụng translation
-      icon: <LayoutDashboard className="w-5 h-5" />,
-    },
-    {
-      path: '/admin/revenue',
-      name: t('revenue'), // Sử dụng translation
-      icon: <TrendingUp className="w-5 h-5" />,
-    },
-    {
-      path: '/admin/companies',
-      name: t('companyManagement'), // Sử dụng translation
-      icon: <Building2 className="w-5 h-5" />,
-    },
-    {
-      path: '/admin/users',
-      name: t('userManagement'), // Sử dụng translation
-      icon: <Users className="w-5 h-5" />,
-    },
-    {
-      path: '/admin/vehicles',
-      name: t('vehicleManagement'), // Sử dụng translation
-      icon: <Bus className="w-5 h-5" />,
-    },
-    {
-      path: '/admin/trips',
-      name: t('tripManagement'), // Sử dụng translation
-      icon: <Calendar className="w-5 h-5" />,
-    },
-    {
-      path: '/admin/bookings',
-      name: t('bookingManagement'), // Sử dụng translation
-      icon: <Ticket className="w-5 h-5" />,
-    },
-    {
-      path: '/admin/finance',
-      name: t('finance'), // Sử dụng translation
-      icon: <DollarSign className="w-5 h-5" />,
-    },
-    {
-      path: '/admin/settings',
-      name: t('settings'), // Sử dụng translation
-      icon: <Settings className="w-5 h-5" />,
-    },
-  ];
+  // src/components/layout/AdminLayout.tsx - Thêm vào menuItems
+const menuItems = [
+  {
+    path: '/admin/dashboard',
+    name: t('dashboard'),
+    icon: <LayoutDashboard className="w-5 h-5" />,
+  },
+  {
+    path: '/admin/revenue',
+    name: t('revenue'),
+    icon: <TrendingUp className="w-5 h-5" />,
+  },
+  {
+    path: '/admin/companies',
+    name: t('companyManagement'),
+    icon: <Building2 className="w-5 h-5" />,
+  },
+  {
+    path: '/admin/users',
+    name: t('userManagement'),
+    icon: <Users className="w-5 h-5" />,
+  },
+  {
+    path: '/admin/reviews', // Thêm menu reviews
+    name: t('reviewManagement'),
+    icon: <MessageCircle className="w-5 h-5" />,
+  },
+  {
+    path: '/admin/finance',
+    name: t('finance'),
+    icon: <DollarSign className="w-5 h-5" />,
+  },
+  {
+    path: '/admin/settings',
+    name: t('settings'),
+    icon: <Settings className="w-5 h-5" />,
+  },
+];
 
   const handleLogout = () => {
     logout();

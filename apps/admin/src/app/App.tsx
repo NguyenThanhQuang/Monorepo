@@ -7,14 +7,15 @@ import {
 } from "react-router-dom";
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
-import { LanguageProvider } from "../contexts/LanguageContext"; // THÊM IMPORT
-import { ThemeProvider } from "./providers"; // THÊM IMPORT
+import { LanguageProvider } from "../contexts/LanguageContext";
+import { ThemeProvider } from "./providers";
 import { AdminLayout } from "../components/layout/AdminLayout";
 import LoginPage from "../features/auth/pages/LoginPage";
 import { AdminDashboard } from "../features/dashboard/pages/DashboardPage";
 import { AdminRevenuePage } from "../features/bookings/pages/AdminRevenuePage";
 import { CompanyManagement } from "../features/companies/pages/CompanyManagement";
 import { UserManagement } from "../features/users/pages/UserManagement";
+import { AdminReviewManagement } from "../features/review/page/AdminReviewManagement";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -73,6 +74,16 @@ function AppContent() {
           }
         />
 
+        {/* Thêm route cho quản lý đánh giá */}
+        <Route
+          path="/admin/reviews"
+          element={
+            <ProtectedRoute>
+              <AdminReviewManagement />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
@@ -83,9 +94,9 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider> {/* BỌC THEME TRƯỚC */}
-      <LanguageProvider> {/* BỌC LANGUAGE SAU */}
-        <AuthProvider> {/* BỌC AUTH CUỐI CÙNG */}
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
           <AppContent />
           <Toaster 
             position="top-right"
