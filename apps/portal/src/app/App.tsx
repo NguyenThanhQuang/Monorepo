@@ -1,55 +1,116 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import { AppProviders } from "./providers";
-import { useAuthStore } from "../core/auth/auth-store";
-import { LoginPage } from "../features/auth/pages/LoginPage";
-import { VehiclePage } from "../features/vehicles/pages/VehiclePage";
-import { MainLayout } from "../shared/layouts/MainLayout";
-import { TripPage } from "../features/trips/pages/TripPage";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import 'dayjs/locale/vi';
 
-const ProtectedRoute = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { LanguageProvider } from '../contexts/LanguageContext';
+import { ThemeProvider } from './providers';
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+import LoginPage from '../components/layout/LoginPage';
+import { CompanyLayout } from '../features/dashboard/pages/CompanyLayout';
+import { CompanyDashboard } from '../features/dashboard/pages/CompanyDashboard';
+import CompanyVehiclesPage from '../features/vehicles/pages/CompanyVehiclesPage';
+import { RouteManagement } from '../features/trips/pages/RouteManagement';
+import AddTripContainer from '../features/trips/add-trip/AddTripContainer';
+import { DriverManagement } from '../features/drivers/pages/DriverManagement';
+import { SettingsPage } from '../features/settings/pages/SettingsPage';
 
-  return <MainLayout />;
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.roles?.includes('company_admin')) return <Navigate to="/login" replace />;
+
+  return <CompanyLayout>{children}</CompanyLayout>;
 };
 
-function App() {
+function AppContent() {
   return (
-    <AppProviders>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route element={<ProtectedRoute />}>
-            <Route
-              path="/dashboard"
-              element={
-                <div className="p-8">
-                  <h1 className="text-2xl font-bold">
-                    Chào mừng quay trở lại!
-                  </h1>
-                  <p className="text-gray-500 mt-2 text-sm">
-                    Dashboard đang được cập nhật dữ liệu từ hệ thống...
-                  </p>
-                </div>
-              }
-            />
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
 
-            <Route path="/vehicles" element={<VehiclePage />} />
-            <Route path="/trips" element={<TripPage />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
-    </AppProviders>
+        <Route
+          path="/company/dashboard"
+          element={
+            <ProtectedRoute>
+              <CompanyDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/company/vehicles"
+          element={
+            <ProtectedRoute>
+              <CompanyVehiclesPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/company/trips"
+          element={
+            <ProtectedRoute>
+              <RouteManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/company/trips/add"
+          element={
+            <ProtectedRoute>
+              <AddTripContainer />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/company/trips/edit/:tripId"
+          element={
+            <ProtectedRoute>
+              <AddTripContainer />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/company/drivers"
+          element={
+            <ProtectedRoute>
+              <DriverManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/company/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="vi">
+            <AppContent />
+          </LocalizationProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
+  );
+}

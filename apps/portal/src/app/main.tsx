@@ -1,11 +1,13 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-// import "../style/index.css";
-import App from "./App";
-import "../core/i18n/i18n";
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
+// Tailwind (prebuilt) + Web-inspired overrides
+import '../style/index.css'
+import '../style/web-ui.css'
+
+import App from './App'
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>,
-);
+  </StrictMode>,
+)

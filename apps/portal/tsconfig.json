@@ -6,21 +6,12 @@
       "@obtp/shared-types": ["../../packages/shared-types/src/index.ts"],
       "@obtp/validation": ["../../packages/validation/src/index.ts"],
       "@obtp/business-logic": ["../../packages/business-logic/src/index.ts"],
-      "@obtp/api-client": ["../../packages/api-client/src/index.ts"],
-      "@obtp/ui": ["../../packages/ui/src/index.ts"]
+      "@obtp/api-client": ["../../packages/api-client/src/index.ts"]
     }
   },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ],
-  "moduleResolution": "bundler",
-  "allowImportingTsExtensions": true,
-  "resolveJsonModule": true,
-  "isolatedModules": true,
-  "noEmit": true,
-  "noUnusedLocals": true,
-  "noUnusedParameters": true,
-  "noFallthroughCasesInSwitch": true
+  ]
 }

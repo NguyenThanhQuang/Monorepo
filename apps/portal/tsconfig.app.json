@@ -24,5 +24,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "../admin/src/features/auth/components/AdminLogin.tsx", "../admin/src/features/auth/components/ForgotPasswordModal.tsx", "../admin/src/contexts/LanguageContext.tsx", "../admin/src/contexts/AuthContext.tsx"]
+  "include": [
+    "src",
+    "../admin/src/features/auth/components/AdminLogin.tsx",
+    "../admin/src/features/auth/components/ForgotPasswordModal.tsx"
+  ]
 }

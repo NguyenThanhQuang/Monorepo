@@ -1,6 +1,5 @@
-// src/components/layout/CompanyLayout.tsx
-import { useState, useEffect, type ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState, type ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Bus,
@@ -13,12 +12,9 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  Star,
-  Globe,
 } from 'lucide-react';
-import { useAuth } from '../../../../../admin/src/contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../app/providers';
-import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface CompanyLayoutProps {
   children: ReactNode;
@@ -29,7 +25,7 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { language, toggleLanguage, t } = useLanguage();
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -40,236 +36,138 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
   const menuItems = [
     {
       path: '/company/dashboard',
-      name: t('dashboard'),
-      icon: <LayoutDashboard className="w-5 h-5" />,
+      name: 'Dashboard',
+      icon: <LayoutDashboard size={20} />,
     },
     {
       path: '/company/vehicles',
-      name: t('vehicleManagement'),
-      icon: <Bus className="w-5 h-5" />,
+      name: 'Quản lý xe',
+      icon: <Bus size={20} />,
     },
     {
       path: '/company/trips',
-      name: t('routeManagement'),
-      icon: <Calendar className="w-5 h-5" />,
+      name: 'Quản lý chuyến đi',
+      icon: <Calendar size={20} />,
     },
     {
       path: '/company/drivers',
-      name: t('driverManagement'),
-      icon: <Users className="w-5 h-5" />,
-    },
-    {
-      path: '/company/reviews',
-      name: t('reviewManagement'),
-      icon: <Star className="w-5 h-5" />,
+      name: 'Quản lý tài xế',
+      icon: <Users size={20} />,
     },
     {
       path: '/company/settings',
-      name: t('settings'),
-      icon: <Settings className="w-5 h-5" />,
+      name: 'Cài đặt',
+      icon: <Settings size={20} />,
     },
   ];
+
+  const isActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Mobile Sidebar Overlay */}
-      {mobileSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setMobileSidebarOpen(false)}
-        />
-      )}
+    <div className="obtp-shell">
+      {/* Mobile overlay */}
+      {mobileSidebarOpen && <div className="obtp-overlay" onClick={() => setMobileSidebarOpen(false)} />}
 
       {/* Sidebar */}
       <aside
-        className={`
-          fixed top-0 left-0 h-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl
-          border-r border-gray-200/50 dark:border-gray-700/50 shadow-2xl shadow-black/5
-          transition-all duration-300 ease-in-out z-50
-          ${sidebarOpen ? 'w-64' : 'w-20'}
-          ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        `}
+        className={[
+          'obtp-sidebar',
+          !sidebarOpen ? 'obtp-collapsed' : '',
+          mobileSidebarOpen ? 'obtp-mobile-open' : '',
+        ].join(' ')}
       >
-        {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className={`flex items-center ${!sidebarOpen && 'justify-center w-full'}`}>
-            {sidebarOpen ? (
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
-                OBTP
-              </span>
-            ) : (
-              <span className="text-xl font-bold text-blue-600">O</span>
-            )}
+        <div className="obtp-sidebar-header">
+          <div className="obtp-brand">
+            <span className="obtp-brand-gradient">OBTP</span>
           </div>
-          
+
+          {/* Desktop collapse */}
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="hidden lg:block p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="obtp-icon-btn"
+            title={sidebarOpen ? 'Thu gọn' : 'Mở rộng'}
+            onClick={() => setSidebarOpen((v) => !v)}
           >
-            <ChevronRight className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${!sidebarOpen && 'rotate-180'}`} />
+            <ChevronRight size={18} style={{ transform: sidebarOpen ? 'rotate(0deg)' : 'rotate(180deg)' }} />
           </button>
-          
-          <button
-            onClick={() => setMobileSidebarOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <X className="w-5 h-5 text-gray-500" />
+
+          {/* Mobile close */}
+          <button className="obtp-icon-btn obtp-close-btn" onClick={() => setMobileSidebarOpen(false)} style={{ marginLeft: 8 }}>
+            <X size={18} />
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-1">
-          {menuItems.map((item) => (
-            <button
-              key={item.path}
-              onClick={() => {
-                navigate(item.path);
-                setMobileSidebarOpen(false);
-              }}
-              className={`
-                w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200
-                ${isActive(item.path)
-                  ? 'bg-gradient-to-r from-blue-600 to-teal-500 text-white shadow-lg shadow-blue-500/20'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
-                }
-                ${!sidebarOpen && 'justify-center'}
-              `}
-            >
-              <span className={`${isActive(item.path) ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>
-                {item.icon}
-              </span>
-              {sidebarOpen && (
-                <span className="ml-3 font-medium whitespace-nowrap">{item.name}</span>
-              )}
-            </button>
-          ))}
-        </nav>
+        <nav className="obtp-nav">
+          {menuItems.map((item) => {
+            const active = isActive(item.path);
+            return (
+              <button
+                key={item.path}
+                onClick={() => {
+                  navigate(item.path);
+                  setMobileSidebarOpen(false);
+                }}
+                className={['obtp-nav-item', active ? 'obtp-active' : ''].join(' ')}
+              >
+                <span aria-hidden="true">{item.icon}</span>
+                {sidebarOpen && <span className="obtp-nav-text">{item.name}</span>}
+              </button>
+            );
+          })}
 
-        {/* Bottom Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl">
-          {/* Language Toggle */}
-          <button
-            onClick={toggleLanguage}
-            className={`
-              w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 mb-2
-              text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50
-              ${!sidebarOpen && 'justify-center'}
-            `}
-          >
-            <Globe className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            {sidebarOpen && (
-              <span className="ml-3 font-medium">
-                {language === 'vi' ? 'English' : 'Tiếng Việt'}
-              </span>
-            )}
-          </button>
-
-          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className={`
-              w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 mb-2
-              text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50
-              ${!sidebarOpen && 'justify-center'}
-            `}
+            className="obtp-nav-item"
+            style={{ marginTop: 6 }}
+            title={theme === 'light' ? 'Chuyển sang tối' : 'Chuyển sang sáng'}
           >
-            {theme === 'light' ? (
-              <Moon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            ) : (
-              <Sun className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            )}
-            {sidebarOpen && (
-              <span className="ml-3 font-medium">
-                {theme === 'light' ? t('darkTheme') : t('lightTheme')}
-              </span>
-            )}
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            {sidebarOpen && <span className="obtp-nav-text">{theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}</span>}
           </button>
+        </nav>
 
-          {/* User Info */}
-          <div className={`flex items-center ${!sidebarOpen && 'justify-center'}`}>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-teal-500 flex items-center justify-center text-white font-semibold flex-shrink-0 shadow-lg shadow-blue-500/20">
-              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
+        <div className="obtp-sidebar-bottom">
+          <div className="obtp-user">
+            <div className="obtp-avatar">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</div>
             {sidebarOpen && (
-              <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {user?.name || t('user')}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {user?.email || ''}
-                </p>
+              <div className="obtp-user-meta">
+                <div className="obtp-user-name">{user?.name || 'User'}</div>
+                <div className="obtp-user-email">{user?.email || ''}</div>
               </div>
             )}
           </div>
-          
-          <button
-            onClick={handleLogout}
-            className={`
-              w-full mt-3 flex items-center px-3 py-2 text-sm text-red-600 dark:text-red-400
-              hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200
-              ${!sidebarOpen && 'justify-center'}
-            `}
-          >
-            <LogOut className="w-4 h-4" />
-            {sidebarOpen && <span className="ml-3">{t('logout')}</span>}
+
+          <button onClick={handleLogout} className="obtp-danger-link" title="Đăng xuất">
+            <LogOut size={18} />
+            {sidebarOpen && <span style={{ fontWeight: 700 }}>Đăng xuất</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main
-        className={`
-          transition-all duration-300 min-h-screen
-          ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}
-          ml-0
-        `}
-      >
-        {/* Mobile Header */}
-        <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 z-30 flex items-center px-4">
-          <button
-            onClick={() => setMobileSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+      {/* Main */}
+      <main className={['obtp-main', !sidebarOpen ? 'obtp-collapsed' : ''].join(' ')}>
+        {/* Mobile topbar */}
+        <div className="obtp-mobile-topbar">
+          <button className="obtp-icon-btn" onClick={() => setMobileSidebarOpen(true)} aria-label="Mở menu">
+            <Menu size={20} />
           </button>
-          <div className="ml-4 text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
-            OBTP
+          <div className="obtp-brand" style={{ marginLeft: 8 }}>
+            <span className="obtp-brand-gradient">OBTP</span>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={toggleLanguage}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <Globe className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            </button>
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              ) : (
-                <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              )}
+          <div style={{ marginLeft: 'auto' }}>
+            <button className="obtp-icon-btn" onClick={toggleTheme} aria-label="Đổi theme">
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="pt-16 lg:pt-0">
-          <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl mx-auto">
-            {children}
-          </div>
-        </div>
+        <div className="obtp-content">{children}</div>
       </main>
     </div>
   );
