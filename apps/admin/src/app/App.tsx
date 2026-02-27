@@ -35,6 +35,7 @@ function AppContent() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
 
         {/* Admin Routes */}
@@ -74,7 +75,6 @@ function AppContent() {
           }
         />
 
-        {/* Thêm route cho quản lý đánh giá */}
         <Route
           path="/admin/reviews"
           element={
@@ -84,9 +84,11 @@ function AppContent() {
           }
         />
 
+        {/* 404 Not Found */}
+        <Route path="/404" element={<div>404 - Page Not Found</div>} />
+        
         {/* Redirects */}
-        <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
     </Router>
   );
