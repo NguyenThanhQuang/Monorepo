@@ -13,8 +13,6 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
     amount,
   );
-const formatDate = (dateStr: string | Date) =>
-  new Date(dateStr).toLocaleDateString("vi-VN");
 
 export function RecentBookingsTable({ bookings }: { bookings: Booking[] }) {
   const getStatusBadge = (status: BookingStatus) => {

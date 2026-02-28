@@ -1,4 +1,4 @@
-import { SeatMap, SeatMapLayout } from "@obtp/shared-types";
+import type { SeatMap, SeatMapLayout } from "@obtp/shared-types";
 
 export interface GeneratedSeatMapResult {
   seatCount: number;

@@ -1,20 +1,15 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
-
-import type { Vehicle } from "@obtp/shared-types";
+import type { CreateVehiclePayload, Vehicle } from "@obtp/shared-types";
 import { VehicleStatus } from "@obtp/shared-types";
 import { CreateVehicleSchema } from "@obtp/validation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type z from "zod";
 
-type FormData = z.infer<typeof CreateVehicleSchema>;
-
-// Mock Presets (có thể tách ra file constants)
 const PRESETS = [
   { label: "Ghế ngồi 16 chỗ", f: 1, r: 4, c: 4, a: [2] },
   { label: "Giường nằm 40 chỗ", f: 2, r: 5, c: 4, a: [2] },
@@ -24,7 +19,7 @@ interface Props {
   vehicleToEdit: Vehicle | null;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: FormData) => void;
+  onSubmit: (data: CreateVehiclePayload) => void;
   isLoading: boolean;
   errorMsg?: string | null;
 }
@@ -45,8 +40,10 @@ export function VehicleFormModal({
     reset,
     setValue,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(CreateVehicleSchema),
+  } = useForm<CreateVehiclePayload>({
+    resolver: zodResolver(
+      CreateVehicleSchema,
+    ) as unknown as Resolver<CreateVehiclePayload>,
     defaultValues: {
       companyId: user?.companyId || "",
       vehicleNumber: "",
@@ -56,6 +53,7 @@ export function VehicleFormModal({
       seatRows: 10,
       seatColumns: 4,
       aislePositions: [2],
+      description: "",
     },
   });
 
@@ -71,6 +69,7 @@ export function VehicleFormModal({
           seatRows: vehicleToEdit.seatRows,
           seatColumns: vehicleToEdit.seatColumns,
           aislePositions: vehicleToEdit.aislePositions,
+          description: vehicleToEdit.description || "",
         });
       } else {
         reset({
@@ -82,6 +81,7 @@ export function VehicleFormModal({
           seatRows: 10,
           seatColumns: 4,
           aislePositions: [2],
+          description: "",
         });
       }
     }
@@ -102,12 +102,16 @@ export function VehicleFormModal({
 
   return (
     <div className="obtp-modal-overlay flex items-center justify-center p-4 z-50">
-      <div className="obtp-card obtp-card-strong w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden">
-        <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="obtp-card obtp-card-strong w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+      >
+        <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h2 className="text-xl font-bold">
             {vehicleToEdit ? "Sửa thông tin xe" : "Thêm xe mới"}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600"
           >
@@ -115,10 +119,7 @@ export function VehicleFormModal({
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="p-6 overflow-y-auto max-h-[70vh]"
-        >
+        <div className="p-6 overflow-y-auto flex-1">
           {errorMsg && (
             <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
               {errorMsg}
@@ -213,22 +214,22 @@ export function VehicleFormModal({
               />
             </div>
           </div>
+        </div>
 
-          <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onClose}
-              disabled={isLoading}
-            >
-              Hủy
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Đang lưu..." : "Lưu thông tin"}
-            </Button>
-          </div>
-        </form>
-      </div>
+        <div className="flex justify-end gap-3 p-6 pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            Hủy
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Đang lưu..." : "Lưu thông tin"}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

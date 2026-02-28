@@ -4,7 +4,7 @@ import { LoginForm } from "../forms/LoginForm";
 export default function LoginPage() {
   return (
     <div className="obtp-auth">
-      <div className="w-full max-w-[460px]">
+      <div style={{ width: "100%", maxWidth: 460 }}>
         <div className="obtp-card obtp-card-strong obtp-auth-card">
           <div className="obtp-auth-header">
             <div className="obtp-auth-logo" aria-hidden="true">
@@ -15,6 +15,7 @@ export default function LoginPage() {
               Đăng nhập để quản trị doanh nghiệp của bạn
             </p>
           </div>
+
           <LoginForm />
         </div>
       </div>

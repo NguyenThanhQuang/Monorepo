@@ -1,5 +1,6 @@
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { api } from "@obtp/api-client";
+import type { LocationResponse, Vehicle } from "@obtp/shared-types";
 import { useQuery } from "@tanstack/react-query";
 
 export const useTripDependencies = () => {
@@ -8,21 +9,25 @@ export const useTripDependencies = () => {
 
   const locationsQuery = useQuery({
     queryKey: ["locations"],
-    queryFn: async () => await api.locations.findAll(),
+    queryFn: async () => {
+      const data = await api.locations.findAll();
+      return data as LocationResponse[];
+    },
   });
 
   const vehiclesQuery = useQuery({
     queryKey: ["vehicles", companyId],
     queryFn: async () => {
       if (!companyId) return [];
-      return await api.vehicles.findAll(companyId);
+      const data = await api.vehicles.findAll(companyId);
+      return data as Vehicle[];
     },
     enabled: !!companyId,
   });
 
   return {
-    locations: locationsQuery.data || [],
-    vehicles: vehiclesQuery.data || [],
+    locations: (locationsQuery.data ?? []) as LocationResponse[],
+    vehicles: (vehiclesQuery.data ?? []) as Vehicle[],
     isLoading: locationsQuery.isLoading || vehiclesQuery.isLoading,
     isError: locationsQuery.isError || vehiclesQuery.isError,
     companyId,

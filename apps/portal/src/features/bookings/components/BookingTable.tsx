@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, Download, XCircle, Search } from "lucide-react";
+import { Download, XCircle, Search } from "lucide-react";
 import { BookingStatus, type Booking } from "@obtp/shared-types";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

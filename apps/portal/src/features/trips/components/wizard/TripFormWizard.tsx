@@ -1,19 +1,33 @@
 import { useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import {
+  useForm,
+  FormProvider,
+  type Resolver,
+  type Path,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Save, CheckCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
+
 import { CreateTripSchema } from "@obtp/validation";
 import type { CreateTripPayload } from "@obtp/shared-types";
 import { useCreateTrip } from "../../api/useCreateTrip";
 import { useTripDependencies } from "../../api/useTripDependencies";
+
 import { Button } from "@/components/ui/button";
 import { StepBasicInfo } from "./StepBasicInfo";
 import { StepSchedule } from "./StepSchedule";
 import { StepPricing } from "./StepPricing";
 import { StepPreview } from "./StepPreview";
 
-const STEPS = [
+type StepConfig = {
+  id: string;
+  title: string;
+  component: React.FC;
+  fields: Path<CreateTripPayload>[];
+};
+
+const STEPS: StepConfig[] = [
   {
     id: "basic",
     title: "Thông tin cơ bản",
@@ -24,7 +38,7 @@ const STEPS = [
     id: "schedule",
     title: "Lịch trình",
     component: StepSchedule,
-    fields: ["departureTime", "expectedArrivalTime", "route.stops"],
+    fields: ["departureTime", "expectedArrivalTime"],
   },
   {
     id: "pricing",
@@ -47,8 +61,10 @@ export function TripFormWizard() {
   const { isLoading, companyId } = useTripDependencies();
   const createTripMutation = useCreateTrip();
 
-  const methods = useForm<z.infer<typeof CreateTripSchema>>({
-    resolver: zodResolver(CreateTripSchema),
+  const methods = useForm<CreateTripPayload>({
+    resolver: zodResolver(
+      CreateTripSchema,
+    ) as unknown as Resolver<CreateTripPayload>,
     mode: "onChange",
     defaultValues: {
       companyId: companyId || "",
@@ -64,7 +80,12 @@ export function TripFormWizard() {
   const { handleSubmit, trigger } = methods;
 
   const handleNext = async () => {
-    const fieldsToValidate = STEPS[activeStep].fields as any;
+    const fieldsToValidate = STEPS[activeStep].fields;
+
+    if (fieldsToValidate.length === 0) {
+      if (activeStep < STEPS.length - 1) setActiveStep((prev) => prev + 1);
+      return;
+    }
 
     const isValid = await trigger(fieldsToValidate);
 
@@ -103,7 +124,6 @@ export function TripFormWizard() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
-      {/* Header Điều hướng */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate("/company/trips")}>
@@ -123,7 +143,6 @@ export function TripFormWizard() {
         </div>
       </div>
 
-      {/* Progress Bar */}
       <div className="w-full bg-slate-200 rounded-full h-2.5 dark:bg-slate-700">
         <div
           className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"

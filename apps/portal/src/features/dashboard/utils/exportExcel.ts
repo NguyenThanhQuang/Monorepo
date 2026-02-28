@@ -2,10 +2,6 @@ import { BookingStatus, PaymentStatus, type Booking } from "@obtp/shared-types";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
-    amount,
-  );
 const formatDate = (dateStr: string | Date) =>
   new Date(dateStr).toLocaleDateString("vi-VN");
 

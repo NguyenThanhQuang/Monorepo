@@ -49,9 +49,9 @@ export function StepBasicInfo() {
             </option>
             {locations.map((loc) => (
               <option
-                key={loc._id}
-                value={loc._id}
-                disabled={loc._id === toLocationId}
+                key={loc.id}
+                value={loc.id}
+                disabled={loc.id === toLocationId}
               >
                 {loc.name} ({loc.province})
               </option>

@@ -5,7 +5,7 @@ import {
   UserRole,
   VehicleStatus,
 } from "./enums";
-import { Company, GeoJsonPoint } from "./models";
+import type { Company, GeoJsonPoint, Location } from "./models";
 
 // --- AUTH INFRASTRUCTURE ---
 export interface JwtPayload {

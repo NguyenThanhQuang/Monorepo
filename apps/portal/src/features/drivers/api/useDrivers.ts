@@ -50,14 +50,14 @@ export const useDriverMutations = () => {
   const queryClient = useQueryClient();
 
   const createDriver = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (_data: any) => {
       /* call api.drivers.create(data) */
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["drivers"] }),
   });
 
   const deleteDriver = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (_id: string) => {
       /* call api.drivers.delete(id) */
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["drivers"] }),

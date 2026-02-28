@@ -1,7 +1,7 @@
 import { useFormContext } from "react-hook-form";
 import { useTripDependencies } from "../../api/useTripDependencies";
 import { format } from "date-fns";
-import { Bus, MapPin, Calendar, Clock, Ticket, Repeat } from "lucide-react";
+import { Bus, Calendar, Clock, Ticket, Repeat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export function StepPreview() {
@@ -10,10 +10,10 @@ export function StepPreview() {
   const formData = watch();
   const vehicle = vehicles.find((v) => v.id === formData.vehicleId);
   const fromLocation = locations.find(
-    (l) => l._id === formData.route.fromLocationId,
+    (l) => l.id === formData.route.fromLocationId,
   );
   const toLocation = locations.find(
-    (l) => l._id === formData.route.toLocationId,
+    (l) => l.id === formData.route.toLocationId,
   );
 
   // Helper formats

@@ -3,11 +3,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { User, Lock } from "lucide-react";
+
 import { LoginSchema } from "@obtp/validation";
-import { UserRole, type LoginPayload } from "@obtp/shared-types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { z } from "zod";
 import { useLogin } from "../api/useLogin";
+import { UserRole, type LoginPayload } from "@obtp/shared-types";
+
+type FormData = z.input<typeof LoginSchema>;
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ export function LoginForm() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginPayload>({
+  } = useForm<FormData>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
       identifier: "",
@@ -54,27 +56,29 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-      {globalError && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg">
-          {globalError}
-        </div>
-      )}
+    /* Sử dụng style inline gap từ source gốc */
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      style={{ display: "grid", gap: 14 }}
+    >
+      {globalError && <div className="obtp-error">{globalError}</div>}
 
       <div className="obtp-field">
         <label className="obtp-label">Email / Số điện thoại</label>
         <div className="obtp-input-wrap">
-          <span className="obtp-input-icon">
-            <User size={18} className="text-slate-400" />
+          <span className="obtp-input-icon" aria-hidden="true">
+            <User size={18} />
           </span>
-          <Input
+          <input
             {...register("identifier")}
+            type="text"
             placeholder="Nhập email hoặc số điện thoại"
-            className="pl-10"
+            className="obtp-input obtp-input-pad"
+            required
           />
         </div>
         {errors.identifier && (
-          <p className="text-sm text-red-500 mt-1">
+          <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
             {errors.identifier.message}
           </p>
         )}
@@ -83,29 +87,32 @@ export function LoginForm() {
       <div className="obtp-field">
         <label className="obtp-label">Mật khẩu</label>
         <div className="obtp-input-wrap">
-          <span className="obtp-input-icon">
-            <Lock size={18} className="text-slate-400" />
+          <span className="obtp-input-icon" aria-hidden="true">
+            <Lock size={18} />
           </span>
-          <Input
-            type="password"
+          <input
             {...register("password")}
+            type="password"
             placeholder="Nhập mật khẩu"
-            className="pl-10"
+            className="obtp-input obtp-input-pad"
+            required
           />
         </div>
         {errors.password && (
-          <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+          <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}>
+            {errors.password.message}
+          </p>
         )}
       </div>
 
-      <div className="mt-2">
-        <Button
+      <div className="obtp-auth-actions">
+        <button
           type="submit"
-          className="w-full"
           disabled={loginMutation.isPending}
+          className="obtp-btn"
         >
           {loginMutation.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
-        </Button>
+        </button>
       </div>
     </form>
   );

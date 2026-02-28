@@ -14,13 +14,8 @@ export const useTripMutations = () => {
   });
 
   const assignDriverMutation = useMutation({
-    mutationFn: async ({
-      tripId,
-      driverId,
-    }: {
-      tripId: string;
-      driverId: string;
-    }) => {
+    mutationFn: async (data: { tripId: string; driverId: string }) => {
+      console.log(data);
       return new Promise((resolve) => setTimeout(resolve, 1000));
     },
     onSuccess: invalidateTrips,
