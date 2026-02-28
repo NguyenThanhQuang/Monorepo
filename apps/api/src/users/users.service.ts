@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-
+// REMOVED: import { InjectConnection } from '@nestjs/mongoose';
 import {
   AUTH_CONSTANTS,
   comparePassword,
@@ -13,7 +13,6 @@ import {
   hashPassword,
   sanitizeUser,
 } from '@obtp/business-logic';
-
 import {
   AuthUserResponse,
   ChangePasswordPayload,
@@ -23,8 +22,8 @@ import {
   UpdateUserPayload,
   UserRole,
 } from '@obtp/shared-types';
-
-import { Types } from 'mongoose';
+// REMOVED: import { Connection, Types } from 'mongoose';
+import { Types } from 'mongoose'; // CHANGED: chỉ import Types
 import { BookingsRepository } from 'src/bookings/bookings.repository';
 import { UserDocument } from './schemas/user.schema';
 import { UsersRepository } from './users.repository';
@@ -43,6 +42,7 @@ interface CreateInternalUserParams extends CreateUserPayload {
 export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
+    // REMOVED: @InjectConnection() private readonly connection: Connection,
     @Inject(forwardRef(() => BookingsRepository))
     private readonly bookingsRepository: BookingsRepository,
   ) {}
@@ -71,7 +71,6 @@ export class UsersService {
 
   async create(payload: CreateInternalUserParams): Promise<UserDocument> {
     let finalHash = payload.passwordHash;
-
     if (!finalHash && payload.password) {
       finalHash = await hashPassword(payload.password);
     }
@@ -83,8 +82,10 @@ export class UsersService {
       passwordHash: finalHash,
       roles: payload.roles || (payload.role ? [payload.role] : [UserRole.USER]),
       isEmailVerified: payload.isEmailVerified ?? false,
+
       emailVerificationToken: payload.emailVerificationToken,
       emailVerificationExpires: payload.emailVerificationExpires,
+
       accountActivationToken: payload.accountActivationToken,
       accountActivationExpires: payload.accountActivationExpires,
     };
@@ -116,8 +117,7 @@ export class UsersService {
       payload.currentPassword,
       user.passwordHash,
     );
-    if (!isValid)
-      throw new BadRequestException('Mật khẩu hiện tại không đúng');
+    if (!isValid) throw new BadRequestException('Mật khẩu hiện tại không đúng');
 
     user.passwordHash = await hashPassword(payload.newPassword);
     await this.usersRepository.save(user);
@@ -187,61 +187,54 @@ export class UsersService {
       emailVerificationToken: token,
       emailVerificationExpires: { $gt: new Date() },
     });
-
     if (!user) return null;
 
     user.isEmailVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationExpires = undefined;
-
     return this.usersRepository.save(user);
   }
 
-  // ✅ ĐÃ SỬA: Mật khẩu mặc định = SỐ ĐIỆN THOẠI
+  // QUAN TRỌNG: Sửa method này - LOẠI BỎ TRANSACTION
   async createOrPromoteCompanyAdmin(
     payload: CreateCompanyAdminPayload,
   ): Promise<{ user: UserDocument; isNew: boolean }> {
-    let user = await this.usersRepository.findOne({
-      email: payload.email,
-    });
-
+    // REMOVED: session and transaction logic
+    let user = await this.usersRepository.findOne({ email: payload.email });
     let isNew = false;
 
     if (user) {
+      // User đã tồn tại - cập nhật roles và companyId
       if (!user.roles.includes(UserRole.COMPANY_ADMIN)) {
         user.roles.push(UserRole.COMPANY_ADMIN);
       }
-
       user.companyId = new Types.ObjectId(payload.companyId);
       await this.usersRepository.save(user);
-    }else {
-  isNew = true;
+    } else {
+      // Tạo user mới
+      isNew = true;
+      const activationToken = generateRandomToken();
 
-  const activationToken = generateRandomToken();
+      user = await this.usersRepository.create({
+        email: payload.email,
+        name: payload.name,
+        phone: payload.phone,
+        companyId: new Types.ObjectId(payload.companyId),
+        roles: [UserRole.COMPANY_ADMIN],
+        isEmailVerified: false,
+        passwordHash: 'temp_placeholder_hash', // Sẽ được set khi user active
+        accountActivationToken: activationToken,
+        accountActivationExpires: new Date(
+          Date.now() +
+            AUTH_CONSTANTS.DEFAULTS.EMAIL_VERIFICATION_EXPIRATION_MS,
+        ),
+      });
+    }
 
-  const hashedPassword = await hashPassword(payload.phone);
-
-  user = await this.usersRepository.create({
-    email: payload.email,
-    name: payload.name,
-    phone: payload.phone,
-    companyId: new Types.ObjectId(payload.companyId),
-    roles: [UserRole.COMPANY_ADMIN],
-    isEmailVerified: true,
-    passwordHash: hashedPassword, // ✅ password = số điện thoại
-    accountActivationToken: activationToken, // ✅ giữ nguyên
-    accountActivationExpires: new Date(
-      Date.now() +
-        AUTH_CONSTANTS.DEFAULTS.EMAIL_VERIFICATION_EXPIRATION_MS,
-    ),
-  });
-}
     return { user: user!, isNew };
   }
 
-  async findOneByActivationToken(
-    token: string,
-  ): Promise<UserDocument | null> {
+  async findOneByActivationToken(token: string): Promise<UserDocument | null> {
     const user = await this.usersRepository.findOne({
       accountActivationToken: token,
       accountActivationExpires: { $gt: new Date() },
@@ -250,7 +243,6 @@ export class UsersService {
     if (user) {
       await user.populate('companyId', 'name');
     }
-
     return user;
   }
 

@@ -131,7 +131,7 @@ export function generateCompanyAdminPromotionEmail(
     <div style="font-family: Arial, sans-serif;">
         <h2>Chào ${name},</h2>
         <p>Tài khoản của bạn trên hệ thống <strong>${appName}</strong> đã được cấp quyền Quản trị cho nhà xe <strong>${companyName}</strong>.</p>
-        <p>Bạn có thể đăng nhập ngay bây giờ bằng mật khẩu hiện tại với mật khẩu lá số điện thoại bạn cung cấp.</p>
+        <p>Bạn có thể đăng nhập ngay bây giờ bằng mật khẩu hiện tại.</p>
         <p style="text-align: center;">
             <a href="${loginUrl}">Đăng nhập ngay</a>
         </p>
