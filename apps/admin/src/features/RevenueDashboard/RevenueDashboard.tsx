@@ -11,7 +11,7 @@ export function RevenueDashboard() {
     try {
       setLoading(true);
       const res = await revenueApi.getRevenue(month);
-      setData(res.data);
+      setData(res);
     } finally {
       setLoading(false);
     }

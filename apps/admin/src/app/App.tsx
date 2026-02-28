@@ -38,6 +38,9 @@ function AppContent() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
 
+        {/* ✅ Default route khi mở app */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
         {/* Admin Routes */}
         <Route
           path="/admin/dashboard"
@@ -84,16 +87,11 @@ function AppContent() {
           }
         />
 
-        {/* 404 Not Found */}
-        <Route path="/404" element={<div>404 - Page Not Found</div>} />
-        
-        {/* Redirects */}
-        <Route path="*" element={<Navigate to="/404" replace />} />
+   
       </Routes>
     </Router>
   );
 }
-
 function App() {
   return (
     <ThemeProvider>

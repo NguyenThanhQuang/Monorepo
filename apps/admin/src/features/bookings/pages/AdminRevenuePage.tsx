@@ -2,246 +2,207 @@
 import { useState, useEffect } from "react";
 import {
   TrendingUp,
-  Calendar,
   Download,
   DollarSign,
+  RefreshCw,
+  ArrowUp,
+  ArrowDown,
   Building2,
-  Filter,
+  Ticket,
   Search,
-  ChevronDown,
   FileText,
-  Eye
+  Printer
 } from "lucide-react";
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import { useAuth } from "../../../contexts/AuthContext";
 import { adminApi, type CompanyRevenueStats, type RevenueFilterParams } from "@obtp/api-client";
+import { format } from "date-fns";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export function AdminRevenuePage() {
-  const { user } = useAuth();
+  const { t } = useLanguage();
+  const [data, setData] = useState<CompanyRevenueStats[]>([]);
   const [loading, setLoading] = useState(true);
-  const [exportLoading, setExportLoading] = useState(false);
-  const [companies, setCompanies] = useState<CompanyRevenueStats[]>([]);
-  const [filteredCompanies, setFilteredCompanies] = useState<CompanyRevenueStats[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [error, setError] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string>(
+    format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd')
+  );
+  const [endDate, setEndDate] = useState<string>(
+    format(new Date(), 'yyyy-MM-dd')
+  );
   const [selectedCompany, setSelectedCompany] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<keyof CompanyRevenueStats>("totalRevenue");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-
-  // Statistics
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
-  const [avgRevenue, setAvgRevenue] = useState(0);
-  const [activeCompanies, setActiveCompanies] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
+  const [filteredData, setFilteredData] = useState<CompanyRevenueStats[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [companyList, setCompanyList] = useState<{ id: string; name: string }[]>([]);
 
-  const months = [
-    { value: 1, label: "Tháng 1" },
-    { value: 2, label: "Tháng 2" },
-    { value: 3, label: "Tháng 3" },
-    { value: 4, label: "Tháng 4" },
-    { value: 5, label: "Tháng 5" },
-    { value: 6, label: "Tháng 6" },
-    { value: 7, label: "Tháng 7" },
-    { value: 8, label: "Tháng 8" },
-    { value: 9, label: "Tháng 9" },
-    { value: 10, label: "Tháng 10" },
-    { value: 11, label: "Tháng 11" },
-    { value: 12, label: "Tháng 12" },
-  ];
-
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
-
+  // Fetch dữ liệu khi thay đổi bộ lọc ngày hoặc retry
   useEffect(() => {
     fetchRevenueData();
-  }, [selectedMonth, selectedYear]);
+  }, [startDate, endDate, retryCount]);
 
+  // Lọc dữ liệu theo công ty và từ khóa tìm kiếm
   useEffect(() => {
-    filterAndSortCompanies();
-  }, [companies, searchTerm, selectedCompany, sortBy, sortOrder]);
+    let filtered = [...data];
+
+    if (selectedCompany !== "all") {
+      filtered = filtered.filter(item => item.companyId === selectedCompany);
+    }
+
+    if (searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        item =>
+          item.companyName.toLowerCase().includes(term) ||
+          item.companyCode.toLowerCase().includes(term)
+      );
+    }
+
+    setFilteredData(filtered);
+  }, [data, selectedCompany, searchTerm]);
 
   const fetchRevenueData = async () => {
     try {
       setLoading(true);
-      
+      setError(null);
+
       const params: RevenueFilterParams = {
-        month: selectedMonth,
-        year: selectedYear
+        fromDate: startDate,
+        toDate: endDate
       };
 
-      const data = await adminApi.getRevenueStats(params);
-      setCompanies(data);
+      const revenueData = await adminApi.getRevenueStats(params);
+      console.log('Revenue data received:', revenueData); // Debug log
+
+      // Kiểm tra nếu revenueData là mảng và có dữ liệu
+      if (Array.isArray(revenueData) && revenueData.length > 0) {
+        setData(revenueData);
+
+        // Cập nhật danh sách công ty cho dropdown
+        const companies = revenueData.map(item => ({
+          id: item.companyId,
+          name: item.companyName
+        }));
+        setCompanyList(companies);
+
+        // Tính tổng doanh thu và số booking
+        const revenue = revenueData.reduce((sum, item) => sum + (item.totalRevenue || 0), 0);
+        const bookings = revenueData.reduce((sum, item) => sum + (item.totalBookings || 0), 0);
+        setTotalRevenue(revenue);
+        setTotalBookings(bookings);
+      } else {
+        // Nếu không có dữ liệu, set mảng rỗng
+        setData([]);
+        setCompanyList([]);
+        setTotalRevenue(0);
+        setTotalBookings(0);
+        
+        // Chỉ hiển thị thông báo lỗi nếu thực sự không có dữ liệu
+        if (revenueData && Array.isArray(revenueData) && revenueData.length === 0) {
+          setError(t('noDataAvailable') || 'Không có dữ liệu doanh thu trong khoảng thời gian này');
+        }
+      }
+    } catch (err: any) {
+      console.error("Error fetching revenue data:", err);
       
-      // Calculate statistics
-      const totalRev = data.reduce((sum, company) => sum + company.totalRevenue, 0);
-      const totalBook = data.reduce((sum, company) => sum + company.totalBookings, 0);
-      const active = data.filter(c => c.totalRevenue > 0).length;
-      
-      setTotalRevenue(totalRev);
-      setTotalBookings(totalBook);
-      setAvgRevenue(active > 0 ? totalRev / active : 0);
-      setActiveCompanies(active);
-      
-    } catch (error) {
-      console.error("Error fetching revenue data:", error);
+      // Xử lý các loại lỗi cụ thể
+      if (err?.response?.status === 404) {
+        setError(t('apiNotImplemented') || 'API doanh thu chưa được triển khai');
+      } else if (err?.response?.status === 401 || err?.response?.status === 403) {
+        setError(t('noPermission') || 'Bạn không có quyền xem dữ liệu này');
+      } else if (err?.response?.status === 500) {
+        setError(t('serverError') || 'Lỗi máy chủ, vui lòng thử lại sau');
+      } else if (err?.message?.includes('Network Error')) {
+        setError(t('networkError') || 'Không thể kết nối đến máy chủ');
+      } else {
+        setError(err?.message || t('unknownError') || 'Không thể tải dữ liệu doanh thu');
+      }
+
+      // Reset data khi có lỗi
+      setData([]);
+      setCompanyList([]);
+      setTotalRevenue(0);
+      setTotalBookings(0);
     } finally {
       setLoading(false);
     }
   };
 
-  const filterAndSortCompanies = () => {
-    let filtered = [...companies];
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
 
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(company =>
-        company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.companyCode.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filter by selected company
-    if (selectedCompany !== "all") {
-      filtered = filtered.filter(company => company.companyId === selectedCompany);
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
-      const aValue = a[sortBy] ?? 0;
-      const bValue = b[sortBy] ?? 0;
+  const handleExportReport = async (type: 'excel' | 'pdf' = 'excel') => {
+    try {
+      setLoading(true);
+      const params: RevenueFilterParams = {
+        fromDate: startDate,
+        toDate: endDate,
+        companyId: selectedCompany !== "all" ? selectedCompany : undefined
+      };
+      const blob = await adminApi.exportRevenueReport(params);
       
-      if (sortOrder === "asc") {
-        return aValue < bValue ? -1 : 1;
+      // Kiểm tra nếu blob là dữ liệu hợp lệ
+      if (blob && blob.size > 0) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bao-cao-doanh-thu-${startDate}-den-${endDate}.${type === 'excel' ? 'xlsx' : 'pdf'}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
       } else {
-        return aValue > bValue ? -1 : 1;
+        throw new Error('File rỗng');
       }
-    });
-
-    setFilteredCompanies(filtered);
-  };
-
-  const handleSort = (field: keyof CompanyRevenueStats) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortOrder("desc");
+    } catch (error) {
+      console.error("Error exporting report:", error);
+      alert(t('exportError') || 'Không thể xuất báo cáo, vui lòng thử lại sau');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const formatCurrency = (amount: number, compact: boolean = false) => {
-    if (compact) {
-      if (amount >= 1000000000) {
-        return `${(amount / 1000000000).toFixed(1)} tỷ`;
-      }
-      if (amount >= 1000000) {
-        return `${(amount / 1000000).toFixed(1)} tr`;
-      }
-      return amount.toLocaleString('vi-VN') + 'đ';
-    }
+  const handlePrintReport = () => {
+    window.print();
+  };
+
+  const formatCurrency = (amount: number) => {
+    if (amount === undefined || amount === null) return '0₫';
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatCompactCurrency = (amount: number) => {
+    if (amount === undefined || amount === null) return '0₫';
+    if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)} tỷ`;
+    if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} triệu`;
     return amount.toLocaleString('vi-VN') + 'đ';
   };
 
-  const formatDate = (date: Date, format: string = 'DD/MM/YYYY') => {
-    const d = new Date(date);
-    const day = d.getDate().toString().padStart(2, '0');
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const year = d.getFullYear();
-    const hours = d.getHours().toString().padStart(2, '0');
-    const minutes = d.getMinutes().toString().padStart(2, '0');
-
-    if (format === 'DD/MM/YYYY HH:mm') {
-      return `${day}/${month}/${year} ${hours}:${minutes}`;
-    }
-    return `${day}/${month}/${year}`;
+  const formatDateRange = () => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return `${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`;
   };
 
-  const handleExportReport = async () => {
-    try {
-      setExportLoading(true);
-
-      const params: RevenueFilterParams = {
-        month: selectedMonth,
-        year: selectedYear
-      };
-
-      // Gọi API export
-      const blob = await adminApi.exportRevenueReport(params);
-      
-      // Download file
-      const fileName = `bao-cao-doanh-thu-${selectedMonth}-${selectedYear}.xlsx`;
-      saveAs(blob, fileName);
-
-    } catch (error) {
-      console.error('Error exporting report:', error);
-      
-      // Fallback: export từ dữ liệu hiện tại nếu API export chưa có
-      try {
-        // Prepare export data
-        const exportData = filteredCompanies.map(company => ({
-          'Nhà xe': company.companyName,
-          'Mã số': company.companyCode,
-          'Doanh thu': company.totalRevenue,
-          'Số vé đã bán': company.totalBookings,
-          'Số chuyến': company.totalTrips,
-          'Đánh giá trung bình': company.averageRating.toFixed(1),
-          'Tăng trưởng': `${company.revenueGrowth > 0 ? '+' : ''}${company.revenueGrowth.toFixed(1)}%`,
-        }));
-
-        // Summary data
-        const summaryData = [
-          { 'Chỉ số': 'Tổng doanh thu', 'Giá trị': formatCurrency(totalRevenue) },
-          { 'Chỉ số': 'Tổng số vé', 'Giá trị': totalBookings.toLocaleString('vi-VN') },
-          { 'Chỉ số': 'Số nhà xe có doanh thu', 'Giá trị': activeCompanies },
-          { 'Chỉ số': 'Doanh thu trung bình/nhà xe', 'Giá trị': formatCurrency(avgRevenue) },
-          { 'Chỉ số': 'Tháng', 'Giá trị': `${months.find(m => m.value === selectedMonth)?.label} ${selectedYear}` },
-          { 'Chỉ số': 'Ngày xuất báo cáo', 'Giá trị': formatDate(new Date(), 'DD/MM/YYYY HH:mm') },
-        ];
-
-        // Create workbook
-        const wb = XLSX.utils.book_new();
-        
-        // Add summary sheet
-        const summaryWs = XLSX.utils.json_to_sheet(summaryData);
-        XLSX.utils.book_append_sheet(wb, summaryWs, 'Tổng quan');
-
-        // Add companies sheet
-        const companiesWs = XLSX.utils.json_to_sheet(exportData);
-        XLSX.utils.book_append_sheet(wb, companiesWs, 'Chi tiết nhà xe');
-
-        // Generate Excel file
-        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        
-        // Download file
-        const fileName = `bao-cao-doanh-thu-${selectedMonth}-${selectedYear}.xlsx`;
-        saveAs(data, fileName);
-      } catch (fallbackError) {
-        console.error('Fallback export error:', fallbackError);
-        alert('Có lỗi xảy ra khi xuất báo cáo. Vui lòng thử lại sau.');
-      }
-    } finally {
-      setExportLoading(false);
-    }
-  };
-
-  const getGrowthColor = (growth: number) => {
-    if (growth > 0) return 'text-green-600';
-    if (growth < 0) return 'text-red-600';
-    return 'text-gray-600';
-  };
-
-  const getGrowthIcon = (growth: number) => {
-    if (growth > 0) return '↑';
-    if (growth < 0) return '↓';
-    return '→';
+  const setDateRange = (days: number) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    setStartDate(format(start, 'yyyy-MM-dd'));
+    setEndDate(format(end, 'yyyy-MM-dd'));
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
+      <div className="flex flex-col items-center justify-center h-64">
+        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-gray-500">{t('loadingRevenueData') || 'Đang tải dữ liệu...'}</p>
       </div>
     );
   }
@@ -249,323 +210,391 @@ export function AdminRevenuePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Báo cáo doanh thu
+            {t('revenueStatistics') || 'Báo cáo doanh thu'}
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Tổng hợp doanh thu tất cả nhà xe
+            {t('revenueStatisticsDesc') || 'Quản lý doanh thu theo nhà xe và thời gian'}
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          {/* Month Filter */}
-          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl px-4 py-2 border border-gray-200 dark:border-gray-700">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="bg-transparent text-sm focus:outline-none dark:text-white"
-            >
-              {months.map(month => (
-                <option key={month.value} value={month.value}>{month.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Year Filter */}
-          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl px-4 py-2 border border-gray-200 dark:border-gray-700">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="bg-transparent text-sm focus:outline-none dark:text-white"
-            >
-              {years.map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Export Button */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={handleExportReport}
-            disabled={exportLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 text-white hover:opacity-90 transition disabled:opacity-50"
+            onClick={handleRetry}
+            disabled={loading}
+            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+            title={t('refresh') || 'Làm mới'}
           >
-            {exportLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Đang xuất...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Xuất báo cáo
-              </>
-            )}
+            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => handleExportReport('excel')}
+            disabled={loading || data.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileText className="w-4 h-4" />
+            {t('exportExcel') || 'Xuất Excel'}
+          </button>
+          <button
+            onClick={() => handleExportReport('pdf')}
+            disabled={loading || data.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-4 h-4" />
+            {t('exportPDF') || 'Xuất PDF'}
+          </button>
+          <button
+            onClick={handlePrintReport}
+            disabled={data.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Printer className="w-4 h-4" />
+            {t('print') || 'In báo cáo'}
           </button>
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Tổng doanh thu */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-purple-500 to-purple-600 mb-4 flex items-center justify-center">
-            <DollarSign className="w-6 h-6 text-white" />
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            {formatCurrency(totalRevenue)}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Tổng doanh thu
-          </div>
-          <div className="mt-2 text-xs text-gray-400">
-            {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
-          </div>
-        </div>
-
-        {/* Tổng số vé */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 mb-4 flex items-center justify-center">
-            <FileText className="w-6 h-6 text-white" />
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            {totalBookings.toLocaleString('vi-VN')}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Tổng số vé đã bán
-          </div>
-        </div>
-
-        {/* Nhà xe hoạt động */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 mb-4 flex items-center justify-center">
-            <Building2 className="w-6 h-6 text-white" />
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            {activeCompanies}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Nhà xe có doanh thu
-          </div>
-          <div className="mt-2 text-xs text-gray-400">
-            / {companies.length} tổng số
-          </div>
-        </div>
-
-        {/* Doanh thu trung bình */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 mb-4 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-white" />
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            {formatCurrency(avgRevenue)}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Doanh thu trung bình/nhà xe
-          </div>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      {/* Bộ lọc */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('fromDate') || 'Từ ngày'}
+            </label>
             <input
-              type="text"
-              placeholder="Tìm kiếm nhà xe..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:text-white"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
-
-          {/* Company Filter */}
-          <div className="w-full sm:w-64 flex items-center gap-2 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-700">
-            <Filter className="w-4 h-4 text-gray-500" />
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('toDate') || 'Đến ngày'}
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('company') || 'Nhà xe'}
+            </label>
             <select
               value={selectedCompany}
               onChange={(e) => setSelectedCompany(e.target.value)}
-              className="w-full bg-transparent text-sm focus:outline-none dark:text-white"
+              className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              <option value="all">Tất cả nhà xe</option>
-              {companies.map(company => (
-                <option key={company.companyId} value={company.companyId}>
-                  {company.companyName}
-                </option>
+              <option value="all">{t('allCompanies') || 'Tất cả nhà xe'}</option>
+              {companyList.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
           </div>
-
-          {/* Sort Info */}
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 rounded-xl">
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              Sắp xếp: {sortBy === 'totalRevenue' ? 'Doanh thu' : 
-                       sortBy === 'totalBookings' ? 'Số vé' : 
-                       sortBy === 'revenueGrowth' ? 'Tăng trưởng' : 'Đánh giá'}
-              {sortOrder === 'desc' ? ' ↓' : ' ↑'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Companies Revenue Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Chi tiết doanh thu nhà xe
-          </h3>
-        </div>
-
-        {filteredCompanies.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700/50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nhà xe
-                  </th>
-                  <th 
-                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                    onClick={() => handleSort('totalRevenue')}
-                  >
-                    <div className="flex items-center gap-1">
-                      Doanh thu
-                      {sortBy === 'totalRevenue' && (
-                        <ChevronDown className={`w-4 h-4 transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                    onClick={() => handleSort('totalBookings')}
-                  >
-                    <div className="flex items-center gap-1">
-                      Số vé
-                      {sortBy === 'totalBookings' && (
-                        <ChevronDown className={`w-4 h-4 transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Số chuyến
-                  </th>
-                  <th 
-                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                    onClick={() => handleSort('averageRating')}
-                  >
-                    <div className="flex items-center gap-1">
-                      Đánh giá
-                      {sortBy === 'averageRating' && (
-                        <ChevronDown className={`w-4 h-4 transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                    onClick={() => handleSort('revenueGrowth')}
-                  >
-                    <div className="flex items-center gap-1">
-                      Tăng trưởng
-                      {sortBy === 'revenueGrowth' && (
-                        <ChevronDown className={`w-4 h-4 transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Thao tác
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredCompanies.map((company) => (
-                  <tr key={company.companyId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {company.logoUrl ? (
-                          <img 
-                            src={company.logoUrl} 
-                            alt={company.companyName}
-                            className="w-10 h-10 rounded-xl object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                            {company.companyName.charAt(0)}
-                          </div>
-                        )}
-                        <div className="ml-3">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {company.companyName}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Mã số: {company.companyCode}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(company.totalRevenue)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {company.totalBookings.toLocaleString('vi-VN')}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {company.totalTrips}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className="text-yellow-400 mr-1">★</span>
-                        <span className="text-sm text-gray-900 dark:text-white">
-                          {company.averageRating.toFixed(1)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-sm font-medium ${getGrowthColor(company.revenueGrowth)}`}>
-                        {getGrowthIcon(company.revenueGrowth)} {Math.abs(company.revenueGrowth).toFixed(1)}%
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => {
-                          // Navigate to company detail
-                          window.location.href = `/admin/companies/${company.companyId}`;
-                        }}
-                        className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="p-12 text-center">
-            <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="w-12 h-12 text-gray-400" />
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('search') || 'Tìm kiếm'}
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder={t('searchCompany') || 'Tìm theo tên nhà xe...'}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
             </div>
-            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              Không có dữ liệu doanh thu
-            </h4>
-            <p className="text-gray-500 max-w-md mx-auto">
-              Chưa có dữ liệu doanh thu trong tháng này
-            </p>
           </div>
-        )}
+        </div>
+
+        {/* Lọc nhanh */}
+        <div className="flex items-center gap-2 mt-4">
+          <span className="text-sm text-gray-500">{t('quickFilter') || 'Lọc nhanh:'}</span>
+          <button
+            onClick={() => setDateRange(7)}
+            className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            7 {t('days') || 'ngày'}
+          </button>
+          <button
+            onClick={() => setDateRange(30)}
+            className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            30 {t('days') || 'ngày'}
+          </button>
+          <button
+            onClick={() => {
+              const date = new Date();
+              setStartDate(format(new Date(date.getFullYear(), date.getMonth(), 1), 'yyyy-MM-dd'));
+              setEndDate(format(date, 'yyyy-MM-dd'));
+            }}
+            className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            {t('thisMonth') || 'Tháng này'}
+          </button>
+          <button
+            onClick={() => {
+              const date = new Date();
+              setStartDate(format(new Date(date.getFullYear(), 0, 1), 'yyyy-MM-dd'));
+              setEndDate(format(date, 'yyyy-MM-dd'));
+            }}
+            className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            {t('thisYear') || 'Năm nay'}
+          </button>
+        </div>
       </div>
+
+      {/* Hiển thị lỗi nếu có */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl text-center">
+          <div className="text-red-600 dark:text-red-400 text-5xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            {t('error') || 'Lỗi'}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={handleRetry}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            {t('retry') || 'Thử lại'}
+          </button>
+        </div>
+      )}
+
+      {/* Cards tổng quan (chỉ hiển thị nếu có dữ liệu) */}
+      {!error && data.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('totalRevenue') || 'Tổng doanh thu'}</p>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCompactCurrency(totalRevenue)}</p>
+              <p className="text-xs text-gray-400 mt-2">{formatDateRange()}</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <Ticket className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('totalBookings') || 'Tổng số vé'}</p>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalBookings.toLocaleString('vi-VN')}</p>
+              <p className="text-xs text-gray-400 mt-2">{formatDateRange()}</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('companies') || 'Nhà xe'}</p>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{filteredData.length}</p>
+              <p className="text-xs text-gray-400 mt-2">{t('activeCompanies') || 'Có doanh thu'}</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('averageOrderValue') || 'Giá trị TB/đơn'}</p>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {totalBookings > 0 ? formatCompactCurrency(Math.round(totalRevenue / totalBookings)) : '0đ'}
+              </p>
+              <p className="text-xs text-gray-400 mt-2">{t('estimatedValue') || 'Giá trị ước tính'}</p>
+            </div>
+          </div>
+
+          {/* Bảng doanh thu */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {selectedCompany === "all"
+                  ? (t('revenueByCompany') || 'Doanh thu theo nhà xe')
+                  : (t('revenueDetails') || 'Chi tiết doanh thu')}
+              </h3>
+              <span className="text-sm text-gray-500">
+                {t('showing') || 'Hiển thị'} {filteredData.length} {t('of') || 'trên'} {data.length}{' '}
+                {t('companies') || 'nhà xe'}
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700/50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('company') || 'Nhà xe'}
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('code') || 'Mã số'}
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('bookings') || 'Số vé'}
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('trips') || 'Số chuyến'}
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('rating') || 'Đánh giá'}
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('growth') || 'Tăng trưởng'}
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('revenue') || 'Doanh thu'}
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('actions') || 'Thao tác'}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                        {t('noRevenueData') || 'Không có dữ liệu doanh thu'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredData.map(item => (
+                      <tr key={item.companyId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            {item.logoUrl ? (
+                              <img
+                                src={item.logoUrl}
+                                alt={item.companyName}
+                                className="w-8 h-8 rounded-full object-cover"
+                                onError={e => ((e.target as HTMLImageElement).src = 'https://via.placeholder.com/32')}
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                                  {item.companyCode?.substring(0, 2) || '?'}
+                                </span>
+                              </div>
+                            )}
+                            <span className="font-medium text-gray-900 dark:text-white">{item.companyName}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right text-gray-600 dark:text-gray-400 font-mono">
+                          {item.companyCode || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 text-right text-gray-900 dark:text-white">
+                          {(item.totalBookings || 0).toLocaleString('vi-VN')}
+                        </td>
+                        <td className="px-6 py-4 text-right text-gray-900 dark:text-white">
+                          {(item.totalTrips || 0).toLocaleString('vi-VN')}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="text-yellow-500">★</span>
+                            <span className="text-gray-900 dark:text-white font-medium">
+                              {(item.averageRating || 0).toFixed(1)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div
+                            className={`flex items-center justify-end gap-1 ${
+                              (item.revenueGrowth || 0) > 0
+                                ? 'text-green-600'
+                                : (item.revenueGrowth || 0) < 0
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                            }`}
+                          >
+                            {(item.revenueGrowth || 0) > 0 ? (
+                              <ArrowUp className="w-4 h-4" />
+                            ) : (item.revenueGrowth || 0) < 0 ? (
+                              <ArrowDown className="w-4 h-4" />
+                            ) : null}
+                            <span className="font-medium">{Math.abs(item.revenueGrowth || 0).toFixed(1)}%</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right font-semibold text-green-600 dark:text-green-400">
+                          {formatCurrency(item.totalRevenue || 0)}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => setSelectedCompany(item.companyId)}
+                            className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 text-sm font-medium"
+                          >
+                            {t('viewDetails') || 'Xem chi tiết'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+                {filteredData.length > 0 && (
+                  <tfoot className="bg-gray-50 dark:bg-gray-700/50">
+                    <tr>
+                      <td colSpan={2} className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                        {t('total') || 'Tổng cộng'}
+                      </td>
+                      <td className="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">
+                        {totalBookings.toLocaleString('vi-VN')}
+                      </td>
+                      <td className="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">
+                        {filteredData.reduce((sum, item) => sum + (item.totalTrips || 0), 0).toLocaleString('vi-VN')}
+                      </td>
+                      <td colSpan={2} className="px-6 py-4 text-right text-gray-500">
+                        {t('average') || 'Trung bình'}:{' '}
+                        {(filteredData.reduce((sum, item) => sum + (item.averageRating || 0), 0) / filteredData.length).toFixed(
+                          1
+                        )}
+                        ★
+                      </td>
+                      <td className="px-6 py-4 text-right font-bold text-green-600 dark:text-green-400">
+                        {formatCurrency(totalRevenue)}
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+      
+      {/* Hiển thị thông báo khi không có dữ liệu */}
+      {!error && data.length === 0 && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-6 rounded-2xl text-center">
+          <div className="text-yellow-600 dark:text-yellow-400 text-5xl mb-4">📊</div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            {t('noData') || 'Không có dữ liệu'}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {t('noDataMessage') || 'Không có dữ liệu doanh thu trong khoảng thời gian này. Vui lòng thử lại với khoảng thời gian khác.'}
+          </p>
+          <button
+            onClick={() => {
+              setStartDate(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd'));
+              setEndDate(format(new Date(), 'yyyy-MM-dd'));
+              handleRetry();
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            {t('resetAndRetry') || 'Đặt lại và thử lại'}
+          </button>
+        </div>
+      )}
     </div>
   );
-}   
+}
