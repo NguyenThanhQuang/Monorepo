@@ -1,5 +1,5 @@
 // src/components/layout/AdminLayout.tsx
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode, type CSSProperties } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -88,12 +88,20 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
 
+  // Keep the main content from being hidden behind the fixed sidebar.
+  // We use a CSS variable + media query (in src/style/overrides.css) so the layout
+  // works even if the checked-in Tailwind output is missing responsive variants.
+  const sidebarWidth = sidebarOpen ? "16rem" : "5rem"; // matches w-64 / w-20
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
+      style={{ ["--admin-sidebar-width" as any]: sidebarWidth } as CSSProperties}
+    >
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 admin-overlay"
           onClick={() => setMobileSidebarOpen(false)}
         />
       )}
@@ -101,11 +109,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar */}
       <aside
         className={`
+          admin-sidebar ${mobileSidebarOpen ? "is-mobile-open" : ""}
           fixed top-0 left-0 h-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl
           border-r border-gray-200/50 dark:border-gray-700/50 shadow-2xl shadow-black/5
           transition-all duration-300 ease-in-out z-50
           ${sidebarOpen ? "w-64" : "w-20"}
-          ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
         {/* Logo */}
@@ -123,7 +131,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="hidden lg:block p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="admin-desktop-only p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label="Toggle sidebar"
           >
             <ChevronRight
@@ -135,7 +143,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
           <button
             onClick={() => setMobileSidebarOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="admin-mobile-only p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
             aria-label="Close sidebar"
           >
             <X className="w-5 h-5 text-gray-500" />
@@ -238,13 +246,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Main Content */}
       <main
         className={`
-          transition-all duration-300 min-h-screen
-          ${sidebarOpen ? "lg:ml-64" : "lg:ml-20"}
-          ml-0
+          admin-main transition-all duration-300 min-h-screen
         `}
       >
         {/* Mobile Header */}
-        <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 z-30 flex items-center px-4">
+        <div className="admin-mobile-header fixed top-0 left-0 right-0 h-16 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 z-30 flex items-center px-4">
           <button
             onClick={() => setMobileSidebarOpen(true)}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -281,7 +287,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
 
         {/* Content Area */}
-        <div className="pt-16 lg:pt-0">
+        <div className="admin-content-wrap">
           <div className="p-6 lg:p-8">{children}</div>
         </div>
       </main>
