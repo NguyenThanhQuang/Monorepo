@@ -24,6 +24,21 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { ReviewsService } from './reviews.service';
+import { z } from 'zod';
+
+// Local schemas for Driver Rating feature
+const CreateDriverReviewSchemaLocal = z.object({
+  bookingId: z.string().min(1),
+  rating: z.coerce.number().min(1).max(5),
+  comment: z.string().max(2000).optional(),
+  isAnonymous: z.coerce.boolean().optional(),
+});
+
+const DriverReviewsQuerySchemaLocal = z.object({
+  driverId: z.string().min(1),
+  limit: z.coerce.number().optional(),
+  skip: z.coerce.number().optional(),
+});
 
 @Controller('reviews')
 export class ReviewsController {
@@ -54,6 +69,54 @@ export class ReviewsController {
   @UsePipes(new ZodValidationPipe(CreateGuestReviewSchema))
   createAsGuest(@Body() payload: sharedTypes.CreateGuestReviewPayload) {
     return this.reviewsService.createAsGuest(payload);
+  }
+
+
+  @Post('driver')
+  @UseGuards(JwtAuthGuard)
+  @UsePipes(new ZodValidationPipe(CreateDriverReviewSchemaLocal))
+  createDriverReview(
+    @Body()
+    payload: {
+      bookingId: string;
+      rating: number;
+      comment?: string;
+      isAnonymous?: boolean;
+    },
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+  ) {
+    return this.reviewsService.createDriverReview(payload, user);
+  }
+
+  @Get('driver')
+  @UsePipes(new ZodValidationPipe(DriverReviewsQuerySchemaLocal))
+  getDriverReviews(
+    @Query()
+    query: { driverId: string; limit?: number; skip?: number },
+  ) {
+    return this.reviewsService.getDriverReviews(query.driverId, {
+      limit: query.limit,
+      skip: query.skip,
+    });
+  }
+
+  @Get('driver/me')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(
+    (sharedTypes.UserRole as any).DRIVER ?? ('driver' as any),
+    sharedTypes.UserRole.COMPANY_ADMIN,
+    sharedTypes.UserRole.ADMIN,
+  )
+  getMyDriverReviews(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Query('limit') limit?: string,
+    @Query('skip') skip?: string,
+  ) {
+    return this.reviewsService.getMyDriverReviews(user, {
+      limit: limit ? Number(limit) : undefined,
+      skip: skip ? Number(skip) : undefined,
+      includeHidden: false,
+    });
   }
 
   @Patch(':id/my-review')

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { User, Lock, Shield, ArrowLeft } from "lucide-react";
 import { authApi } from "@obtp/api-client";
-import { useLanguage } from "../../../../../portal/src/contexts/LanguageContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { UserRole } from "@obtp/shared-types";
-import { ForgotPasswordModal } from "../../../../../portal/src/components/auth/ForgotPassword";
+import { ForgotPasswordModal } from "../components/ForgotPasswordModal";
 
 interface AdminLoginProps {
   onLoginSuccess: (adminData: {
@@ -51,6 +51,7 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
 
       // Lưu token
       localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("adminUser", JSON.stringify({ id: data.user.id, name: data.user.name, email: data.user.email }));
 
       onLoginSuccess({
         name: data.user.name,
@@ -99,7 +100,7 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
 
             {/* Identifier */}
             <div>
-              <label className="text-sm">
+              <label className="text-sm text-gray-700 dark:text-gray-300">
                 Email / Phone
               </label>
 
@@ -110,7 +111,8 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="w-full pl-10 py-3 bg-gray-50 dark:bg-gray-700 border-2 rounded-xl"
+                                    placeholder={t("emailPlaceholder")}
+className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 transition-all"
                   required
                 />
               </div>
@@ -118,7 +120,7 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
 
             {/* Password */}
             <div>
-              <label className="text-sm">{t("password")}</label>
+              <label className="text-sm text-gray-700 dark:text-gray-300">{t("password")}</label>
 
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -127,7 +129,8 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 py-3 bg-gray-50 dark:bg-gray-700 border-2 rounded-xl"
+                                    placeholder={t("passwordPlaceholder")}
+className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 transition-all"
                   required
                 />
               </div>

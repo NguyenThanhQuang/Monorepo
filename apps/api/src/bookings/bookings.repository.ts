@@ -49,6 +49,27 @@ export class BookingsRepository {
       .exec();
   }
 
+  async findByIdWithDetails(
+    id: string | Types.ObjectId,
+    session?: ClientSession,
+  ): Promise<BookingDocument | null> {
+    return this.bookingModel
+      .findById(id)
+      .session(session || null)
+      .populate({
+        path: 'tripId',
+        select: 'route departureTime vehicleId companyId status',
+        populate: [
+          { path: 'companyId', select: 'name logoUrl' },
+          { path: 'route.fromLocationId', select: 'name fullAddress province' },
+          { path: 'route.toLocationId', select: 'name fullAddress province' },
+          { path: 'vehicleId', select: 'licensePlate' },
+        ],
+      })
+      .populate({ path: 'checkedInByDriverId', select: 'name phone email' })
+      .exec();
+  }
+
   async findOne(
     filter: QueryFilter<BookingDocument>,
   ): Promise<BookingDocument | null> {
@@ -197,5 +218,19 @@ export class BookingsRepository {
         },
       },
     ]);
+  }
+
+  async findExpiredHolds(
+    now: Date = new Date(),
+    limit = 200,
+  ): Promise<BookingDocument[]> {
+    return this.bookingModel
+      .find({
+        status: BookingStatus.HELD,
+        heldUntil: { $exists: true, $lte: now },
+      })
+      .sort({ heldUntil: 1 })
+      .limit(limit)
+      .exec();
   }
 }

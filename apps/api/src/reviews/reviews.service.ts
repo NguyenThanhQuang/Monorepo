@@ -48,7 +48,10 @@ export class ReviewsService {
       );
     }
 
-    const exist = await this.reviewsRepository.existsByBookingId(bookingId);
+    const exist = await this.reviewsRepository.existsByBookingIdAndType(
+      bookingId,
+      'trip',
+    );
     if (exist) throw new ConflictException('Booking này đã được đánh giá.');
 
     const trip = await this.tripsService.findOne(tripId);
@@ -85,6 +88,7 @@ export class ReviewsService {
     }
 
     const review = await this.reviewsRepository.create({
+      targetType: 'trip',
       userId: new Types.ObjectId(user.id),
       bookingId: new Types.ObjectId(payload.bookingId),
       tripId: new Types.ObjectId(payload.tripId),
@@ -127,6 +131,7 @@ export class ReviewsService {
     }
 
     const review = await this.reviewsRepository.create({
+      targetType: 'trip',
       bookingId: new Types.ObjectId(payload.bookingId),
       tripId: new Types.ObjectId(payload.tripId),
       companyId: companyIdToSave,
@@ -144,6 +149,108 @@ export class ReviewsService {
     await this.bookingsRepository.save(booking);
 
     return review;
+  }
+
+
+  async createDriverReview(
+    payload: {
+      bookingId: string;
+      rating: number;
+      comment?: string;
+      isAnonymous?: boolean;
+    },
+    user: AuthUserResponse,
+  ): Promise<ReviewDocument> {
+    if (!payload?.bookingId) {
+      throw new BadRequestException('bookingId is required');
+    }
+
+    const booking = await this.bookingsRepository.findById(payload.bookingId);
+    if (!booking) throw new NotFoundException('Đơn hàng không tồn tại.');
+
+    if (!booking.userId || booking.userId.toString() !== user.id) {
+      throw new ForbiddenException('Booking này không thuộc tài khoản của bạn.');
+    }
+
+    const status = String((booking as any)?.status || '').toUpperCase();
+    const payStatus = String((booking as any)?.paymentStatus || '').toUpperCase();
+    if (status !== 'CONFIRMED' || payStatus !== 'PAID') {
+      throw new BadRequestException(
+        'Booking chưa thanh toán hoặc chưa được xác nhận.',
+      );
+    }
+
+    if (!(booking as any).checkedInAt || !(booking as any).checkedInByDriverId) {
+      throw new BadRequestException(
+        'Vé chưa được check-in, chưa thể đánh giá tài xế.',
+      );
+    }
+
+    const exist = await this.reviewsRepository.existsByBookingIdAndType(
+      payload.bookingId,
+      'driver',
+    );
+    if (exist) throw new ConflictException('Booking này đã đánh giá tài xế.');
+
+    const tripId = booking.tripId.toString();
+    const trip = await this.tripsService.findOne(tripId);
+
+    let companyIdToSave: Types.ObjectId;
+    if (isPopulated(trip.companyId)) {
+      companyIdToSave = new Types.ObjectId(trip.companyId._id);
+    } else {
+      companyIdToSave = new Types.ObjectId(trip.companyId.toString());
+    }
+
+    const driverId = new Types.ObjectId((booking as any).checkedInByDriverId);
+
+    const review = await this.reviewsRepository.create({
+      targetType: 'driver',
+      driverId,
+
+      userId: new Types.ObjectId(user.id),
+      bookingId: new Types.ObjectId(payload.bookingId),
+      tripId: new Types.ObjectId(tripId),
+      companyId: companyIdToSave,
+
+      rating: payload.rating,
+      comment: payload.comment,
+      isAnonymous: !!payload.isAnonymous,
+
+      displayName: payload.isAnonymous
+        ? `${user.name.charAt(0).toUpperCase()}***`
+        : user.name,
+    });
+
+    (booking as any).driverReviewId = review._id;
+    await this.bookingsRepository.save(booking);
+
+    return review;
+  }
+
+  async getDriverReviews(
+    driverId: string,
+    opts?: { limit?: number; skip?: number; includeHidden?: boolean },
+  ) {
+    if (!Types.ObjectId.isValid(driverId)) {
+      throw new BadRequestException('driverId is invalid');
+    }
+    const did = new Types.ObjectId(driverId);
+
+    const stats = await this.reviewsRepository.getDriverRatingStats(
+      did,
+      !!opts?.includeHidden,
+    );
+    const items = await this.reviewsRepository.findDriverReviews(did, opts);
+
+    return { ok: true, stats, items };
+  }
+
+  async getMyDriverReviews(
+    user: AuthUserResponse,
+    opts?: { limit?: number; skip?: number; includeHidden?: boolean },
+  ) {
+    return this.getDriverReviews(user.id, opts);
   }
 
   async updateReview(
@@ -183,7 +290,7 @@ export class ReviewsService {
   }
 
   async findAllPublic(query: ReviewQuery): Promise<ReviewDocument[]> {
-    const filter: any = { isVisible: true };
+    const filter: any = { isVisible: true, targetType: 'trip' };
 
     if (query.companyId) filter.companyId = new Types.ObjectId(query.companyId);
     if (query.tripId) filter.tripId = new Types.ObjectId(query.tripId);

@@ -42,25 +42,14 @@ export class PaymentsService implements OnModuleInit {
   }
 
   onModuleInit() {
-    const PayOSLib = require('@payos/node');
-    let PayOSConstructor: new (arg0: string, arg1: string, arg2: string) => any;
+    // @payos/node v2.x
+    const { PayOS } = require('@payos/node');
 
-    if (typeof PayOSLib === 'function') {
-      PayOSConstructor = PayOSLib;
-    } else if (PayOSLib.default && typeof PayOSLib.default === 'function') {
-      PayOSConstructor = PayOSLib.default;
-    } else if (PayOSLib.PayOS && typeof PayOSLib.PayOS === 'function') {
-      PayOSConstructor = PayOSLib.PayOS;
-    } else {
-      this.logger.error('CRITICAL: Cannot verify PayOS Constructor', PayOSLib);
-      throw new InternalServerErrorException('PayOS Library Load Failed');
-    }
-
-    this.payOS = new PayOSConstructor(
-      this.configService.getOrThrow<string>('PAYOS_CLIENT_ID'),
-      this.configService.getOrThrow<string>('PAYOS_API_KEY'),
-      this.configService.getOrThrow<string>('PAYOS_CHECKSUM_KEY'),
-    );
+    this.payOS = new PayOS({
+      clientId: this.configService.getOrThrow<string>('PAYOS_CLIENT_ID'),
+      apiKey: this.configService.getOrThrow<string>('PAYOS_API_KEY'),
+      checksumKey: this.configService.getOrThrow<string>('PAYOS_CHECKSUM_KEY'),
+    });
 
     this.logger.log('PayOS Initialized Successfully');
   }
@@ -91,7 +80,27 @@ export class PaymentsService implements OnModuleInit {
     if (!booking.heldUntil || new Date(booking.heldUntil).getTime() < now) {
       throw new BadRequestException('Đơn hàng đã hết hạn giữ chỗ.');
     }
+    // ✅ nếu đã có orderCode, thử lấy lại thông tin link để khỏi tạo order mới
+    if (booking.paymentOrderCode) {
+      try {
+        const resp = await this.payOS.get(
+          `/v2/payment-requests/${booking.paymentOrderCode}`,
+        );
+        const info = (resp as any)?.data ?? resp;
 
+        const st = String(info?.status ?? '').toUpperCase();
+        // nếu vẫn pending thì trả lại link cũ
+        if (st === 'PENDING' && info?.checkoutUrl) {
+          return {
+            checkoutUrl: info.checkoutUrl,
+            orderCode: info.orderCode ?? booking.paymentOrderCode,
+            qrCode: info.qrCode,
+          };
+        }
+      } catch {
+        // ignore -> sẽ tạo link mới
+      }
+    }
     const orderCode = generatePaymentOrderCode();
     const description = formatPaymentDescription(orderCode);
 
@@ -118,7 +127,7 @@ export class PaymentsService implements OnModuleInit {
     });
 
     try {
-      const paymentLink = await this.payOS.createPaymentLink(paymentData);
+      const paymentLink = await this.payOS.paymentRequests.create(paymentData);
 
       return {
         checkoutUrl: paymentLink.checkoutUrl,
@@ -139,7 +148,7 @@ export class PaymentsService implements OnModuleInit {
 
     const { data, signature } = payload;
 
-    if (!this.verifyWebhookSignature(data, signature)) {
+    if (!(await this.verifyWebhookSignature(payload))) {
       this.logger.error(
         `Webhook Signature Invalid! OrderCode: ${data.orderCode}`,
       );
@@ -212,17 +221,108 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  private verifyWebhookSignature(
-    data: any,
-    incomingSignature: string,
-  ): boolean {
-    const checksumKey = this.configService.get<string>('PAYOS_CHECKSUM_KEY');
-    if (!checksumKey) return false;
+  private async verifyWebhookSignature(
+    payload: PayOSWebhookPayload,
+  ): Promise<boolean> {
     try {
-      return this.payOS.verifyPaymentWebhookData(data);
+      await this.payOS.webhooks.verify(payload);
+      return true;
     } catch (e) {
-      this.logger.warn(`PayOS Library verify failed, fallback? ${e}`);
+      this.logger.warn(`PayOS webhook verify failed: ${e}`);
       return false;
     }
+  }
+
+  async syncPaymentByBookingId(bookingId: string, user?: AuthUserResponse) {
+    const booking = await this.bookingsRepository.findById(bookingId);
+    if (!booking) throw new NotFoundException('Đơn hàng không tồn tại.');
+
+    if (booking.userId && user && booking.userId.toString() !== user.id) {
+      throw new ForbiddenException('Không có quyền kiểm tra đơn này.');
+    }
+
+    if (!booking.paymentOrderCode) {
+      return { ok: false, message: 'Đơn chưa có mã thanh toán PayOS.' };
+    }
+
+    const resp = await this.payOS.get(
+      `/v2/payment-requests/${booking.paymentOrderCode}`,
+    );
+    const info = (resp as any)?.data ?? resp;
+    const payStatus = String(info?.status ?? '').toUpperCase();
+
+    // PAID -> confirm booking + sinh ticketCode
+    if (payStatus === 'PAID') {
+      await this.bookingsService.confirmBooking(bookingId, {
+        paidAmount: Number(info?.amount ?? booking.totalAmount),
+        paymentMethod: 'PayOS',
+        transactionDateTime:
+          info?.transactionDateTime || new Date().toISOString(),
+      });
+      return { ok: true, status: 'PAID' };
+    }
+
+    // CANCELLED/EXPIRED -> cancel hold + nhả ghế
+    if (payStatus === 'CANCELLED' || payStatus === 'EXPIRED') {
+      await this.bookingsService.cancelExpiredHoldSystem(bookingId);
+      return { ok: true, status: payStatus };
+    }
+
+    return { ok: true, status: payStatus || 'PENDING' };
+  }
+
+  async devConfirmPayment(bookingId: string, user?: AuthUserResponse) {
+    if (this.configService.get<string>('PAYMENT_DEV_MODE') !== 'true') {
+      throw new ForbiddenException(
+        'DEV confirm đang tắt. Bật PAYMENT_DEV_MODE=true để dùng.',
+      );
+    }
+
+    const booking = await this.bookingsRepository.findById(bookingId);
+    if (!booking) throw new NotFoundException('Đơn hàng không tồn tại.');
+
+    if (booking.status !== BookingStatus.HELD) {
+      throw new BadRequestException('Chỉ DEV-confirm được đơn đang HELD.');
+    }
+
+    if (booking.userId && user && booking.userId.toString() !== user.id) {
+      throw new ForbiddenException('Không có quyền confirm đơn này.');
+    }
+
+    // nếu quá hạn giữ chỗ thì không cho confirm giả
+    const now = Date.now();
+    if (!booking.heldUntil || new Date(booking.heldUntil).getTime() < now) {
+      throw new BadRequestException('Đơn hàng đã hết hạn giữ chỗ.');
+    }
+
+    // cập nhật payment record (DEV) cho sạch
+    const orderCode = booking.paymentOrderCode ?? generatePaymentOrderCode();
+    booking.paymentOrderCode = orderCode;
+    await this.bookingsRepository.save(booking);
+
+    let tx = await this.paymentsRepository.findByOrderCode(orderCode);
+    if (!tx) {
+      tx = await this.paymentsRepository.create({
+        orderCode,
+        bookingId: booking._id,
+        amount: booking.totalAmount,
+        status: PaymentStatus.PENDING,
+        description: formatPaymentDescription(orderCode),
+        paymentMethod: 'DEV',
+      });
+    }
+    tx.status = PaymentStatus.PAID;
+    tx.paymentMethod = 'DEV';
+    tx.transactionDateTime = new Date().toISOString();
+    await this.paymentsRepository.save(tx);
+
+    // ✅ điểm quan trọng: gọi confirmBooking để sinh ticketCode + BOOKED ghế
+    const confirmed = await this.bookingsService.confirmBooking(bookingId, {
+      paidAmount: booking.totalAmount,
+      paymentMethod: 'DEV',
+      transactionDateTime: new Date().toISOString(),
+    });
+
+    return { ok: true, status: 'PAID', ticketCode: confirmed.ticketCode };
   }
 }

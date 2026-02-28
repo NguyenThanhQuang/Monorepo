@@ -24,7 +24,7 @@ export class UserDefinition {
   name: string;
 
   @Prop({
-    type: [{ type: String, enum: Object.values(UserRole) }],
+    type: [{ type: String, enum: [...Object.values(UserRole), "driver"] }],
     required: true,
     default: [UserRole.USER],
   })

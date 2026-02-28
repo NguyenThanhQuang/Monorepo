@@ -9,13 +9,19 @@ const passwordSchema = z
       "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt",
   });
 
-export const RegisterSchema = z.object({
-  email: z.email({ message: "Email không đúng định dạng" }),
+export const RegisterSchema = z
+  .object({
+    email: z.email({ message: "Email không đúng định dạng" }),
+    phone: z.string().min(1, { message: "Số điện thoại không được để trống" }),
+    name: z.string().min(1, { message: "Tên không được để trống" }),
 
-  phone: z.string().min(1, { message: "Số điện thoại không được để trống" }),
-  password: z.string().min(6, { message: "Mật khẩu phải có ít nhất 6 ký tự" }),
-  name: z.string().min(1, { message: "Tên không được để trống" }),
-});
+    password: passwordSchema,                 // ✅ mạnh
+    confirmPassword: z.string().min(1, { message: "Vui lòng xác nhận mật khẩu" }), // ✅ thêm
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Xác nhận mật khẩu không khớp",
+    path: ["confirmPassword"],
+  });
 
 export const LoginSchema = z.object({
   identifier: z

@@ -1,8 +1,3 @@
-import { Route } from "lucide-react";
-import { AdminLayout } from "../components/layout/AdminLayout";
-import { RevenueDashboard } from "../features/RevenueDashboard/RevenueDashboard";
-
-// Định nghĩa React Router (Lazy loading pages)
-<Route path="/admin" element={<AdminLayout />}>
-   <Route path="revenue" element={<RevenueDashboard />} />
-</Route>
+// This project now defines routes in src/app/App.tsx using react-router-dom v7.
+// Keeping this file to avoid breaking imports in older references.
+export {};

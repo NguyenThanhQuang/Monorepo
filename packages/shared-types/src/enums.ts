@@ -8,6 +8,7 @@ export enum UserRole {
   ADMIN = "admin",
   USER = "user",
   STAFF = "staff",
+  DRIVER = 'driver',
   COMPANY_ADMIN = "company_admin",
 }
 

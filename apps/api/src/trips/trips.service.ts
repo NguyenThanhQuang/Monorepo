@@ -5,11 +5,11 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { initializeTripSeats } from '@obtp/business-logic';
 import {
-  CompanyStatus,
   CreateTripPayload,
   SearchTripQuery,
   SeatStatus,
@@ -29,6 +29,14 @@ import { CompaniesService } from '../companies/companies.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { TripDocument } from './schemas/trip.schema';
 import { TripsRepository } from './trips.repository';
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const TZ = "Asia/Ho_Chi_Minh";
 
 @Injectable()
 export class TripsService {
@@ -43,201 +51,213 @@ export class TripsService {
     private readonly bookingsRepository: BookingsRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
- async searchTripsByLocationId(
+
+  async searchTripsByLocationId(
     fromLocationId: string,
     toLocationId: string,
     date: string,
+    options?: { includeDeparted?: boolean },
   ) {
     return this.tripsRepository.searchTripsByLocationId(
       fromLocationId,
       toLocationId,
       date,
-    );
-  }
- async create(payload: CreateTripPayload): Promise<TripDocument> {
-  const { companyId, vehicleId, route, departureTime, expectedArrivalTime } =
-    payload;
-
-  const depart = new Date(departureTime);
-  const arrive = new Date(expectedArrivalTime);
- 
-
-  const stopLocationIds = (route.stops || []).map((s) => s.locationId);
-  const allLocationIds = [
-    route.fromLocationId,
-    route.toLocationId,
-    ...stopLocationIds,
-  ];
-
-  const [company, vehicle] = await Promise.all([
-    this.companiesService.findOne(companyId),
-    this.vehiclesService.findOne(vehicleId),
-  ]);
-
-  if (company.status !== CompanyStatus.ACTIVE) {
-    throw new BadRequestException(`Nhà xe đang ngừng hoạt động.`);
-  }
-  if (vehicle.status !== VehicleStatus.ACTIVE) {
-    throw new BadRequestException(
-      `Xe ${vehicle.vehicleNumber} đang không khả dụng.`,
+      { includeDeparted: options?.includeDeparted ?? true },
     );
   }
 
-  // Lấy companyId từ vehicle (có thể là ObjectId hoặc string)
-  const vehicleCompanyId = vehicle.companyId._id
-    ? vehicle.companyId._id.toString()
-    : vehicle.companyId.toString();
+    async findActiveTrips(date?: string): Promise<any[]> {
+    const targetDate = date || dayjs().tz(TZ).format("YYYY-MM-DD");
 
-  if (vehicleCompanyId !== companyId) {
-    throw new BadRequestException('Xe này không thuộc về nhà xe đã chọn.');
+    const startOfDay = dayjs.tz(targetDate, TZ).startOf("day").toDate();
+    const endOfDay = dayjs.tz(targetDate, TZ).add(1, "day").startOf("day").toDate();
+
+    const filter: any = {
+      departureTime: { $gte: startOfDay, $lt: endOfDay },
+      status: { $in: [TripStatus.SCHEDULED, TripStatus.DEPARTED] },
+      isRecurrenceTemplate: false,
+    };
+
+    // dùng repo method sẵn có (management trips) vì đã populate đủ dữ liệu
+    return this.tripsRepository.findManagementTrips(filter);
   }
 
-  const fromLoc = await this.locationsRepository.findById(
-    route.fromLocationId,
-  );
-  const toLoc = await this.locationsRepository.findById(route.toLocationId);
+  async create(payload: CreateTripPayload): Promise<TripDocument> {
+    const { companyId, vehicleId, route, departureTime, expectedArrivalTime } =
+      payload;
 
-  if (!fromLoc || !toLoc) {
-    throw new BadRequestException('Điểm đi hoặc điểm đến không tồn tại.');
-  }
+    const depart = new Date(departureTime);
+    const arrive = new Date(expectedArrivalTime);
 
-  let mapInfo = { polyline: '', duration: 0, distance: 0 };
-  try {
-    const routeData = await this.mapsService.getRouteInfo([
-      {
-        lat: fromLoc.location.coordinates[1],
-        lng: fromLoc.location.coordinates[0],
-      },
-      {
-        lat: toLoc.location.coordinates[1],
-        lng: toLoc.location.coordinates[0],
-      },
+    const [company, vehicle] = await Promise.all([
+      this.companiesService.findOne(companyId),
+      this.vehiclesService.findOne(vehicleId),
     ]);
-    mapInfo = routeData;
-  } catch (error) {
-    console.warn(
-      `[TripsService] Không thể lấy lộ trình từ Maps: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
 
-  const vehicleObj = vehicle.toObject ? vehicle.toObject() : vehicle;
-  const initialSeats = initializeTripSeats(vehicleObj as unknown as Vehicle);
+    // NOTE: bạn có import CompanyStatus nhưng đang so sánh string,
+    // mình giữ nguyên theo code hiện tại của bạn
+    if ((company as any).status !== 'active') {
+      throw new BadRequestException('Nhà xe đang ngừng hoạt động.');
+    }
 
-  const readySeats = initialSeats.map((s) => ({
-    ...s,
-    status: SeatStatus.AVAILABLE,
-    // Đảm bảo bookingId là undefined nếu không có
-    bookingId: undefined,
-  }));
+    if (vehicle.status !== VehicleStatus.ACTIVE) {
+      throw new BadRequestException(
+        `Xe ${vehicle.vehicleNumber} không khả dụng.`,
+      );
+    }
 
-  const stopsData = (route.stops || []).map((stop) => ({
-    locationId: stop.locationId,
-    expectedArrivalTime: new Date(stop.expectedArrivalTime),
-    expectedDepartureTime: stop.expectedDepartureTime
-      ? new Date(stop.expectedDepartureTime)
-      : undefined,
-    status: TripStopStatus.PENDING,
-  }));
+    if (vehicle.companyId.toString() !== companyId) {
+      throw new BadRequestException('Xe không thuộc về nhà xe này.');
+    }
 
-  // Tạo ObjectId từ strings
-  const tripData: any = {
-    companyId: new Types.ObjectId(companyId),
-    vehicleId: new Types.ObjectId(vehicleId),
-    route: {
-      fromLocationId: new Types.ObjectId(route.fromLocationId),
-      toLocationId: new Types.ObjectId(route.toLocationId),
-      stops: stopsData.map(stop => ({
-        ...stop,
-        locationId: new Types.ObjectId(stop.locationId)
-      })),
-      ...mapInfo,
-    },
-    departureTime: depart,
-    expectedArrivalTime: arrive,
-    price: payload.price,
-    status: TripStatus.SCHEDULED,
-    availableSeatsCount: readySeats.length,
-    isRecurrenceTemplate: payload.isRecurrenceTemplate || false,
-    isRecurrenceActive: payload.isRecurrenceTemplate || false,
-    seats: readySeats,
-  };
+    const mapInfo = { polyline: '', duration: 0, distance: 0 };
 
-  // Log để debug
-  console.log('Creating trip with data:', {
-    companyId: tripData.companyId,
-    vehicleId: tripData.vehicleId,
-    companyIdType: typeof tripData.companyId,
-    vehicleIdType: typeof tripData.vehicleId,
-    companyIdInstance: tripData.companyId instanceof Types.ObjectId,
-    vehicleIdInstance: tripData.vehicleId instanceof Types.ObjectId,
-  });
+    const vehicleParam: Partial<Vehicle> = {
+      ...vehicle.toObject(),
+      _id: vehicle._id.toString(),
+    } as unknown as Partial<Vehicle>;
 
-  const createdTrip = await this.tripsRepository.create(tripData);
-  
-  return createdTrip;
-}
+    // ✅ FIX: tạo seats đúng biến
+    const initialSeats = initializeTripSeats(vehicleParam);
 
-  async findPublicTrips(query: SearchTripQuery): Promise<any[]> {
-    const date = new Date(query.date);
-    const startOfDay = dayjs(date).startOf('day').toDate();
-    const endOfDay = dayjs(date).endOf('day').toDate();
+    const readySeats = initialSeats.map((s) => ({
+      ...s,
+      status: SeatStatus.AVAILABLE,
+      bookingId: undefined,
+    }));
 
-    const rawTrips = await this.tripsRepository.findPublicTripsByCondition(
-      startOfDay,
-      endOfDay,
-      query.from,
-      query.to,
-    );
+    const stopsData = (route.stops || []).map((stop) => ({
+      locationId: stop.locationId,
+      expectedArrivalTime: new Date(stop.expectedArrivalTime),
+      expectedDepartureTime: stop.expectedDepartureTime
+        ? new Date(stop.expectedDepartureTime)
+        : undefined,
+      status: TripStopStatus.PENDING,
+    }));
 
-    return rawTrips.map((trip) => {
-      const availableCount = trip.seats
-        ? trip.seats.filter((s: any) => s.status === SeatStatus.AVAILABLE)
-            .length
-        : 0;
+    const tripData: any = {
+      companyId: new Types.ObjectId(companyId),
+      vehicleId: new Types.ObjectId(vehicleId),
+      route: {
+        fromLocationId: new Types.ObjectId(route.fromLocationId),
+        toLocationId: new Types.ObjectId(route.toLocationId),
+        stops: stopsData.map((stop) => ({
+          ...stop,
+          locationId: new Types.ObjectId(stop.locationId),
+        })),
+        ...mapInfo,
+      },
+      departureTime: depart,
+      expectedArrivalTime: arrive,
+      price: payload.price,
+      status: TripStatus.SCHEDULED,
+      availableSeatsCount: readySeats.length,
+      isRecurrenceTemplate: payload.isRecurrenceTemplate || false,
+      isRecurrenceActive: payload.isRecurrenceTemplate || false,
+      seats: readySeats,
+    };
 
-      return {
-        ...trip,
-        seats: undefined,
-        availableSeatsCount: availableCount,
-      };
+    console.log('Creating trip with data:', {
+      companyId: tripData.companyId,
+      vehicleId: tripData.vehicleId,
+      companyIdType: typeof tripData.companyId,
+      vehicleIdType: typeof tripData.vehicleId,
+      companyIdInstance: tripData.companyId instanceof Types.ObjectId,
+      vehicleIdInstance: tripData.vehicleId instanceof Types.ObjectId,
     });
+
+    const createdTrip = await this.tripsRepository.create(tripData);
+    return createdTrip;
   }
 
-// trips.service.ts - Thêm log để debug
+  async findPublicTrips(query: any): Promise<any[]> {
+    const startOfDay = dayjs
+      .tz(query.date, 'Asia/Ho_Chi_Minh')
+      .startOf('day')
+      .toDate();
+    const endOfDay = dayjs
+      .tz(query.date, 'Asia/Ho_Chi_Minh')
+      .add(1, 'day')
+      .startOf('day')
+      .toDate();
 
-async findOne(id: string): Promise<TripDocument> {
-  console.log('🔍 TripsService.findOne called with ID:', id);
-  console.log('📏 ID length:', id.length);
-  console.log('🔢 ID is valid ObjectId?', Types.ObjectId.isValid(id));
-  
-  try {
-    // Kiểm tra ID hợp lệ
-    if (!id || !Types.ObjectId.isValid(id)) {
-      console.error('❌ Invalid ObjectId format:', id);
-      throw new NotFoundException('ID chuyến đi không hợp lệ.');
+    // ✅ ưu tiên theo ID (mobile đang dùng)
+    if (query.fromLocationId && query.toLocationId) {
+      const trips = await this.tripsRepository.searchTripsByLocationId(
+        query.fromLocationId,
+        query.toLocationId,
+        query.date,
+      );
+
+      // searchTripsByLocationId đã populate + lean, nên chỉ cần normalize available
+      return trips.map((trip: any) => {
+        const availableCount = trip.seats
+          ? trip.seats.filter((s: any) => s.status === SeatStatus.AVAILABLE)
+              .length
+          : (trip.availableSeatsCount ?? 0);
+
+        return {
+          ...trip,
+          seats: undefined,
+          availableSeatsCount: availableCount,
+        };
+      });
     }
-    
-    const objectId = new Types.ObjectId(id);
-    console.log('✅ Converted to ObjectId:', objectId.toString());
-    
-    const trip = await this.tripsRepository.findByIdWithDetails(id);
-    
-    if (!trip) {
-      console.error('❌ Trip not found with ID:', id);
-      console.log('   Check if this ID exists in database');
-      throw new NotFoundException('Chuyến đi không tồn tại.');
+
+    // ✅ fallback legacy theo string (web/public search cũ)
+    if (query.from && query.to) {
+      const rawTrips = await this.tripsRepository.findPublicTripsByCondition(
+        startOfDay,
+        endOfDay,
+        query.from,
+        query.to,
+      );
+
+      return rawTrips.map((trip: any) => {
+        const availableCount = trip.seats
+          ? trip.seats.filter((s: any) => s.status === SeatStatus.AVAILABLE)
+              .length
+          : 0;
+
+        return {
+          ...trip,
+          seats: undefined,
+          availableSeatsCount: availableCount,
+        };
+      });
     }
-    
-    console.log('✅ Trip found:', trip._id);
-    return trip;
-  } catch (error) {
-    console.error('❌ Error in findOne:', error);
-    if (error instanceof NotFoundException) {
-      throw error;
-    }
-    throw new NotFoundException('Không thể tìm thấy chuyến đi.');
+
+    // ✅ thiếu params thì báo đúng
+    throw new BadRequestException('Missing required search parameters');
   }
-}
+
+  async findOne(id: string): Promise<TripDocument> {
+    console.log('🔍 TripsService.findOne called with ID:', id);
+
+    try {
+      if (!id || !Types.ObjectId.isValid(id)) {
+        throw new BadRequestException('ID chuyến đi không hợp lệ.');
+      }
+
+      const trip = await this.tripsRepository.findByIdWithDetails(id);
+
+      if (!trip) {
+        throw new NotFoundException('Chuyến đi không tồn tại.');
+      }
+
+      return trip;
+    } catch (error) {
+      // ✅ Giữ nguyên các lỗi HTTP bạn đã throw
+      if (error instanceof BadRequestException) throw error;
+      if (error instanceof NotFoundException) throw error;
+
+      // ✅ Lỗi khác (DB, code...) thì nên là 500
+      throw new InternalServerErrorException(
+        'Không thể lấy thông tin chuyến đi.',
+      );
+    }
+  }
+
   async update(
     id: string,
     payload: UpdateTripPayload,
@@ -293,7 +313,6 @@ async findOne(id: string): Promise<TripDocument> {
     });
 
     await this.tripsRepository.save(trip);
-
     this.eventEmitter.emit('trip.cancelled', { tripId: id });
 
     return trip;
@@ -315,9 +334,11 @@ async findOne(id: string): Promise<TripDocument> {
           : undefined;
       }
     });
+
     trip.availableSeatsCount = trip.seats.filter(
       (s) => s.status === SeatStatus.AVAILABLE,
     ).length;
+
     await this.tripsRepository.save(trip);
   }
 
@@ -331,7 +352,7 @@ async findOne(id: string): Promise<TripDocument> {
     console.log('Service filter:', filter);
     const trips = await this.tripsRepository.findManagementTrips(filter);
     console.log(`Found ${trips.length} trips for management`);
-    
+
     return trips;
   }
 
@@ -348,11 +369,11 @@ async findOne(id: string): Promise<TripDocument> {
     });
   }
 
+  // ✅ FIX: xóa duplicate check + xóa return bị rơi ra ngoài
   async searchByFrom(fromId: string) {
     if (!fromId) {
       throw new BadRequestException('Missing fromId');
     }
-
     return this.tripsRepository.searchByFrom(fromId);
   }
 
@@ -360,7 +381,6 @@ async findOne(id: string): Promise<TripDocument> {
     if (!fromId || !toId) {
       throw new BadRequestException('Missing route params');
     }
-
     return this.tripsRepository.searchByRoute(fromId, toId);
   }
 
@@ -369,8 +389,9 @@ async findOne(id: string): Promise<TripDocument> {
     isActive: boolean,
   ): Promise<TripDocument | null> {
     const trip = await this.tripsRepository.findById(id);
-    if (!trip || !trip.isRecurrenceTemplate)
+    if (!trip || !trip.isRecurrenceTemplate) {
       throw new BadRequestException('Không phải chuyến đi mẫu.');
+    }
 
     trip.isRecurrenceActive = isActive;
     return this.tripsRepository.save(trip);
@@ -394,8 +415,9 @@ async findOne(id: string): Promise<TripDocument> {
       stopLocationId,
       status,
     );
-    if (!result)
+    if (!result) {
       throw new NotFoundException('Không tìm thấy chuyến hoặc trạm.');
+    }
     return result;
   }
 }

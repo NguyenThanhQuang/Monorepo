@@ -67,10 +67,7 @@ export class VehiclesController {
     const vehicle = await this.vehiclesService.findOne(id);
 
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      if (
-        vehicle.companyId?._id?.toString() !== user.companyId &&
-        vehicle.companyId?.toString() !== user.companyId
-      ) {
+      if (vehicle.companyId?.toString() !== user.companyId) {
         throw new ForbiddenException('Không có quyền xem xe của công ty khác.');
       }
     }
@@ -88,9 +85,7 @@ export class VehiclesController {
     const vehicle = await this.vehiclesService.findOne(id);
 
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      const ownerId = vehicle.companyId._id
-        ? vehicle.companyId._id.toString()
-        : vehicle.companyId.toString();
+      const ownerId = vehicle.companyId.toString();
       if (ownerId !== user.companyId) {
         throw new ForbiddenException('Không có quyền sửa xe công ty khác.');
       }
@@ -112,9 +107,7 @@ export class VehiclesController {
   ) {
     const vehicle = await this.vehiclesService.findOne(id);
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      const ownerId = vehicle.companyId._id
-        ? vehicle.companyId._id.toString()
-        : vehicle.companyId.toString();
+      const ownerId = vehicle.companyId.toString();
       if (ownerId !== user.companyId) throw new ForbiddenException();
     }
     return this.vehiclesService.remove(id);

@@ -124,7 +124,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
       <DialogContent dividers>
         <Grid container spacing={2}>
-          <Grid xs={12}>
+          <Grid item xs={12}>
             <TextField
               fullWidth
               label="Tên công ty"
@@ -135,7 +135,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
           </Grid>
 
           {!isEditMode && (
-            <Grid xs={12} md={6}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Mã công ty"
@@ -146,7 +146,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             </Grid>
           )}
 
-          <Grid xs={12} md={6}>
+          <Grid item xs={12} md={6}>
             <FormControl fullWidth>
               <InputLabel>Trạng thái</InputLabel>
               <Select
@@ -170,7 +170,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             </FormControl>
           </Grid>
 
-          <Grid xs={12}>
+          <Grid item xs={12}>
             <TextField
               fullWidth
               label="Địa chỉ"
@@ -179,7 +179,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             />
           </Grid>
 
-          <Grid xs={12} md={6}>
+          <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Số điện thoại"
@@ -188,7 +188,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             />
           </Grid>
 
-          <Grid xs={12} md={6}>
+          <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Email"
@@ -199,7 +199,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
           {!isEditMode && (
             <>
-              <Grid xs={12}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Tên Admin"
@@ -209,7 +209,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                 />
               </Grid>
 
-              <Grid xs={12} md={6}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   label="Email Admin"
@@ -219,7 +219,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                 />
               </Grid>
 
-              <Grid xs={12} md={6}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   label="SĐT Admin"

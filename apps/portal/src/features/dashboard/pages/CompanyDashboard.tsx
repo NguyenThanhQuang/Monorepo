@@ -258,21 +258,21 @@ export function CompanyDashboard() {
   };
 
   return (
-    <div className="p-8">
+    <div style={{ display: 'grid', gap: 16 }}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 style={{ fontSize: 28, fontWeight: 900, margin: 0 }}>
             Dashboard Nhà Xe
           </h1>
-          <p className="text-gray-500">
+          <p style={{ color: 'var(--obtp-muted2)', marginTop: 6 }}>
             Công ty: {user?.companyId || 'N/A'}
           </p>
         </div>
 
         <div className="flex gap-3">
           <select 
-            className="px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700"
+            className="obtp-input" style={{ width: 160, padding: '10px 12px' }}
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value as ReportPeriod)}
           >
@@ -285,7 +285,7 @@ export function CompanyDashboard() {
           <button 
             onClick={handleExportReport}
             disabled={exportLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-teal-500 text-white hover:opacity-90 transition disabled:opacity-50"
+            className="obtp-btn"
           >
             {exportLoading ? (
               <>
@@ -311,20 +311,20 @@ export function CompanyDashboard() {
           {/* Revenue Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             {/* Tổng doanh thu */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
+            <div className="obtp-card obtp-card-strong rounded-3xl p-6  hover:shadow-lg transition">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 mb-4 flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-white" />
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {formatCurrency(revenueStats.totalRevenue)}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div style={{ fontSize: 13, color: 'var(--obtp-muted2)' }}>
                 Tổng doanh thu
               </div>
             </div>
 
             {/* Doanh thu tháng này */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
+            <div className="obtp-card obtp-card-strong rounded-3xl p-6  hover:shadow-lg transition">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 mb-4 flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
@@ -332,7 +332,7 @@ export function CompanyDashboard() {
                 {formatCurrency(revenueStats.currentMonthRevenue)}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span style={{ fontSize: 13, color: 'var(--obtp-muted2)' }}>
                   Doanh thu tháng này
                 </span>
                 <span className={`text-sm font-medium ${getRevenueGrowthColor()}`}>
@@ -342,14 +342,14 @@ export function CompanyDashboard() {
             </div>
 
             {/* Tổng số vé */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
+            <div className="obtp-card obtp-card-strong rounded-3xl p-6  hover:shadow-lg transition">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-purple-500 to-purple-600 mb-4 flex items-center justify-center">
                 <FileText className="w-6 h-6 text-white" />
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {revenueStats.totalBookings}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div style={{ fontSize: 13, color: 'var(--obtp-muted2)' }}>
                 Tổng số vé
               </div>
               <div className="mt-2 flex gap-4 text-xs">
@@ -359,21 +359,21 @@ export function CompanyDashboard() {
             </div>
 
             {/* Giá vé trung bình */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
+            <div className="obtp-card obtp-card-strong rounded-3xl p-6  hover:shadow-lg transition">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 mb-4 flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {formatCurrency(revenueStats.averageTicketPrice)}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div style={{ fontSize: 13, color: 'var(--obtp-muted2)' }}>
                 Giá vé trung bình
               </div>
             </div>
           </div>
 
           {/* Revenue Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
+          <div className="obtp-card obtp-card-strong" style={{ padding: 16, marginTop: 4 }}>
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Doanh thu 6 tháng gần nhất
@@ -419,7 +419,7 @@ export function CompanyDashboard() {
                 <div className="h-full rounded-2xl bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-900/10 dark:to-teal-900/10 flex items-center justify-center">
                   <div className="text-center">
                     <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Chưa có dữ liệu doanh thu</p>
+                    <p style={{ color: 'var(--obtp-muted2)', marginTop: 6 }}>Chưa có dữ liệu doanh thu</p>
                   </div>
                 </div>
               )}
@@ -427,7 +427,7 @@ export function CompanyDashboard() {
           </div>
 
           {/* Recent Bookings */}
-          <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700">
+          <div className="obtp-card obtp-card-strong rounded-3xl ">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Đơn đặt gần đây

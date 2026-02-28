@@ -4,6 +4,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
@@ -20,6 +21,7 @@ import { PaymentsService } from './payments.service';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('payments')
 export class PaymentsController {
@@ -33,6 +35,21 @@ export class PaymentsController {
     @CurrentUser() user: AuthUserResponse,
   ) {
     return this.paymentsService.createPaymentLink(payload, user);
+  }
+
+    @Post('sync')
+  @UseGuards(JwtAuthGuard) // giống create-link (nếu create-link của bạn đang guard)
+  async syncPayment(@Body() body: { bookingId: string }, @Req() req: Request) {
+    const user = (req as any).user; // JwtAuthGuard sẽ attach user vào req.user
+    return this.paymentsService.syncPaymentByBookingId(body.bookingId, user);
+  }
+
+    // ✅ DEV confirm: không cần PayOS trả PAID
+  @Post('dev-confirm')
+  @UseGuards(JwtAuthGuard)
+  async devConfirm(@Body() body: { bookingId: string }, @Req() req: Request) {
+    const user = (req as any).user;
+    return this.paymentsService.devConfirmPayment(body.bookingId, user);
   }
 
   @Post('webhook')

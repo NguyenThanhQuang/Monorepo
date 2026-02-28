@@ -1,0 +1,31 @@
+/* Lightweight UI overrides & brand helpers */
+
+:root {
+  --brand-primary: #2563eb; /* blue-600 */
+  --brand-secondary: #14b8a6; /* teal-500 */
+}
+
+.brand-gradient {
+  background-image: linear-gradient(to right, var(--brand-primary), var(--brand-secondary));
+}
+
+.brand-gradient-br {
+  background-image: linear-gradient(to bottom right, var(--brand-primary), var(--brand-secondary));
+}
+
+.brand-text-gradient {
+  background-image: linear-gradient(to right, var(--brand-primary), var(--brand-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Better default focus for plain inputs used in Tailwind components */
+input, select, textarea {
+  outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+  border-color: rgba(37, 99, 235, 0.65);
+}

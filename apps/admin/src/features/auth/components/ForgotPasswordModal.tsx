@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Mail, CheckCircle, ArrowLeft } from "lucide-react";
 import { authApi } from "@obtp/api-client";
-import { useLanguage } from "../../../../../portal/src/contexts/LanguageContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface ForgotPasswordModalProps {
   onClose: () => void;
@@ -43,7 +43,7 @@ export function ForgotPasswordModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
 
       <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden">
 
@@ -52,7 +52,7 @@ export function ForgotPasswordModal({
 
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4"
+            className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-xl transition-colors"
           >
             <X className="text-white" />
           </button>
@@ -72,6 +72,8 @@ export function ForgotPasswordModal({
           {!isSuccess ? (
             <form onSubmit={handleSubmit} className="space-y-6">
 
+              <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">{t("registeredEmail")}</label>
+
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
 
@@ -79,7 +81,8 @@ export function ForgotPasswordModal({
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 py-3 bg-gray-50 border-2 rounded-xl"
+                                    placeholder={t("emailPlaceholder")}
+className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 transition-all"
                   required
                 />
               </div>

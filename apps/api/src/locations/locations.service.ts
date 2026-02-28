@@ -19,6 +19,28 @@ import { LocationsRepository } from './locations.repository';
 export class LocationsService {
   constructor(private readonly repo: LocationsRepository) {}
 
+  // locations.service.ts
+private normalizeKeyword(keyword: string) {
+  const k = (keyword || "").trim();
+  const lower = k.toLowerCase();
+
+  // map common aliases
+  if (
+    lower.includes("tp.hcm") ||
+    lower.includes("tp hcm") ||
+    lower.includes("tphcm") ||
+    lower.includes("tp. hồ chí minh") ||
+    lower.includes("thành phố hồ chí minh")
+  ) {
+    return "Hồ Chí Minh";
+  }
+
+  if (lower.includes("thành phố hà nội")) return "Hà Nội";
+  return k;
+}
+
+
+
   async create(payload: CreateLocationPayload): Promise<Location> {
     const exists = await this.repo.findByNameAndProvince(
       payload.name,
@@ -45,20 +67,38 @@ export class LocationsService {
   }
 
   async search(keyword: string): Promise<Location[]> {
-    const searchRegex = createSafeSearchRegex(keyword);
+    const raw = (keyword || '').trim();
+    if (!raw) return [];
 
-    if (!searchRegex) {
-      return [];
+    const normalized = raw
+      .replace(/^tp\.?\s*/i, '') // "TP. " -> ""
+      .replace(/^thành phố\s+/i, '') // "Thành phố " -> ""
+      .trim();
+
+    const rx1 = createSafeSearchRegex(raw);
+    const rx2 = createSafeSearchRegex(normalized);
+
+    const or: any[] = [];
+
+    if (rx1) {
+      or.push(
+        { name: { $regex: rx1 } },
+        { province: { $regex: rx1 } },
+        { slug: { $regex: rx1 } },
+      );
     }
 
-    const filter = {
-      $or: [
-        { name: { $regex: searchRegex } },
-        { province: { $regex: searchRegex } },
-      ],
-    };
+    if (rx2 && normalized.toLowerCase() !== raw.toLowerCase()) {
+      or.push(
+        { name: { $regex: rx2 } },
+        { province: { $regex: rx2 } },
+        { slug: { $regex: rx2 } },
+      );
+    }
 
-    return this.repo.search(filter, 15);
+    if (or.length === 0) return [];
+
+    return this.repo.search({ $or: or }, 15);
   }
 
   async findOne(id: string): Promise<Location> {

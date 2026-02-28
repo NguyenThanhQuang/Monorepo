@@ -11,6 +11,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { CommonModule } from './common/common.module';
 import { CompaniesModule } from './companies/companies.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { DriversModule } from './drivers/drivers.module';
 import { HealthModule } from './health/health.module';
 import { LocationsModule } from './locations/locations.module';
 import { MailModule } from './mail/mail.module';
@@ -21,6 +22,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { TripsModule } from './trips/trips.module';
 import { UsersModule } from './users/users.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
+
 
 @Module({
   imports: [
@@ -66,6 +68,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     MailModule,
     AuthModule,
     UsersModule,
+    DriversModule,
     CompaniesModule,
     BookingsModule,
     VehiclesModule,
@@ -77,6 +80,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     MapsModule,
     ReviewsModule,
     HealthModule,
+    EventEmitterModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

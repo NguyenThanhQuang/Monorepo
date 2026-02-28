@@ -3,14 +3,24 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AUTH_CONSTANTS } from '@obtp/business-logic';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+
 import { UsersModule } from '../users/users.module';
+import { MailModule } from '../mail/mail.module';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { TokenModule } from './token/token.module';
 
+
+
 @Module({
   imports: [
+    // ✅ thêm forRoot nếu bạn CHƯA khai báo trong AppModule
+    EventEmitterModule.forRoot(),
+
+    MailModule,
     TokenModule,
     forwardRef(() => UsersModule),
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -38,7 +48,10 @@ import { TokenModule } from './token/token.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+  ],
   exports: [AuthService, JwtModule, PassportModule],
 })
 export class AuthModule {}

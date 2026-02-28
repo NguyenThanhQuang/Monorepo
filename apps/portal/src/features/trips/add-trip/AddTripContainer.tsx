@@ -58,7 +58,7 @@ interface SimpleVehicle extends Omit<Vehicle, 'createdAt' | 'updatedAt'> {
   seatMapFloor2?: any;
 }
 
-const API_BASE_URL = 'http://localhost:3001/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL as string;
 
 const parseDateField = (dateValue: string | Date | undefined): Date => {
   if (!dateValue) return new Date();

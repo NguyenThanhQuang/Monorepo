@@ -101,6 +101,21 @@ export class BookingDefinition {
   @Prop({ type: String, index: true })
   paymentGatewayTransactionId?: string;
 
+  @Prop({ type: Date })
+  checkedInAt?: Date;
+
+  @Prop({ type: String })
+  checkedInBy?: string;
+
+  @Prop({
+    type: Types.ObjectId,
+    ref: UserDefinition.name,
+    required: false,
+    index: true,
+  })
+  checkedInByDriverId?: Types.ObjectId;
+
+
   @Prop({
     type: Types.ObjectId,
     ref: 'ReviewDefinition',
@@ -108,17 +123,26 @@ export class BookingDefinition {
     index: true,
   })
   reviewId?: Types.ObjectId;
+
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'ReviewDefinition',
+    required: false,
+    index: true,
+  })
+  driverReviewId?: Types.ObjectId;
 }
+
 
 export const BookingSchema = SchemaFactory.createForClass(BookingDefinition);
 
 // Chỉ xóa khi HELD và đã quá hạn heldUntil
-BookingSchema.index(
-  { heldUntil: 1 },
-  {
-    expireAfterSeconds: 0,
-    partialFilterExpression: { status: BookingStatus.HELD },
-  },
-);
+// BookingSchema.index(
+//   { heldUntil: 1 },
+//   {
+//     expireAfterSeconds: 0,
+//     partialFilterExpression: { status: BookingStatus.HELD },
+//   },
+// );
 
 BookingSchema.index({ contactPhone: 1, createdAt: -1 });

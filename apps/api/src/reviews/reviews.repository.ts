@@ -39,6 +39,14 @@ export class ReviewsRepository {
     return !!exists;
   }
 
+  async existsByBookingIdAndType(
+    bookingId: string | Types.ObjectId,
+    targetType: 'trip' | 'driver',
+  ): Promise<boolean> {
+    const exists = await this.reviewModel.exists({ bookingId, targetType });
+    return !!exists;
+  }
+
   async findAllPublic(
     filter: QueryFilter<ReviewDocument>,
   ): Promise<ReviewDocument[]> {
@@ -58,6 +66,80 @@ export class ReviewsRepository {
       .populate('companyId', 'name')
       .sort({ createdAt: -1 })
       .exec();
+  }
+
+
+  async findDriverReviews(
+    driverId: Types.ObjectId,
+    opts?: { limit?: number; skip?: number; includeHidden?: boolean },
+  ) {
+    const limit = Math.min(Math.max(opts?.limit ?? 20, 1), 50);
+    const skip = Math.max(opts?.skip ?? 0, 0);
+    const filter: any = { targetType: 'driver', driverId };
+    if (!opts?.includeHidden) filter.isVisible = true;
+
+    return this.reviewModel
+      .find(filter)
+      .select('-userId')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+  }
+
+  async getDriverRatingStats(driverId: Types.ObjectId, includeHidden = false) {
+    const match: any = { targetType: 'driver', driverId };
+    if (!includeHidden) match.isVisible = true;
+
+    const [agg] = await this.reviewModel
+      .aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: null,
+            avgRating: { $avg: '$rating' },
+            count: { $sum: 1 },
+            c1: {
+              $sum: {
+                $cond: [{ $eq: ['$rating', 1] }, 1, 0],
+              },
+            },
+            c2: {
+              $sum: {
+                $cond: [{ $eq: ['$rating', 2] }, 1, 0],
+              },
+            },
+            c3: {
+              $sum: {
+                $cond: [{ $eq: ['$rating', 3] }, 1, 0],
+              },
+            },
+            c4: {
+              $sum: {
+                $cond: [{ $eq: ['$rating', 4] }, 1, 0],
+              },
+            },
+            c5: {
+              $sum: {
+                $cond: [{ $eq: ['$rating', 5] }, 1, 0],
+              },
+            },
+          },
+        },
+      ])
+      .exec();
+
+    return {
+      avgRating: agg?.avgRating ? Number(agg.avgRating) : 0,
+      count: agg?.count ?? 0,
+      breakdown: {
+        1: agg?.c1 ?? 0,
+        2: agg?.c2 ?? 0,
+        3: agg?.c3 ?? 0,
+        4: agg?.c4 ?? 0,
+        5: agg?.c5 ?? 0,
+      },
+    };
   }
 
   async save(review: ReviewDocument): Promise<ReviewDocument> {

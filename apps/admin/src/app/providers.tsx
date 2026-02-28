@@ -1,1 +1,2 @@
-// Bọc toàn bộ Provider (Auth, Query, Theme, Toast)
+// App-wide providers are wired in src/main.tsx (LanguageProvider).
+export {};

@@ -45,6 +45,7 @@ export interface RegisterPayload {
   email: string;
   phone: string;
   password: string;
+  confirmPassword: string;
   name: string;
 }
 
@@ -322,8 +323,8 @@ export interface UpdateTripPayload {
 
 // Payload query tìm chuyến đi
 export interface SearchTripQuery {
-  from: string; // Tên tỉnh/thành hoặc ID (thường là ID sẽ chuẩn hơn, nhưng public thì text)
-  to: string;
+  fromLocationId: string;
+  toLocationId: string;
   date: string; // YYYY-MM-DD
   passengers?: number; // Mặc định 1
 }

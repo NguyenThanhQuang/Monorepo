@@ -88,7 +88,7 @@ export class MailService {
     payload: SendVerificationEmailPayload,
   ): Promise<void> {
     const apiBaseUrl = this.configService.getOrThrow<string>('API_BASE_URL');
-    const verifyTokenUrl = `${apiBaseUrl}/auth/verify-email?token=${payload.token}`;
+    const verifyTokenUrl = `${apiBaseUrl}/auth/verify-email-redirect?token=${payload.token}`;
 
     const context: EmailContext = {
       appName: this.mailFromName,
@@ -106,15 +106,11 @@ export class MailService {
   async sendPasswordResetEmail(
     payload: SendForgotPasswordPayload,
   ): Promise<void> {
-    const clientUrl = this.configService.get(
-      'CLIENT_URL',
-      'http://localhost:3000',
-    );
-    const path = this.configService.get(
-      'CLIENT_PASSWORD_RESET_PATH',
-      '/auth/reset-password',
-    );
-    const resetUrl = `${clientUrl}${path}?token=${payload.token}`;
+    // ✅ Base URL của API (PHẢI là domain public, không phải localhost)
+    const apiBaseUrl = this.configService.getOrThrow<string>('API_BASE_URL');
+
+    // ✅ Link universal redirect (đã tạo ở AuthController)
+    const resetUrl = `${apiBaseUrl}/auth/reset-password-redirect?token=${payload.token}`;
 
     const context: EmailContext = {
       appName: this.mailFromName,
@@ -123,6 +119,7 @@ export class MailService {
     };
 
     const { subject, html } = generatePasswordResetEmail(payload.name, context);
+
     await this.sendMail(payload.email, subject, html);
   }
 

@@ -69,6 +69,16 @@ async getCompanyBookings(@CurrentUser() user: sharedTypes.AuthUserResponse) {
     throw error;
   }
 }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  async getById(
+    @Param('id') id: string,
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+  ) {
+    return this.bookingsService.getBookingById(id, user);
+  }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async cancel(

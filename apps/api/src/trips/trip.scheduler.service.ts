@@ -1,27 +1,41 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { initializeTripSeats } from '@obtp/business-logic';
-import { TripStatus, Vehicle } from '@obtp/shared-types';
-import { Types } from 'mongoose';
-import { VehiclesService } from '../vehicles/vehicles.service';
-import { TripsRepository } from './trips.repository';
+// src/trips/trip-scheduler.service.ts
+import { Injectable, Logger } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { initializeTripSeats } from "@obtp/business-logic";
+import { TripStatus, Vehicle } from "@obtp/shared-types";
+import { Types } from "mongoose";
+import { VehiclesService } from "../vehicles/vehicles.service";
+import { TripsRepository } from "./trips.repository";
 
 @Injectable()
 export class TripSchedulerService {
   private readonly logger = new Logger(TripSchedulerService.name);
+
+  // ✅ ENV flag để tắt scheduler trong dev/test
+  // DISABLE_TRIP_SCHEDULER=true
+  private readonly disabled =
+    String(process.env.DISABLE_TRIP_SCHEDULER || "").toLowerCase() === "true";
 
   constructor(
     private readonly tripsRepository: TripsRepository,
     private readonly vehiclesService: VehiclesService,
   ) {}
 
+  private shouldRun(jobName: string): boolean {
+    if (!this.disabled) return true;
+    // log 1 dòng cho dễ hiểu
+    this.logger.warn(`SKIP ${jobName}: DISABLE_TRIP_SCHEDULER=true`);
+    return false;
+  }
+
   // Tự động sinh chuyến đi hàng ngày (Daily Trip Gen)
   @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async handleDailyTripGeneration() {
-    this.logger.log('Started Daily Trip Generation...');
+    if (!this.shouldRun("DailyTripGeneration")) return;
 
-    const templates =
-      await this.tripsRepository.findActiveRecurrenceTemplates();
+    this.logger.log("Started Daily Trip Generation...");
+
+    const templates = await this.tripsRepository.findActiveRecurrenceTemplates();
     let count = 0;
 
     const tomorrow = new Date();
@@ -39,7 +53,7 @@ export class TripSchedulerService {
       if (exists) continue;
 
       const vehicle = await this.vehiclesService.findOne(
-        template.vehicleId._id.toString(),
+        template.vehicleId.toString(),
       );
 
       const vehicleParam: Partial<Vehicle> = {
@@ -50,9 +64,7 @@ export class TripSchedulerService {
       const rawSeats = initializeTripSeats(vehicleParam);
       const seats = rawSeats.map((seat) => ({
         ...seat,
-        bookingId: seat.bookingId
-          ? new Types.ObjectId(seat.bookingId)
-          : undefined,
+        bookingId: seat.bookingId ? new Types.ObjectId(seat.bookingId) : undefined,
       }));
 
       const durationMs =
@@ -73,26 +85,20 @@ export class TripSchedulerService {
         recurrenceParentId: template._id as any,
 
         status: TripStatus.SCHEDULED,
-        seats: seats,
+        seats,
         availableSeatsCount: seats.length,
       });
+
       count++;
     }
+
     this.logger.log(`Generated ${count} trips for tomorrow.`);
   }
 
   // Update Status (SCHEDULED -> DEPARTED)
-  @Cron(CronExpression.EVERY_10_MINUTES)
-  async handleStatusUpdate() {
-    // Vì Repository Mongoose support updateMany
-    // Ta có thể inject TripModel vào đây hoặc thêm method updateStatus vào Repo
-    // Ở đây demo concept, ta giả định Repo có updateManyStatus
-    // await this.tripsRepository.updateManyStatus(...)
-  }
-
-  @Cron(CronExpression.EVERY_10_MINUTES)
+  // @Cron(CronExpression.EVERY_10_MINUTES)
   async handleUpdateDepartedTrips() {
-    this.logger.log('SCAN: Updating DEPARTED trips...');
+    this.logger.log("SCAN: Updating DEPARTED trips...");
     const now = new Date();
     const result = await this.tripsRepository.updateManyStatus(
       {
@@ -107,9 +113,9 @@ export class TripSchedulerService {
     }
   }
 
-  @Cron(CronExpression.EVERY_30_MINUTES)
+  // @Cron(CronExpression.EVERY_30_MINUTES)
   async handleUpdateArrivedTrips() {
-    this.logger.log('SCAN: Updating ARRIVED trips...');
+    this.logger.log("SCAN: Updating ARRIVED trips...");
     const now = new Date();
     const result = await this.tripsRepository.updateManyStatus(
       {

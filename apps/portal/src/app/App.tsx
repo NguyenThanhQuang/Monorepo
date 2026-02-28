@@ -1,29 +1,26 @@
-// src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import 'dayjs/locale/vi'; // Import locale tiếng Việt
+import 'dayjs/locale/vi';
+
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { LanguageProvider } from '../contexts/LanguageContext';
+import { ThemeProvider } from './providers';
+
 import LoginPage from '../components/layout/LoginPage';
+import { CompanyLayout } from '../features/dashboard/pages/CompanyLayout';
 import { CompanyDashboard } from '../features/dashboard/pages/CompanyDashboard';
 import CompanyVehiclesPage from '../features/vehicles/pages/CompanyVehiclesPage';
 import { RouteManagement } from '../features/trips/pages/RouteManagement';
-import { ThemeProvider } from './providers';
 import AddTripContainer from '../features/trips/add-trip/AddTripContainer';
-import { CompanyLayout } from '../features/dashboard/pages/CompanyLayout';
+import { DriverManagement } from '../features/drivers/pages/DriverManagement';
+import { SettingsPage } from '../features/settings/pages/SettingsPage';
 
-// Protected Route component with Layout
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!user.roles?.includes('company_admin')) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.roles?.includes('company_admin')) return <Navigate to="/login" replace />;
 
   return <CompanyLayout>{children}</CompanyLayout>;
 };
@@ -52,7 +49,6 @@ function AppContent() {
           }
         />
 
-        {/* Routes for Trip Management */}
         <Route
           path="/company/trips"
           element={
@@ -80,18 +76,36 @@ function AppContent() {
           }
         />
 
+        <Route
+          path="/company/drivers"
+          element={
+            <ProtectedRoute>
+              <DriverManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/company/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
 }
 
-function App() {
+export default function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
         <AuthProvider>
-          {/* Bọc LocalizationProvider ở đây để các DatePicker hoạt động ổn định */}
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="vi">
             <AppContent />
           </LocalizationProvider>
@@ -100,5 +114,3 @@ function App() {
     </ThemeProvider>
   );
 }
-
-export default App;

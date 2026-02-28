@@ -30,9 +30,14 @@ import { UserDocument } from 'src/users/schemas/user.schema';
 import { UsersService } from '../users/users.service';
 import { TokenService } from './token/token.service';
 
+const FORGOT_PASSWORD_COOLDOWN_MS = 30_000;
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+
+  // ✅ chống spam 30s / email (in-memory)
+  private forgotPasswordLastReq = new Map<string, number>();
 
   constructor(
     @Inject(forwardRef(() => UsersService))
@@ -125,11 +130,15 @@ export class AuthService {
     }
 
     const newToken = generateRandomToken();
-    const expiresMs = this.configService.get<number>(
+    const raw = this.configService.get<string>(
       'EMAIL_VERIFICATION_TOKEN_EXPIRES_IN_MS',
-      86400000,
     );
-    const expires = new Date(Date.now() + expiresMs);
+    const expiresMs = Number(raw ?? 86400000);
+
+    const safeMs =
+      Number.isFinite(expiresMs) && expiresMs > 0 ? expiresMs : 86400000;
+
+    const expires = new Date(Date.now() + safeMs);
 
     await this.usersService.updateVerificationInfo(user._id.toString(), {
       token: newToken,
@@ -241,9 +250,18 @@ export class AuthService {
   }
 
   async requestPasswordReset(payload: ForgotPasswordPayload): Promise<void> {
-    const user = await this.usersService.findOneByEmail(
-      payload.email.toLowerCase(),
-    );
+    const emailKey = payload.email.trim().toLowerCase();
+
+    // ✅ Rate limit 30s / email (silent)
+    const now = Date.now();
+    const last = this.forgotPasswordLastReq.get(emailKey) ?? 0;
+    if (now - last < FORGOT_PASSWORD_COOLDOWN_MS) {
+      this.logger.warn(`Forgot password throttled for: ${emailKey}`);
+      return;
+    }
+    this.forgotPasswordLastReq.set(emailKey, now);
+
+    const user = await this.usersService.findOneByEmail(emailKey);
     if (!user) return;
 
     const token = generateRandomToken();
@@ -257,7 +275,7 @@ export class AuthService {
     this.eventEmitter.emit('user.forgot_password', {
       email: user.email,
       name: user.name,
-      token: token,
+      token,
     });
   }
 

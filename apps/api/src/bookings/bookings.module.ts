@@ -7,6 +7,7 @@ import { BookingsController } from './bookings.controller';
 import { BookingsRepository } from './bookings.repository';
 import { BookingsService } from './bookings.service';
 import { BookingDefinition, BookingSchema } from './schemas/booking.schema';
+import { BookingsHoldCleanupService } from './bookings-hold-cleanup.service';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { BookingDefinition, BookingSchema } from './schemas/booking.schema';
     forwardRef(() => UsersModule),
   ],
   controllers: [BookingsController],
-  providers: [BookingsService, BookingsRepository],
+  providers: [BookingsService, BookingsRepository, BookingsHoldCleanupService],
   exports: [BookingsService, BookingsRepository],
 })
 export class BookingsModule {}
