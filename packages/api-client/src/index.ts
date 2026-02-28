@@ -52,3 +52,5 @@ export {
   usersApi,
   vehiclesApi,
 };
+
+export * from "../src/core/http-client";

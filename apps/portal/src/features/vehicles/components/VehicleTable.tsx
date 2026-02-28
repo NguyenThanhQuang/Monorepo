@@ -1,54 +1,83 @@
+import type { Vehicle } from "@obtp/shared-types";
+import { VehicleStatus } from "@obtp/shared-types";
+import { Edit2, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
+  TableHeader,
   TableRow,
-  IconButton,
-} from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import type { Vehicle } from "@obtp/shared-types";
+} from "@/components/ui/table";
 
-export default function VehicleTable({
-  vehicles,
-  onEdit,
-  onDelete,
-}: any) {
+interface Props {
+  vehicles: Vehicle[];
+  onEdit: (vehicle: Vehicle) => void;
+  onDelete: (id: string) => void;
+}
+
+export function VehicleTable({ vehicles, onEdit, onDelete }: Props) {
+  const getStatusBadge = (status: VehicleStatus) => {
+    switch (status) {
+      case VehicleStatus.ACTIVE:
+        return <Badge variant="success">Hoạt động</Badge>;
+      case VehicleStatus.MAINTENANCE:
+        return <Badge variant="warning">Bảo trì</Badge>;
+      case VehicleStatus.INACTIVE:
+        return <Badge variant="secondary">Ngưng HD</Badge>;
+      default:
+        return <Badge>N/A</Badge>;
+    }
+  };
+
   return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          <TableCell>Biển số</TableCell>
-          <TableCell>Loại</TableCell>
-          <TableCell>Ghế</TableCell>
-          {/* <TableCell>Hãng</TableCell> */}
-          <TableCell>Trạng thái</TableCell>
-          <TableCell />
-        </TableRow>
-      </TableHead>
-
-      <TableBody>
-        {vehicles.map((v: Vehicle) => (
-          <TableRow key={v._id}>
-            <TableCell>{v.vehicleNumber}</TableCell>
-            <TableCell>{v.type}</TableCell>
-            <TableCell>{v.totalSeats}</TableCell>
-            {/* <TableCell>{v.brand}</TableCell> */}
-            <TableCell>{v.status}</TableCell>
-
-            <TableCell>
-              <IconButton onClick={() => onEdit(v)}>
-                <EditIcon />
-              </IconButton>
-
-              <IconButton onClick={() => onDelete(v._id)}>
-                <DeleteIcon />
-              </IconButton>
-            </TableCell>
+    <div className="obtp-card obtp-card-strong">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Biển số</TableHead>
+            <TableHead>Loại xe</TableHead>
+            <TableHead>Số ghế</TableHead>
+            <TableHead>Trạng thái</TableHead>
+            <TableHead className="text-right">Thao tác</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {vehicles.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={5}
+                className="text-center py-8 text-slate-500"
+              >
+                Chưa có xe nào
+              </TableCell>
+            </TableRow>
+          ) : (
+            vehicles.map((v) => (
+              <TableRow key={v.id}>
+                <TableCell className="font-bold">{v.vehicleNumber}</TableCell>
+                <TableCell>{v.type}</TableCell>
+                <TableCell>{v.totalSeats}</TableCell>
+                <TableCell>{getStatusBadge(v.status)}</TableCell>
+                <TableCell className="text-right space-x-2">
+                  <Button variant="ghost" size="icon" onClick={() => onEdit(v)}>
+                    <Edit2 size={16} className="text-blue-600" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete(v.id)}
+                  >
+                    <Trash2 size={16} className="text-red-600" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
