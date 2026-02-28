@@ -144,8 +144,9 @@ export class MailService {
       'CLIENT_URL',
       'http://localhost:3000',
     );
-    const activationUrl = `${clientUrl}/activate-account?token=${payload.token}`;
-
+const activationUrl = `${this.configService.get(
+  'FRONTEND_URL',
+)}/activate-account?token=${payload.token}`;
     const context: EmailContext = {
       appName: this.mailFromName,
       verifyTokenUrl: activationUrl,

@@ -14,6 +14,7 @@ import { AdminRevenuePage } from "../features/bookings/pages/AdminRevenuePage";
 import { CompanyManagement } from "../features/companies/pages/CompanyManagement";
 import { UserManagement } from "../features/users/pages/UserManagement";
 import { AdminReviewManagement } from "../features/review/page/AdminReviewManagement";
+import ActivateAccountPage from "../features/ActivateAccountPage";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -50,7 +51,10 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
+<Route
+  path="/activate-account"
+  element={<ActivateAccountPage />}
+/>
         <Route
           path="/admin/revenue"
           element={

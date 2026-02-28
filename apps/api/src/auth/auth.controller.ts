@@ -314,9 +314,12 @@ export class AuthController {
     return result;
   }
 
-  @Post('activate-account')
-  @UsePipes(new ZodValidationPipe(ActivateAccountSchema))
+ @Post('activate-account')
   async activateAccount(@Body() payload: ActivateAccountPayload) {
+    if (!payload.token || !payload.newPassword) {
+      throw new BadRequestException('Thiếu token hoặc mật khẩu.');
+    }
+
     return this.authService.activateAccount(payload);
   }
 }

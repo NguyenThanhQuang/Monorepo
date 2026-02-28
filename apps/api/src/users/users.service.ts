@@ -234,17 +234,18 @@ export class UsersService {
     return { user: user!, isNew };
   }
 
-  async findOneByActivationToken(token: string): Promise<UserDocument | null> {
-    const user = await this.usersRepository.findOne({
-      accountActivationToken: token,
-      accountActivationExpires: { $gt: new Date() },
-    });
+async findOneByActivationToken(token: string): Promise<UserDocument | null> {
+  const user = await this.usersRepository.findOne({
+    accountActivationToken: token,
+    accountActivationExpires: { $gt: new Date() },
+  });
 
-    if (user) {
-      await user.populate('companyId', 'name');
-    }
-    return user;
+  if (user) {
+    await user.populate('companyId', 'name');
   }
+
+  return user;
+}
 
   async save(user: UserDocument): Promise<UserDocument> {
     return this.usersRepository.save(user);
