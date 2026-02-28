@@ -51,6 +51,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
       validationOptions: {
         allowUnknown: true,
         abortEarly: true,
+         retryWrites: false
       },
     }),
     MongooseModule.forRootAsync({

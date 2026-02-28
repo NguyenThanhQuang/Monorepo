@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
-  ClientSession,
   Model,
-  QueryFilter,
   Types,
   UpdateQuery,
-} from 'mongoose';
+} from 'mongoose'; // REMOVED: ClientSession
 import { UserDefinition, UserDocument } from './schemas/user.schema';
 
 @Injectable()
@@ -15,12 +13,10 @@ export class UsersRepository {
     @InjectModel(UserDefinition.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async create(
-    userData: Partial<UserDefinition>,
-    session?: ClientSession,
-  ): Promise<UserDocument> {
+  // REMOVED session parameter
+  async create(userData: Partial<UserDefinition>): Promise<UserDocument> {
     const newUser = new this.userModel(userData);
-    return newUser.save({ session });
+    return newUser.save();
   }
 
   async findById(id: string | Types.ObjectId): Promise<UserDocument | null> {
@@ -48,27 +44,23 @@ export class UsersRepository {
     return this.userModel.findOne({ phone }).select('+passwordHash').exec();
   }
 
-  async findOne(
-    filter: QueryFilter<UserDocument>,
-  ): Promise<UserDocument | null> {
+  async findOne(filter: Record<string, any>): Promise<UserDocument | null> {
     return this.userModel.findOne(filter).exec();
   }
 
+  // REMOVED session parameter
   async update(
     id: string,
     updateData: UpdateQuery<UserDocument>,
-    session?: ClientSession,
   ): Promise<UserDocument | null> {
     return this.userModel
-      .findByIdAndUpdate(id, updateData, { new: true, session })
+      .findByIdAndUpdate(id, updateData, { new: true })
       .exec();
   }
 
-  async save(
-    user: UserDocument,
-    session?: ClientSession,
-  ): Promise<UserDocument> {
-    return user.save({ session });
+  // REMOVED session parameter
+  async save(user: UserDocument): Promise<UserDocument> {
+    return user.save();
   }
 
   async findAll(): Promise<UserDocument[]> {

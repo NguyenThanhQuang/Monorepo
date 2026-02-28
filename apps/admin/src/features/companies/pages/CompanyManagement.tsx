@@ -606,7 +606,6 @@ export function CompanyManagement() {
             }}
             company={selectedCompany}
           />
-// Trong CompanyManagement.tsx, sửa phần ConfirmActionModal
 
 <ConfirmActionModal
   isOpen={showSuspendModal}

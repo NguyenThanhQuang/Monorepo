@@ -5,7 +5,7 @@ import {
   CompanyStatsResponse,
   UpdateCompanyPayload,
 } from '@obtp/shared-types';
-import { ClientSession, Model, QueryFilter } from 'mongoose';
+import { Model } from 'mongoose'; // Removed ClientSession
 import { CompanyDefinition, CompanyDocument } from './schemas/company.schema';
 
 @Injectable()
@@ -15,15 +15,13 @@ export class CompaniesRepository {
     private companyModel: Model<CompanyDocument>,
   ) {}
 
-  async create(
-    doc: Partial<Company>,
-    session?: ClientSession,
-  ): Promise<Company> {
+  // Removed session parameter
+  async create(doc: Partial<Company>): Promise<Company> {
     const newCompany = new this.companyModel(doc);
-    return (await newCompany.save({ session })) as unknown as Company;
+    return (await newCompany.save()) as unknown as Company;
   }
 
-  async findOne(filter: QueryFilter<CompanyDocument>): Promise<Company | null> {
+  async findOne(filter: Record<string, any>): Promise<Company | null> {
     return this.companyModel
       .findOne(filter)
       .exec() as unknown as Company | null;
@@ -37,13 +35,13 @@ export class CompaniesRepository {
     return this.companyModel.find().exec() as unknown as Company[];
   }
 
+  // Removed session parameter
   async update(
     id: string,
     updateData: UpdateCompanyPayload,
-    session?: ClientSession,
   ): Promise<Company | null> {
     return this.companyModel
-      .findByIdAndUpdate(id, { $set: updateData }, { new: true, session })
+      .findByIdAndUpdate(id, { $set: updateData }, { new: true })
       .exec() as unknown as Company | null;
   }
 

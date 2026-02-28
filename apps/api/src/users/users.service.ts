@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectConnection } from '@nestjs/mongoose';
+// REMOVED: import { InjectConnection } from '@nestjs/mongoose';
 import {
   AUTH_CONSTANTS,
   comparePassword,
@@ -22,7 +22,8 @@ import {
   UpdateUserPayload,
   UserRole,
 } from '@obtp/shared-types';
-import { Connection, Types } from 'mongoose';
+// REMOVED: import { Connection, Types } from 'mongoose';
+import { Types } from 'mongoose'; // CHANGED: chỉ import Types
 import { BookingsRepository } from 'src/bookings/bookings.repository';
 import { UserDocument } from './schemas/user.schema';
 import { UsersRepository } from './users.repository';
@@ -41,7 +42,7 @@ interface CreateInternalUserParams extends CreateUserPayload {
 export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
-    @InjectConnection() private readonly connection: Connection,
+    // REMOVED: @InjectConnection() private readonly connection: Connection,
     @Inject(forwardRef(() => BookingsRepository))
     private readonly bookingsRepository: BookingsRepository,
   ) {}
@@ -194,53 +195,43 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  // QUAN TRỌNG: Sửa method này - LOẠI BỎ TRANSACTION
   async createOrPromoteCompanyAdmin(
     payload: CreateCompanyAdminPayload,
   ): Promise<{ user: UserDocument; isNew: boolean }> {
-    const session = await this.connection.startSession();
-    session.startTransaction();
+    // REMOVED: session and transaction logic
+    let user = await this.usersRepository.findOne({ email: payload.email });
+    let isNew = false;
 
-    try {
-      let user = await this.usersRepository.findOne({ email: payload.email });
-      let isNew = false;
-
-      if (user) {
-        if (!user.roles.includes(UserRole.COMPANY_ADMIN)) {
-          user.roles.push(UserRole.COMPANY_ADMIN);
-        }
-        user.companyId = new Types.ObjectId(payload.companyId);
-        await this.usersRepository.save(user, session);
-      } else {
-        isNew = true;
-        const activationToken = generateRandomToken();
-
-        user = await this.usersRepository.create(
-          {
-            email: payload.email,
-            name: payload.name,
-            phone: payload.phone,
-            companyId: new Types.ObjectId(payload.companyId),
-            roles: [UserRole.COMPANY_ADMIN],
-            isEmailVerified: false,
-            passwordHash: 'temp_placeholder_hash',
-            accountActivationToken: activationToken,
-            accountActivationExpires: new Date(
-              Date.now() +
-                AUTH_CONSTANTS.DEFAULTS.EMAIL_VERIFICATION_EXPIRATION_MS,
-            ),
-          },
-          session,
-        );
+    if (user) {
+      // User đã tồn tại - cập nhật roles và companyId
+      if (!user.roles.includes(UserRole.COMPANY_ADMIN)) {
+        user.roles.push(UserRole.COMPANY_ADMIN);
       }
+      user.companyId = new Types.ObjectId(payload.companyId);
+      await this.usersRepository.save(user);
+    } else {
+      // Tạo user mới
+      isNew = true;
+      const activationToken = generateRandomToken();
 
-      await session.commitTransaction();
-      return { user: user!, isNew };
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      await session.endSession();
+      user = await this.usersRepository.create({
+        email: payload.email,
+        name: payload.name,
+        phone: payload.phone,
+        companyId: new Types.ObjectId(payload.companyId),
+        roles: [UserRole.COMPANY_ADMIN],
+        isEmailVerified: false,
+        passwordHash: 'temp_placeholder_hash', // Sẽ được set khi user active
+        accountActivationToken: activationToken,
+        accountActivationExpires: new Date(
+          Date.now() +
+            AUTH_CONSTANTS.DEFAULTS.EMAIL_VERIFICATION_EXPIRATION_MS,
+        ),
+      });
     }
+
+    return { user: user!, isNew };
   }
 
   async findOneByActivationToken(token: string): Promise<UserDocument | null> {
