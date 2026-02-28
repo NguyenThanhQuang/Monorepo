@@ -101,34 +101,35 @@ export function VehicleFormModal({
   };
 
   return (
-    <div className="obtp-modal-overlay flex items-center justify-center p-4 z-50">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="obtp-card obtp-card-strong w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+    <div className="obtp-modal-overlay">
+      <div
+        className="obtp-card obtp-card-strong obtp-modal"
+        style={{ maxWidth: 600 }}
       >
-        <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <h2 className="text-xl font-bold">
-            {vehicleToEdit ? "Sửa thông tin xe" : "Thêm xe mới"}
-          </h2>
+        <div className="obtp-modal-header">
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
+            className="obtp-icon-btn"
+            style={{ position: "absolute", right: 12, top: 12 }}
           >
-            <X size={24} />
+            <X size={18} />
           </button>
+          <h2 className="obtp-modal-title">
+            {vehicleToEdit ? "Chỉnh sửa thông tin xe" : "Thêm xe mới"}
+          </h2>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1">
-          {errorMsg && (
-            <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
-              {errorMsg}
-            </div>
-          )}
+        <div className="obtp-modal-body">
+          <form
+            id="vehicle-form"
+            onSubmit={handleSubmit(onSubmit)}
+            style={{ display: "grid", gap: 14 }}
+          >
+            {errorMsg && <div className="obtp-error">{errorMsg}</div>}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {!vehicleToEdit && (
-              <div className="md:col-span-2">
+              <div className="obtp-field">
                 <label className="obtp-label">Chọn mẫu xe (Tự động điền)</label>
                 <select
                   className="obtp-input"
@@ -147,32 +148,38 @@ export function VehicleFormModal({
               </div>
             )}
 
-            <div className="obtp-field">
-              <label className="obtp-label">Biển số xe *</label>
-              <Input
-                {...register("vehicleNumber")}
-                placeholder="VD: 51B-12345"
-                className="pl-3"
-              />
-              {errors.vehicleNumber && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.vehicleNumber.message}
-                </p>
-              )}
-            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 14,
+              }}
+            >
+              <div className="obtp-field">
+                <label className="obtp-label">Biển số xe *</label>
+                <input
+                  {...register("vehicleNumber")}
+                  placeholder="51B-12345"
+                  className="obtp-input"
+                />
+                {errors.vehicleNumber && (
+                  <p className="obtp-error-text">
+                    {errors.vehicleNumber.message}
+                  </p>
+                )}
+              </div>
 
-            <div className="obtp-field">
-              <label className="obtp-label">Loại xe *</label>
-              <Input
-                {...register("type")}
-                placeholder="VD: Giường nằm 40 chỗ"
-                className="pl-3"
-              />
-              {errors.type && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.type.message}
-                </p>
-              )}
+              <div className="obtp-field">
+                <label className="obtp-label">Loại xe *</label>
+                <input
+                  {...register("type")}
+                  placeholder="Xe giường nằm..."
+                  className="obtp-input"
+                />
+                {errors.type && (
+                  <p className="obtp-error-text">{errors.type.message}</p>
+                )}
+              </div>
             </div>
 
             <div className="obtp-field">
@@ -183,53 +190,84 @@ export function VehicleFormModal({
                 <option value={VehicleStatus.INACTIVE}>Ngưng hoạt động</option>
               </select>
             </div>
-          </div>
 
-          <h3 className="font-semibold text-lg border-b pb-2 mb-4 dark:border-slate-800">
-            Cấu hình Sơ đồ ghế
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="obtp-field">
-              <label className="obtp-label">Số tầng</label>
-              <Input
-                type="number"
-                {...register("floors", { valueAsNumber: true })}
-                className="pl-3"
-              />
+            <div
+              style={{
+                margin: "10px 0",
+                borderTop: "1px solid var(--obtp-border)",
+                paddingTop: 14,
+              }}
+            >
+              <h3 style={{ fontSize: 18, fontWeight: 900, marginBottom: 14 }}>
+                Cấu hình Sơ đồ ghế
+              </h3>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: 14,
+                }}
+              >
+                <div className="obtp-field">
+                  <label className="obtp-label">Số tầng</label>
+                  <input
+                    type="number"
+                    {...register("floors", { valueAsNumber: true })}
+                    className="obtp-input"
+                  />
+                </div>
+                <div className="obtp-field">
+                  <label className="obtp-label">Hàng ghế</label>
+                  <input
+                    type="number"
+                    {...register("seatRows", { valueAsNumber: true })}
+                    className="obtp-input"
+                  />
+                </div>
+                <div className="obtp-field">
+                  <label className="obtp-label">Cột ghế</label>
+                  <input
+                    type="number"
+                    {...register("seatColumns", { valueAsNumber: true })}
+                    className="obtp-input"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="obtp-field">
-              <label className="obtp-label">Hàng ghế</label>
-              <Input
-                type="number"
-                {...register("seatRows", { valueAsNumber: true })}
-                className="pl-3"
-              />
-            </div>
-            <div className="obtp-field">
-              <label className="obtp-label">Cột ghế</label>
-              <Input
-                type="number"
-                {...register("seatColumns", { valueAsNumber: true })}
-                className="pl-3"
-              />
-            </div>
-          </div>
+          </form>
         </div>
 
-        <div className="flex justify-end gap-3 p-6 pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
-          <Button
+        {/* FOOTER: Nằm trong card nhưng tách biệt body */}
+        <div
+          className="obtp-modal-footer"
+          style={{
+            padding: "0 24px 24px",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 12,
+          }}
+        >
+          <button
             type="button"
-            variant="secondary"
+            className="obtp-btn-secondary"
             onClick={onClose}
             disabled={isLoading}
+            style={{ padding: "10px 20px" }}
           >
             Hủy
-          </Button>
-          <Button type="submit" disabled={isLoading}>
+          </button>
+          <button
+            type="submit"
+            form="vehicle-form"
+            className="obtp-btn"
+            disabled={isLoading}
+            style={{ padding: "10px 20px", minWidth: 140 }}
+          >
             {isLoading ? "Đang lưu..." : "Lưu thông tin"}
-          </Button>
+          </button>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
