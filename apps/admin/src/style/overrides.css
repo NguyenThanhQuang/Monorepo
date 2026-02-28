@@ -29,3 +29,79 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
   border-color: rgba(37, 99, 235, 0.65);
 }
+
+/* --------------------------------------------------------------------------
+   Admin layout helpers
+   --------------------------------------------------------------------------
+   The project currently checks in a prebuilt Tailwind output file.
+   If that file wasn't rebuilt after changing components, some responsive
+   variants (e.g. lg:ml-64, lg:hidden) may be missing.
+
+   To make the Admin UI always usable, we implement the sidebar/main layout
+   with plain CSS media queries.
+*/
+
+.admin-desktop-only {
+  display: none !important;
+}
+
+.admin-mobile-only {
+  display: inline-flex !important;
+}
+
+/* The mobile header element also has Tailwind utility classes like `flex`.
+   Use !important so our breakpoint rules always win even if the checked-in
+   Tailwind output is rebuilt or reordered. */
+.admin-mobile-header {
+  display: flex !important;
+}
+
+/* Desktop: keep main content visible next to the fixed sidebar */
+@media (min-width: 1024px) {
+  .admin-desktop-only {
+    display: inline-flex !important;
+  }
+
+  .admin-mobile-only {
+    display: none !important;
+  }
+
+  .admin-mobile-header {
+    display: none !important;
+  }
+
+  .admin-overlay {
+    display: none !important;
+  }
+
+  .admin-sidebar {
+    transform: translateX(0) !important;
+  }
+
+  .admin-main {
+    margin-left: var(--admin-sidebar-width, 16rem);
+  }
+
+  .admin-content-wrap {
+    padding-top: 0;
+  }
+}
+
+/* Mobile: slide sidebar in/out without relying on Tailwind translate utilities */
+@media (max-width: 1023.98px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .admin-sidebar.is-mobile-open {
+    transform: translateX(0);
+  }
+
+  .admin-main {
+    margin-left: 0;
+  }
+
+  .admin-content-wrap {
+    padding-top: 4rem; /* matches the fixed mobile header height (h-16) */
+  }
+}
