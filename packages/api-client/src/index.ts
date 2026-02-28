@@ -1,3 +1,4 @@
+import { adminApi } from "./modules/admin.api";
 import { authApi } from "./modules/auth.api";
 import { bookingsApi } from "./modules/bookings.api";
 import { companiesApi } from "./modules/companies.api";
@@ -11,12 +12,15 @@ import { tripsApi } from "./modules/trips.api";
 import { usersApi } from "./modules/users.api";
 import { vehiclesApi } from "./modules/vehicles.api";
 
-// Export Core HTTP Client (Nếu muốn dùng thủ công)
+export type {
+  CompanyRevenueStats,
+  DashboardStats,
+  RecentActivity,
+  RevenueFilterParams,
+} from "./modules/admin.api";
 
-// Export Type Definition của Error để catch lỗi
 export type { ApiErrorResponse } from "@obtp/shared-types";
 
-// Export dạng Single Namespace 'api'
 export const api = {
   auth: authApi,
   users: usersApi,
@@ -30,10 +34,11 @@ export const api = {
   dashboard: dashboardApi,
   maps: mapsApi,
   revenueApi: revenueApi,
+  admin: adminApi,
 };
 
-// Hoặc export lẻ từng cái nếu thích tree-shaking
 export {
+  adminApi,
   authApi,
   bookingsApi,
   companiesApi,
@@ -41,9 +46,9 @@ export {
   locationsApi,
   mapsApi,
   paymentsApi,
+  revenueApi,
   reviewsApi,
   tripsApi,
   usersApi,
   vehiclesApi,
-  revenueApi
 };

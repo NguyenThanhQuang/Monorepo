@@ -26,9 +26,11 @@ export function RevenueDashboard() {
     try {
       setLoading(true);
       setError(null);
+
       const res = await revenueApi.getRevenue(month);
       setData(normalizeRevenueResponse(res));
     } catch (e: any) {
+      console.error("RevenueDashboard load error:", e);
       setError(e?.response?.data?.message || "Không thể tải dữ liệu doanh thu");
       setData([]);
     } finally {
@@ -43,7 +45,10 @@ export function RevenueDashboard() {
 
   const formatCurrency = (v: number) => new Intl.NumberFormat("vi-VN").format(v) + "đ";
 
-  const empty = useMemo(() => !loading && !error && data.length === 0, [loading, error, data.length]);
+  const empty = useMemo(
+    () => !loading && !error && data.length === 0,
+    [loading, error, data.length]
+  );
 
   return (
     <div className="p-6">
@@ -100,13 +105,17 @@ export function RevenueDashboard() {
               </tr>
             )}
 
-            {!loading && data.map((item) => (
-              <tr key={item.companyName} className="border-b dark:border-gray-700 hover:bg-gray-50/60 dark:hover:bg-white/5">
-                <td className="p-4 font-medium dark:text-white">{item.companyName}</td>
-                <td className="p-4 dark:text-white">{item.totalBookings}</td>
-                <td className="p-4 font-semibold text-green-600">{formatCurrency(item.totalRevenue)}</td>
-              </tr>
-            ))}
+            {!loading &&
+              data.map((item) => (
+                <tr
+                  key={item.companyName}
+                  className="border-b dark:border-gray-700 hover:bg-gray-50/60 dark:hover:bg-white/5"
+                >
+                  <td className="p-4 font-medium dark:text-white">{item.companyName}</td>
+                  <td className="p-4 dark:text-white">{item.totalBookings}</td>
+                  <td className="p-4 font-semibold text-green-600">{formatCurrency(item.totalRevenue)}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>

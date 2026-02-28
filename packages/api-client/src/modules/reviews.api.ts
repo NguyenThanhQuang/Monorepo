@@ -2,6 +2,7 @@ import {
   CreateGuestReviewPayload,
   CreateReviewPayload,
   Review,
+  ReviewDTO,
   ReviewQuery,
   UpdateUserReviewPayload,
 } from "@obtp/shared-types";
@@ -28,9 +29,14 @@ export const reviewsApi = {
     return http.patch<Review>(`/reviews/${id}/my-review`, payload);
   },
 
+  // Lấy reviews của user hiện tại
+  getMyReviews: () => {
+    return http.get<Review[]>("/reviews/my");
+  },
+
   // --- ADMIN ---
-  getAllAdmin: (query: ReviewQuery) => {
-    return http.get<Review[]>("/reviews/admin/all", { params: query });
+  getAllAdmin: (params?: { companyId?: string }) => {
+    return http.get<ReviewDTO[]>("/reviews/admin/all", { params });
   },
 
   toggleVisibility: (id: string, isVisible: boolean) => {

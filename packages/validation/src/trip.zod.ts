@@ -1,12 +1,10 @@
 import { BUSINESS_CONSTANTS } from "@obtp/business-logic";
 import { z } from "zod";
 
-// Reusable sub-schema
 const TripStopSchema = z.object({
   locationId: z.string().regex(BUSINESS_CONSTANTS.REGEX.MONGO_ID, {
-    message: "Location ID invalid",
+    message: "Location ID không hợp lệ",
   }),
-
   expectedArrivalTime: z.string().datetime(),
   expectedDepartureTime: z.string().datetime().optional(),
 });
@@ -14,37 +12,37 @@ const TripStopSchema = z.object({
 export const CreateTripSchema = z
   .object({
     companyId: z.string().regex(BUSINESS_CONSTANTS.REGEX.MONGO_ID, {
-      message: "Company ID invalid",
+      message: "Company ID không hợp lệ",
     }),
     vehicleId: z.string().regex(BUSINESS_CONSTANTS.REGEX.MONGO_ID, {
-      message: "Vehicle ID invalid",
+      message: "Vehicle ID không hợp lệ",
     }),
-
     route: z.object({
       fromLocationId: z.string().regex(BUSINESS_CONSTANTS.REGEX.MONGO_ID, {
-        message: "From Location invalid",
+        message: "From Location ID không hợp lệ",
       }),
       toLocationId: z.string().regex(BUSINESS_CONSTANTS.REGEX.MONGO_ID, {
-        message: "To Location invalid",
+        message: "To Location ID không hợp lệ",
       }),
       stops: z.array(TripStopSchema).optional(),
     }),
-
-    departureTime: z
-      .string()
-      .datetime({ message: "Thời gian khởi hành không hợp lệ" }),
-    expectedArrivalTime: z
-      .string()
-      .datetime({ message: "Thời gian đến không hợp lệ" }),
-
-    price: z.coerce.number().min(0),
+    departureTime: z.string().refine((val) => !isNaN(Date.parse(val)), {
+      message: "Thời gian khởi hành không hợp lệ",
+    }),
+    expectedArrivalTime: z.string().refine((val) => !isNaN(Date.parse(val)), {
+      message: "Thời gian đến không hợp lệ",
+    }),
+    price: z.coerce.number().min(0, "Giá vé không thể là số âm"),
     isRecurrenceTemplate: z.boolean().optional().default(false),
   })
   .refine(
     (data) => {
+      if (!data.departureTime || !data.expectedArrivalTime) {
+        return true;
+      }
       const start = new Date(data.departureTime);
       const end = new Date(data.expectedArrivalTime);
-      return start > end;
+      return start < end;
     },
     {
       message: "Thời gian khởi hành phải trước thời gian dự kiến đến",
@@ -55,7 +53,6 @@ export const CreateTripSchema = z
 export const SearchTripQuerySchema = z.object({
   from: z.string().min(1),
   to: z.string().min(1),
-
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Date format YYYY-MM-DD" }),

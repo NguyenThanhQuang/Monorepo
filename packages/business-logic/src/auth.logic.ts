@@ -1,4 +1,4 @@
-import * as bcrypt from "bcrypt";
+import * as bcrypt from "bcryptjs";
 import * as crypto from "crypto";
 
 export function generateRandomToken(length: number = 32): string {

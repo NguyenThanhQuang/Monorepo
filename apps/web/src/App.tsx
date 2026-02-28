@@ -1,4 +1,3 @@
-// App.tsx
 import { useEffect, useState } from 'react';
 
 import { FAQPage } from './components/layout/faq/FAQPage';
@@ -12,15 +11,12 @@ import { SearchResults } from './components/shared/Search/SearchResults';
 
 import { Auth } from './pages/auth/auth';
 import { UserProfilePage } from './pages/UserProfile';
+import { MyTripsPage } from './pages/MyTripsPage'; // Import MyTripsPage
 
 /* ===== ADMIN ===== */
 import { AdminLoginContainer } from './hooks/Logic/AdminLogin.container';
 import { SystemDashboardContainer } from './hooks/Logic/SystemDashboard.container';
 import { UserManagementContainer } from './hooks/Logic/UserManagement.container';
-import { CompanyDashboard } from './pages/company-dashboard';
-import { BookingManagement } from './pages/admin/BookingManagement';
-import { RouteManagement } from './pages/admin/route-management';
-import VehicleManagementPage from './pages/admin/vehicle-management';
 import AddTripContainer from '../../portal/src/features/trips/add-trip/AddTripContainer';
 import { TripDetail } from './components/shared/Search/TripDetail';
 
@@ -28,7 +24,6 @@ import { TripDetail } from './components/shared/Search/TripDetail';
 
 /* ================= PLACEHOLDER ================= */
 const TicketLookupPage = () => <div className="p-6">Tra Cứu Vé</div>;
-const MyTripsPage = () => <div className="p-6">Chuyến Đi Của Tôi</div>;
 
 /* ================= PAGE TYPE ================= */
 export type Page =
@@ -44,7 +39,7 @@ export type Page =
   | 'add-trip'
   | 'trips-management' 
   | 'vehicles-management'
-  | 'trip-detail'        // 👈 THÊM DÒNG NÀY
+  | 'trip-detail'
   | 'booking-management'
   /* SYSTEM */
   | 'system-dashboard'
@@ -214,7 +209,7 @@ const App = () => {
         return <UserProfilePage onBack={() => setPage('home')} />;
 
       case 'myTrips':
-        return <MyTripsPage />;
+        return <MyTripsPage onBack={() => setPage('home')} />;
 
       case 'add-trip':
         return <AddTripContainer />;
@@ -253,18 +248,7 @@ const App = () => {
       case 'user-management':
         return <UserManagementContainer />;
 
-      /* ===== COMPANY ===== */
-      case 'company-dashboard':
-        return <CompanyDashboard onNavigate={setPage} />;
 
-      case 'company-booking':
-        return <BookingManagement />;
-
-      case 'company-route':
-        return <RouteManagement />;
-
-      case 'company-vehicle':
-        return <VehicleManagementPage />;
 
       case 'home':
       default:

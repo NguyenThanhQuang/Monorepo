@@ -1,423 +1,422 @@
-  import { CompanyStatus, LocationType, UserRole, VehicleStatus } from "./enums";
+import { CompanyStatus, LocationType, UserRole, VehicleStatus } from "./enums";
 
-  /**
-   * Interface chuẩn GeoJSON cho tọa độ không gian.
-   * Theo chuẩn MongoDB: [longitude, latitude]
-   */
-  export interface GeoJsonPoint {
-    type: "Point";
-    coordinates: [number, number];
-  }
-  // src/pages/ticket-lookup/types.ts
+/**
+ * Interface chuẩn GeoJSON cho tọa độ không gian.
+ * Theo chuẩn MongoDB: [longitude, latitude]
+ */
+export interface GeoJsonPoint {
+  type: "Point";
+  coordinates: [number, number];
+}
 
-  export interface TicketLookupForm {
-    identifier: string;
-    contactPhone: string;
-  }
+export interface TicketLookupForm {
+  identifier: string;
+  contactPhone: string;
+}
 
-  export interface TripSeat {
+export interface TripSeat {
+  seatNumber: string;
+  status: SeatStatus;
+  floor?: number;
+  bookingId?: string;
+  position?: { row: number; col: number; x?: number; y?: number };
+}
+
+export interface TripDetailResponse {
+  _id: string;
+  price: number;
+  departureTime: string;
+  expectedArrivalTime: string;
+  companyId: {
+    name: string;
+  };
+  vehicleId: {
+    type: string;
+    totalSeats: number;
+  };
+  route: {
+    fromLocationId: { name: string };
+    toLocationId: { name: string };
+  };
+  seats: TripSeat[];
+}
+
+export interface UserProfileResponse {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export interface UpdateProfilePayload {
+  name: string;
+  phone: string;
+}
+
+export interface TicketLookupResponse {
+  _id: string;
+  ticketCode: string;
+  status: "HELD" | "CONFIRMED" | "CANCELLED";
+
+  contactName: string;
+  contactPhone: string;
+
+  totalAmount: number;
+
+  passengers: {
     seatNumber: string;
-    status: SeatStatus;
-    floor?: number;
-    bookingId?: string;
-    position?: { row: number; col: number; x?: number; y?: number };
-  }
+    price: number;
+  }[];
 
-    export interface TripDetailResponse {
-      _id: string;
-      price: number;
-      departureTime: string;
-      expectedArrivalTime: string;
-      companyId: {
+  tripId: {
+    departureTime: string;
+    route: {
+      fromLocationId: {
         name: string;
       };
-      vehicleId: {
-        type: string;
-        totalSeats: number;
-      };
-      route: {
-        fromLocationId: { name: string };
-        toLocationId: { name: string };
-      };
-      seats: TripSeat[];
-    }
-
-  export interface UserProfileResponse {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  }
-
-  export interface UpdateProfilePayload {
-    name: string;
-    phone: string;
-  }
-
-  export interface TicketLookupResponse {
-    _id: string;
-    ticketCode: string;
-    status: "HELD" | "CONFIRMED" | "CANCELLED";
-
-    contactName: string;
-    contactPhone: string;
-
-    totalAmount: number;
-
-    passengers: {
-      seatNumber: string;
-      price: number;
-    }[];
-
-    tripId: {
-      departureTime: string;
-      route: {
-        fromLocationId: {
-          name: string;
-        };
-        toLocationId: {
-          name: string;
-        };
-      };
-      companyId: {
+      toLocationId: {
         name: string;
-        logoUrl?: string;
       };
     };
-  }
+    companyId: {
+      name: string;
+      logoUrl?: string;
+    };
+  };
+}
 
-  export interface Location {
-    _id: string;
+export interface Location {
+  _id: string;
+  id: string;
+  name: string;
+
+  slug: string;
+  province: string;
+  district?: string;
+  fullAddress: string;
+  location: GeoJsonPoint;
+  type: LocationType;
+  images?: string[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  nameVi: string;
+  nameEn: string;
+  image: string;
+  routes: number;
+  popular: boolean;
+  description?: string;
+  popularRoutes?: Array<{
+    from: string;
+    to: string;
+    duration: string;
+    price: string;
+    trips: number;
+  }>;
+}
+
+export interface User {
+  id: string; // Mapping from _id via repository wrapper
+  _id: string; // Mongoose original ID
+
+  name: string;
+  email: string;
+  phone: string;
+  passwordHash?: string; // Internal usage only (select: false)
+
+  roles: UserRole[];
+  companyId?: string; // Reference ID stored as string
+
+  isEmailVerified: boolean;
+  isBanned: boolean;
+
+  // Timestamps
+  lastLoginDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Tokens (Internal - Should usually be selected false)
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
+  accountActivationToken?: string;
+  accountActivationExpires?: Date;
+}
+
+export interface Company {
+  id: string; // ObjectId
+  name: string;
+  code: string; // Unique identifier (VD: FUTA, THANHBUOI)
+  address?: string;
+  phone?: string;
+  email?: string; // Email liên hệ chung của công ty
+  description?: string;
+  logoUrl?: string;
+  status: CompanyStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type SeatMapLayout = (string | null)[][];
+
+export interface SeatMap {
+  rows: number;
+  cols: number;
+  layout: SeatMapLayout;
+}
+
+export interface Vehicle {
+  id: string;
+  _id: string;
+  amenities?: string[]; //
+  companyId: string;
+  vehicleNumber: string;
+  type: string;
+  description?: string;
+  status: VehicleStatus;
+  vehicle?: Pick<
+    Vehicle,
+    "id" | "_id" | "vehicleNumber" | "amenities" | "type"
+  >;
+  floors: number;
+  seatRows: number;
+  seatColumns: number;
+  aislePositions: number[];
+
+  totalSeats: number;
+  seatMap?: SeatMap;
+  seatMapFloor2?: SeatMap;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+import { SeatStatus, TripStatus, TripStopStatus } from "./enums";
+
+export interface TripStopInfo {
+  locationId: string; // Ref Location
+  expectedArrivalTime: Date;
+  expectedDepartureTime?: Date;
+  status: TripStopStatus;
+}
+
+export interface RouteInfo {
+  fromLocationId: string;
+  toLocationId: string;
+  stops: TripStopInfo[];
+  duration?: number; // Minutes
+  distance?: number; // Meters or KM
+  // ✅ FIX: dùng cho UI
+  from?: Location;
+  to?: Location;
+}
+
+export interface Trip {
+  id: string;
+  _id: string;
+
+  companyId: string;
+
+  vehicleId: string; // backend ref
+  vehicle?: {
     id: string;
-    name: string;
-
-    slug: string;
-    province: string;
-    district?: string;
-    fullAddress: string;
-    location: GeoJsonPoint;
-    type: LocationType;
-    images?: string[];
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    nameVi: string;
-    nameEn: string;
-    image: string;
-    routes: number;
-    popular: boolean;
-    description?: string;
-    popularRoutes?: Array<{
-      from: string;
-      to: string;
-      duration: string;
-      price: string;
-      trips: number;
-    }>;
-  }
-
-  export interface User {
-    id: string; // Mapping from _id via repository wrapper
-    _id: string; // Mongoose original ID
-
-    name: string;
-    email: string;
-    phone: string;
-    passwordHash?: string; // Internal usage only (select: false)
-
-    roles: UserRole[];
-    companyId?: string; // Reference ID stored as string
-
-    isEmailVerified: boolean;
-    isBanned: boolean;
-
-    // Timestamps
-    lastLoginDate?: Date;
-    createdAt: Date;
-    updatedAt: Date;
-
-    // Tokens (Internal - Should usually be selected false)
-    emailVerificationToken?: string;
-    emailVerificationExpires?: Date;
-    passwordResetToken?: string;
-    passwordResetExpires?: Date;
-    accountActivationToken?: string;
-    accountActivationExpires?: Date;
-  }
-
-  export interface Company {
-    id: string; // ObjectId
-    name: string;
-    code: string; // Unique identifier (VD: FUTA, THANHBUOI)
-    address?: string;
-    phone?: string;
-    email?: string; // Email liên hệ chung của công ty
-    description?: string;
-    logoUrl?: string;
-    status: CompanyStatus;
-    createdAt: Date;
-    updatedAt: Date;
-  }
-
-  export type SeatMapLayout = (string | null)[][];
-
-  export interface SeatMap {
-    rows: number;
-    cols: number;
-    layout: SeatMapLayout;
-  }
-
-  export interface Vehicle {
-    id: string;
-    _id: string;
-  amenities?: string[]; // 
-    companyId: string;
     vehicleNumber: string;
-    type: string;
-    description?: string;
-    status: VehicleStatus;
-    vehicle?: Pick<
-      Vehicle,
-      'id' | '_id' | 'vehicleNumber' | 'amenities' | 'type'
-    >;
-    floors: number;
-    seatRows: number;
-    seatColumns: number;
-    aislePositions: number[];
+  }; // ✅ UI dùng
 
-    totalSeats: number;
-    seatMap?: SeatMap;
-    seatMapFloor2?: SeatMap;
+  route: RouteInfo;
 
-    createdAt: Date;
-    updatedAt: Date;
-  }
+  departureTime: Date;
+  expectedArrivalTime: Date;
 
-  import { SeatStatus, TripStatus, TripStopStatus } from "./enums";
+  price: number;
+  status: TripStatus;
 
-  export interface TripStopInfo {
-    locationId: string; // Ref Location
-    expectedArrivalTime: Date;
-    expectedDepartureTime?: Date;
-    status: TripStopStatus;
-  }
+  seats: TripSeat[];
+  availableSeatsCount: number;
+  totalSeats: number;
 
-  export interface RouteInfo {
-    fromLocationId: string;
-    toLocationId: string;
-    stops: TripStopInfo[];
-    duration?: number; // Minutes
-    distance?: number; // Meters or KM
-    // ✅ FIX: dùng cho UI
-    from?: Location;
-    to?: Location;
-  }
+  isRecurrenceTemplate: boolean;
+  isRecurrenceActive: boolean;
+  recurrenceParentId?: string;
 
-  export interface Trip {
-    id: string;
-    _id: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-    companyId: string;
+import { BookingStatus, PaymentStatus } from "./enums";
 
-    vehicleId: string; // backend ref
-    vehicle?: {
-      id: string;
-      vehicleNumber: string;
-    }; // ✅ UI dùng
+export interface PassengerInfo {
+  name: string;
+  phone: string;
+  seatNumber: string; // Số ghế (A01, B02...)
+  price: number; // Giá vé tại thời điểm đặt (Snapshot)
+}
 
-    route: RouteInfo;
+export interface Booking {
+  id: string;
+  _id: string;
 
-    departureTime: Date;
-    expectedArrivalTime: Date;
+  userId?: string;
+  companyId: string;
+  tripId: string;
 
-    price: number;
-    status: TripStatus;
+  // Thông tin liên hệ đặt vé
+  contactName: string;
+  contactPhone: string;
+  contactEmail?: string;
 
-    seats: TripSeat[];
-    availableSeatsCount: number;
-    totalSeats: number;
+  // Chi tiết vé
+  passengers: PassengerInfo[];
+  totalAmount: number;
 
-    isRecurrenceTemplate: boolean;
-    isRecurrenceActive: boolean;
-    recurrenceParentId?: string;
+  status: BookingStatus;
+  paymentStatus: PaymentStatus;
+  paymentMethod?: string;
 
-    createdAt: Date;
-    updatedAt: Date;
-  }
+  ticketCode?: string; // Mã vé (khi đã confirm)
+  paymentOrderCode?: number; // Mã đơn hàng payment gateway
+  paymentGatewayTransactionId?: string;
 
-  import { BookingStatus, PaymentStatus } from "./enums";
+  // TTL Management
+  bookingTime: Date;
+  heldUntil?: Date; // Thời hạn giữ ghế
 
-  export interface PassengerInfo {
-    name: string;
-    phone: string;
-    seatNumber: string; // Số ghế (A01, B02...)
-    price: number; // Giá vé tại thời điểm đặt (Snapshot)
-  }
+  // Reference Review (Sau khi hoàn thành chuyến đi)
+  reviewId?: string;
+  isReviewed?: boolean;
 
-  export interface Booking {
-    id: string;
-    _id: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-    userId?: string;
-    companyId: string;
-    tripId: string;
+import { PaymentMethod } from "./enums";
 
-    // Thông tin liên hệ đặt vé
-    contactName: string;
-    contactPhone: string;
-    contactEmail?: string;
+export interface PaymentTransaction {
+  id: string;
+  _id: string;
 
-    // Chi tiết vé
-    passengers: PassengerInfo[];
-    totalAmount: number;
+  orderCode: number; // Unique int required by PayOS
+  bookingId: string;
+  amount: number;
 
-    status: BookingStatus;
-    paymentStatus: PaymentStatus;
-    paymentMethod?: string;
+  paymentMethod: string | PaymentMethod;
+  status: PaymentStatus;
 
-    ticketCode?: string; // Mã vé (khi đã confirm)
-    paymentOrderCode?: number; // Mã đơn hàng payment gateway
-    paymentGatewayTransactionId?: string;
+  // Data thô từ gateway để debug
+  gatewayTransactionId?: string;
+  transactionDateTime?: string; // string ISO/Format from gateway
+  rawResponse?: Record<string, any>;
 
-    // TTL Management
-    bookingTime: Date;
-    heldUntil?: Date; // Thời hạn giữ ghế
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-    // Reference Review (Sau khi hoàn thành chuyến đi)
-    reviewId?: string;
-    isReviewed?: boolean;
+// Review Entity
+export interface Review {
+  id: string;
+  _id: string;
 
-    createdAt: Date;
-    updatedAt: Date;
-  }
+  userId?: string; // Có thể null nếu Guest review hoặc logic xóa user
 
-  import { PaymentMethod } from "./enums";
+  bookingId: string; // Unique
+  tripId: string; // Reference
+  companyId: string; // Reference (Denormalized)
 
-  export interface PaymentTransaction {
-    id: string;
-    _id: string;
+  displayName: string; // Tên hiển thị (User thật hoặc Tên khách)
 
-    orderCode: number; // Unique int required by PayOS
-    bookingId: string;
-    amount: number;
+  rating: number; // 1-5
+  comment?: string;
 
-    paymentMethod: string | PaymentMethod;
-    status: PaymentStatus;
+  isAnonymous: boolean; // Nếu true -> Frontend tự mask tên
 
-    // Data thô từ gateway để debug
-    gatewayTransactionId?: string;
-    transactionDateTime?: string; // string ISO/Format from gateway
-    rawResponse?: Record<string, any>;
+  editCount: number;
+  lastEditedAt?: Date;
 
-    createdAt: Date;
-    updatedAt: Date;
-  }
+  isVisible: boolean; // Moderation flag
 
-  // Review Entity
-  export interface Review {
-    id: string;
-    _id: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+/// bổ sung ui
+export interface LocationSuggestion {
+  id: string;
+  name: string;
+  province: string;
+  type: string;
+}
+// @obtp/shared-types
 
-    userId?: string; // Có thể null nếu Guest review hoặc logic xóa user
+export interface AdminBookingResponse {
+  id: string;
+  ticketCode?: string;
 
-    bookingId: string; // Unique
-    tripId: string; // Reference
-    companyId: string; // Reference (Denormalized)
+  contactName: string;
+  contactPhone: string;
 
-    displayName: string; // Tên hiển thị (User thật hoặc Tên khách)
+  routeName: string; // "TP.HCM → Đà Lạt"
+  departureDate: string; // ISO
+  departureTime: string; // "05:00"
 
-    rating: number; // 1-5
-    comment?: string;
+  seatNumbers: string[]; // ["A15", "A16"]
 
-    isAnonymous: boolean; // Nếu true -> Frontend tự mask tên
+  vehiclePlate?: string;
 
-    editCount: number;
-    lastEditedAt?: Date;
+  totalAmount: number;
 
-    isVisible: boolean; // Moderation flag
+  status: BookingStatus;
 
-    createdAt: Date;
-    updatedAt: Date;
-  }
-  /// bổ sung ui
-  export interface LocationSuggestion {
-    id: string;
-    name: string;
-    province: string;
-    type: string;
-  }
-  // @obtp/shared-types
+  createdAt: Date;
+}
+export interface CompanyStats {
+  totalTrips: number;
+  totalVehicles: number;
+  totalBookings: number;
+  totalRevenue?: number;
+}
+// Trong shared-types.ts hoặc ngay trong component
+export interface SimpleVehicle {
+  _id: string;
+  id: string;
+  licensePlate: string; // Biển số xe
+  vehicleNumber?: string; // Có thể là biển số
+  name?: string; // Tên xe (nếu có)
+  brand?: string; // Hãng xe
+  model?: string; // Dòng xe
+  type?: string; // Loại xe: sleeper, seater, vip
+  capacity: number; // Số ghế
+  totalSeats?: number; // Cũng là số ghế
+  companyId: string;
+  status: string;
+}
+export interface Company {
+  _id: string;
+  id: string;
+  name: string;
+  code: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  description?: string;
+  logoUrl?: string;
+  status: CompanyStatus;
 
-  export interface AdminBookingResponse {
-    id: string;
-    ticketCode?: string;
+  stats?: CompanyStats; // ✅ FIX
 
-    contactName: string;
-    contactPhone: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-    routeName: string; // "TP.HCM → Đà Lạt"
-    departureDate: string; // ISO
-    departureTime: string; // "05:00"
+export interface AdminUserListItem {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  roles: UserRole[];
+  isBanned: boolean;
+  createdAt: string;
 
-    seatNumbers: string[]; // ["A15", "A16"]
-
-    vehiclePlate?: string;
-
-    totalAmount: number;
-
-    status: BookingStatus;
-
-    createdAt: Date;
-  }
-  export interface CompanyStats {
-    totalTrips: number;
-    totalVehicles: number;
-    totalBookings: number;
-    totalRevenue?: number;
-  }
-  // Trong shared-types.ts hoặc ngay trong component
-  export interface SimpleVehicle {
-    _id: string;
-    id: string;
-    licensePlate: string;    // Biển số xe
-    vehicleNumber?: string;  // Có thể là biển số
-    name?: string;          // Tên xe (nếu có)
-    brand?: string;         // Hãng xe
-    model?: string;         // Dòng xe
-    type?: string;          // Loại xe: sleeper, seater, vip
-    capacity: number;       // Số ghế
-    totalSeats?: number;    // Cũng là số ghế
-    companyId: string;
-    status: string;
-  }
-  export interface Company {
-    _id:string;
-    id: string;
-    name: string;
-    code: string;
-    address?: string;
-    phone?: string;
-    email?: string;
-    description?: string;
-    logoUrl?: string;
-    status: CompanyStatus;
-
-    stats?: CompanyStats; // ✅ FIX
-
-    createdAt: Date;
-    updatedAt: Date;
-  }
-
-  export interface AdminUserListItem {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    roles: UserRole[];
-    isBanned: boolean;
-    createdAt: string;
-
-    // FE computed (optional)
-    totalTrips?: number;
-    totalSpent?: number;
-  }
+  // FE computed (optional)
+  totalTrips?: number;
+  totalSpent?: number;
+}

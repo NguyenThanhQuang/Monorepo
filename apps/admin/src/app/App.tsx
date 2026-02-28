@@ -1,67 +1,132 @@
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useNavigate,
-} from "react-router-dom";
-import { AdminLayout } from "../components/layout/AdminLayout";
-import { RevenueDashboard } from "../features/RevenueDashboard/RevenueDashboard";
-import { CompanyManagement } from "../features/companies/pages/CompanyManagement";
-import { AdminLogin } from "../features/auth/pages/AdminLogin";
+// src/app/App.tsx
+import type { ReactNode } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
-function isAuthed() {
-  return Boolean(localStorage.getItem("accessToken"));
+import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { LanguageProvider } from "../contexts/LanguageContext";
+import { ThemeProvider } from "./providers";
+
+import { AdminLayout } from "../components/layout/AdminLayout";
+import LoginPage from "../features/auth/pages/LoginPage";
+import { AdminDashboard } from "../features/dashboard/pages/DashboardPage";
+import { AdminRevenuePage } from "../features/bookings/pages/AdminRevenuePage";
+import { CompanyManagement } from "../features/companies/pages/CompanyManagement";
+import { UserManagement } from "../features/users/pages/UserManagement";
+import { AdminReviewManagement } from "../features/review/page/AdminReviewManagement";
+
+function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  // nếu role khác tên (ADMIN/admin) thì sửa ở đây
+  if (!user.roles?.includes("admin")) return <Navigate to="/login" replace />;
+
+  return <AdminLayout>{children}</AdminLayout>;
 }
 
-function LoginRoute() {
-  const nav = useNavigate();
+function AppContent() {
+  const { user } = useAuth();
 
   return (
-    <AdminLogin
-      onBack={() => nav(-1)}
-      onLoginSuccess={(_adminData) => {
-        // AdminLogin itself already saves accessToken.
-        nav("/admin/revenue", { replace: true });
-      }}
-    />
-  );
-}
+    <Router>
+      <Routes>
+        {/* Public */}
+        <Route path="/login" element={<LoginPage />} />
 
-function RequireAuth({ children }: { children: React.ReactNode }) {
-  if (!isAuthed()) return <Navigate to="/login" replace />;
-  return <>{children}</>;
+        {/* Default */}
+        <Route
+          path="/"
+          element={<Navigate to={user ? "/admin/dashboard" : "/login"} replace />}
+        />
+
+        {/* Admin */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/revenue"
+          element={
+            <ProtectedRoute>
+              <AdminRevenuePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/companies"
+          element={
+            <ProtectedRoute>
+              <CompanyManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute>
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/reviews"
+          element={
+            <ProtectedRoute>
+              <AdminReviewManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 404 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={<Navigate to="/admin/revenue" replace />}
-        />
-
-        <Route path="/login" element={<LoginRoute />} />
-
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth>
-              <AdminLayout />
-            </RequireAuth>
-          }
-        >
-          <Route index element={<Navigate to="revenue" replace />} />
-          <Route path="revenue" element={<RevenueDashboard />} />
-          <Route path="companies" element={<CompanyManagement />} />
-        </Route>
-
-        <Route
-          path="*"
-          element={<Navigate to="/admin/revenue" replace />}
-        />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <AppContent />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: "#363636",
+                color: "#fff",
+                borderRadius: "12px",
+              },
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: "#10b981",
+                  secondary: "#fff",
+                },
+              },
+              error: {
+                duration: 4000,
+                iconTheme: {
+                  primary: "#ef4444",
+                  secondary: "#fff",
+                },
+              },
+            }}
+          />
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

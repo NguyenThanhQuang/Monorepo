@@ -1,3 +1,4 @@
+// src/api/users.api.ts
 import {
   ChangePasswordPayload,
   SanitizedUserResponse,
@@ -35,5 +36,16 @@ export const usersApi = {
       `/users/admin/${userId}/status`,
       payload,
     );
+  },
+
+  // Thêm các API mới nếu cần
+  getUserDetails: (userId: string) => {
+    return http.get<SanitizedUserResponse & { totalTrips?: number; totalSpent?: number }>(
+      `/users/${userId}`
+    );
+  },
+
+  getUserBookings: (userId: string) => {
+    return http.get<any[]>(`/users/${userId}/bookings`);
   },
 };

@@ -1,13 +1,7 @@
 import { Injectable, BadRequestException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { TripStatus, TripStopStatus } from "@obtp/shared-types";
-import {
-  ClientSession,
-  Model,
-  QueryFilter,
-  Types,
-  UpdateQuery,
-} from "mongoose";
+import { ClientSession, Model, QueryFilter, Types, UpdateQuery } from "mongoose";
 import { TripDefinition, TripDocument } from "./schemas/trip.schema";
 
 import dayjs from "dayjs";
@@ -43,9 +37,7 @@ export class TripsRepository {
 
   private ensureDateYYYYMMDD(date: string) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ""))) {
-      throw new BadRequestException(
-        `date must be YYYY-MM-DD. Received: ${date}`,
-      );
+      throw new BadRequestException(`date must be YYYY-MM-DD. Received: ${date}`);
     }
     return String(date);
   }
@@ -77,25 +69,16 @@ export class TripsRepository {
 
     // route ids
     if (tripData.route) {
-      if (
-        tripData.route.fromLocationId &&
-        typeof tripData.route.fromLocationId === "string"
-      ) {
+      if (tripData.route.fromLocationId && typeof tripData.route.fromLocationId === "string") {
         if (!isValidObjectId(tripData.route.fromLocationId)) {
-          throw new BadRequestException(
-            `Invalid route.fromLocationId: ${tripData.route.fromLocationId}`,
-          );
+          throw new BadRequestException(`Invalid route.fromLocationId: ${tripData.route.fromLocationId}`);
         }
         tripData.route.fromLocationId = toObjectId(tripData.route.fromLocationId);
       }
-      if (
-        tripData.route.toLocationId &&
-        typeof tripData.route.toLocationId === "string"
-      ) {
+
+      if (tripData.route.toLocationId && typeof tripData.route.toLocationId === "string") {
         if (!isValidObjectId(tripData.route.toLocationId)) {
-          throw new BadRequestException(
-            `Invalid route.toLocationId: ${tripData.route.toLocationId}`,
-          );
+          throw new BadRequestException(`Invalid route.toLocationId: ${tripData.route.toLocationId}`);
         }
         tripData.route.toLocationId = toObjectId(tripData.route.toLocationId);
       }
@@ -105,9 +88,7 @@ export class TripsRepository {
           const stopData = { ...stop };
           if (stopData.locationId && typeof stopData.locationId === "string") {
             if (!isValidObjectId(stopData.locationId)) {
-              throw new BadRequestException(
-                `Invalid stop.locationId: ${stopData.locationId}`,
-              );
+              throw new BadRequestException(`Invalid stop.locationId: ${stopData.locationId}`);
             }
             stopData.locationId = toObjectId(stopData.locationId);
           }
@@ -131,10 +112,7 @@ export class TripsRepository {
     }
 
     // recurrenceParentId
-    if (
-      tripData.recurrenceParentId &&
-      typeof tripData.recurrenceParentId === "string"
-    ) {
+    if (tripData.recurrenceParentId && typeof tripData.recurrenceParentId === "string") {
       if (!isValidObjectId(tripData.recurrenceParentId)) {
         throw new BadRequestException(`Invalid recurrenceParentId: ${tripData.recurrenceParentId}`);
       }
@@ -175,7 +153,11 @@ export class TripsRepository {
     return this.tripModel
       .findById(objectId)
       .populate({ path: "companyId", model: "Company", select: "_id name email phone logoUrl status" })
-      .populate({ path: "vehicleId", model: "Vehicle", select: "_id vehicleNumber type totalSeats status floors seatRows seatColumns aislePositions" })
+      .populate({
+        path: "vehicleId",
+        model: "Vehicle",
+        select: "_id vehicleNumber type totalSeats status floors seatRows seatColumns aislePositions amenities",
+      })
       .populate({ path: "route.fromLocationId", model: "Location", select: "_id name province district address location" })
       .populate({ path: "route.toLocationId", model: "Location", select: "_id name province district address location" })
       .populate({ path: "route.stops.locationId", model: "Location", select: "_id name province district address location" })
@@ -223,8 +205,7 @@ export class TripsRepository {
         {
           $match: {
             departureTime: { $gte: startOfDay, $lt: endOfDay },
-            // ✅ include DEPARTED để user vẫn thấy chuyến (tuỳ app bạn muốn)
-            status: { $in: ["scheduled", "departed"] },
+            status: { $in: [TripStatus.SCHEDULED, TripStatus.DEPARTED] },
             isRecurrenceTemplate: false,
           },
         },
@@ -291,14 +272,8 @@ export class TripsRepository {
       .exec();
   }
 
-  async findDailyTrip(
-    parentId: string | Types.ObjectId,
-    date: Date,
-  ): Promise<TripDocument | null> {
-    const objectId =
-      typeof parentId === "string"
-        ? this.ensureObjectId(parentId, "parentId")
-        : parentId;
+  async findDailyTrip(parentId: string | Types.ObjectId, date: Date): Promise<TripDocument | null> {
+    const objectId = typeof parentId === "string" ? this.ensureObjectId(parentId, "parentId") : parentId;
 
     return this.tripModel
       .findOne({
@@ -335,7 +310,6 @@ export class TripsRepository {
     const fromId = this.ensureObjectId(fromLocationId, "fromLocationId");
     const toId = this.ensureObjectId(toLocationId, "toLocationId");
 
-    // ✅ start/end theo timezone VN
     const start = dayjs.tz(dateStr, TZ).startOf("day").toDate();
     const end = dayjs.tz(dateStr, TZ).add(1, "day").startOf("day").toDate();
 
@@ -355,42 +329,6 @@ export class TripsRepository {
 
     console.log("Mongoose Query:", filter);
 
-    // =========================
-    // ✅ DEBUG CHỐT 100% DB BACKEND ĐANG DÙNG
-    // =========================
-    try {
-      console.log("DEBUG model collection =", this.tripModel.collection.name);
-      console.log("DEBUG model dbName =", (this.tripModel.db as any)?.name);
-
-      const total = await this.tripModel.countDocuments({});
-      console.log("DEBUG total trips in backend DB =", total);
-
-      const routeCount = await this.tripModel.countDocuments({
-        "route.fromLocationId": fromId,
-        "route.toLocationId": toId,
-      });
-      console.log("DEBUG routeCount =", routeCount);
-
-      const matchCount = await this.tripModel.countDocuments(filter);
-      console.log("DEBUG matchCount =", matchCount);
-
-      // bonus: xem thử trip gần nhất theo route (để biết status/time nó là gì)
-      const sample = await this.tripModel
-        .findOne({
-          "route.fromLocationId": fromId,
-          "route.toLocationId": toId,
-        })
-        .sort({ departureTime: -1 })
-        .select({ _id: 1, departureTime: 1, status: 1, "route.fromLocationId": 1, "route.toLocationId": 1 })
-        .lean()
-        .exec();
-      console.log("DEBUG sampleTrip =", sample);
-    } catch (e) {
-      console.log("DEBUG failed:", e);
-    }
-
-    // =========================
-
     return this.tripModel
       .find(filter)
       .populate({
@@ -401,23 +339,22 @@ export class TripsRepository {
       .populate({
         path: "vehicleId",
         model: "Vehicle",
-        select: "_id vehicleNumber type totalSeats status",
+        select: "_id vehicleNumber type totalSeats status amenities",
       })
       .populate({
         path: "route.fromLocationId",
         model: "Location",
-        select: "_id name province",
+        select: "_id name province district address",
       })
       .populate({
         path: "route.toLocationId",
         model: "Location",
-        select: "_id name province",
+        select: "_id name province district address",
       })
       .sort({ departureTime: 1 })
       .lean()
       .exec();
   }
-
 
   async search(filter: any) {
     return this.tripModel
@@ -509,9 +446,7 @@ export class TripsRepository {
     newStatus: TripStatus,
   ): Promise<any> {
     return this.tripModel
-      .updateMany(filter, {
-        $set: { status: newStatus },
-      })
+      .updateMany(filter, { $set: { status: newStatus } })
       .exec();
   }
 }

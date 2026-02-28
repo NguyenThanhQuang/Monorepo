@@ -2,7 +2,7 @@ import { BUSINESS_CONSTANTS } from "@obtp/business-logic";
 import { VehicleStatus } from "@obtp/shared-types";
 import { z } from "zod";
 
-// Shared Sub-Schema
+// Cấu hình vị trí lối đi: Mảng chứa số cột có lối đi, ví dụ [2, 5] nghĩa là sau cột 2 và cột 5 có lối đi
 const AislePositionSchema = z
   .array(z.number().int().min(1).max(10))
   .max(5, "Tối đa 5 lối đi")

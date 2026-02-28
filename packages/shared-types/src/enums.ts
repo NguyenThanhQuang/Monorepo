@@ -8,7 +8,7 @@ export enum UserRole {
   ADMIN = "admin",
   USER = "user",
   STAFF = "staff",
-  DRIVER = 'driver',
+  DRIVER = "driver",
   COMPANY_ADMIN = "company_admin",
 }
 
@@ -69,7 +69,6 @@ export enum BookingStatus {
   EXPIRED = "expired", // Hết hạn giữ chỗ mà không thanh toán
 }
 
-// Payment Related Enums
 export enum PaymentMethod {
   PAYOS = "payos",
   CASH = "cash",

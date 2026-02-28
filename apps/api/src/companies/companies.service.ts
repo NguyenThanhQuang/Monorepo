@@ -4,9 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectConnection } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
-
+// Removed InjectConnection import
 import {
   Company,
   CreateCompanyPayload,
@@ -20,12 +18,13 @@ import { CompaniesRepository } from './companies.repository';
 export class CompaniesService {
   constructor(
     private readonly repo: CompaniesRepository,
-    @InjectConnection() private readonly connection: Connection,
+    // Removed @InjectConnection() private readonly connection: Connection,
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
   ) {}
 
   async create(payload: CreateCompanyPayload): Promise<Company> {
+    // Kiểm tra trùng lặp
     const existsByName = await this.repo.findOne({ name: payload.name });
     if (existsByName) {
       throw new ConflictException(`Nhà xe "${payload.name}" đã tồn tại.`);
@@ -37,15 +36,12 @@ export class CompaniesService {
     }
 
     const { adminName, adminEmail, adminPhone, ...companyInfo } = payload;
-    const session = await this.connection.startSession();
-    session.startTransaction();
+
+    // Tạo company trước
+    const savedCompany = await this.repo.create({ ...companyInfo, code });
 
     try {
-      const savedCompany = await this.repo.create(
-        { ...companyInfo, code },
-        session,
-      );
-
+      // Tạo hoặc thăng chức company admin
       const { user: adminAccount, isNew } =
         await this.usersService.createOrPromoteCompanyAdmin({
           name: adminName,
@@ -54,6 +50,7 @@ export class CompaniesService {
           companyId: savedCompany.id,
         });
 
+      // Gửi email tương ứng
       if (isNew) {
         if (!adminAccount.accountActivationToken) {
           throw new InternalServerErrorException(
@@ -73,13 +70,14 @@ export class CompaniesService {
         });
       }
 
-      await session.commitTransaction();
       return savedCompany;
     } catch (error) {
-      await session.abortTransaction();
+      // Nếu có lỗi khi tạo user hoặc gửi email, rollback thủ công: xóa company vừa tạo
+      await this.repo.delete(savedCompany.id).catch((deleteError) => {
+        // Log lỗi nếu không xóa được, nhưng vẫn throw lỗi gốc
+        console.error('Failed to delete company after user creation error:', deleteError);
+      });
       throw error;
-    } finally {
-      await session.endSession();
     }
   }
 
@@ -104,8 +102,6 @@ export class CompaniesService {
 
     if (payload.name && payload.name !== existing.name) {
       const duplicateName = await this.repo.findOne({ name: payload.name });
-      // Cần check duplicate._id != id, nhưng repository findOne trả về doc
-      // Check thủ công:
       if (duplicateName && duplicateName.id.toString() !== id) {
         throw new ConflictException(`Tên nhà xe "${payload.name}" đã tồn tại.`);
       }
@@ -121,8 +117,5 @@ export class CompaniesService {
     const existing = await this.repo.findById(id);
     if (!existing) throw new NotFoundException(`Nhà xe không tồn tại`);
     await this.repo.delete(id);
-
-    // Note: Cần xem xét xóa Trips/Bookings hoặc User Admin liên quan
-    // Nhưng tuân thủ Scope hiện tại -> chỉ xóa Company collection.
   }
 }

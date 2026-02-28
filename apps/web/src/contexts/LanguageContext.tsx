@@ -16,9 +16,10 @@ const STORAGE_KEY = 'preferredLanguage';
 
 const translations: Record<Language, Record<string, string>> = {
   vi:   {
+    
       // Header
       home: 'Trang chủ',
-      routes: 'Tuyến đường',
+      routes: 'Tyumen đường',
       ticketLookup: 'Tra cứu vé',
       contact: 'Liên hệ',
       hotline: 'Hotline',
@@ -27,13 +28,44 @@ const translations: Record<Language, Record<string, string>> = {
       account: 'Tài khoản',
       myTrips: 'Chuyến xe của tôi',
       profile: 'Thông tin cá nhân',
-    
+      
+
+reviewManagement: 'Quản lý đánh giá',
+reviewManagementDesc: 'Quản lý đánh giá từ khách hàng',
+totalReviews: 'Tổng đánh giá',
+published: 'Đã đăng',
+hidden: 'Đã ẩn',
+fiveStarReviews: 'Đánh giá 5 sao',
+satisfaction: 'Hài lòng',
+ratingDistribution: 'Phân bố đánh giá',
+star: 'sao',
+stars: 'sao',
+searchReviews: 'Tìm kiếm đánh giá...',
+allRatings: 'Tất cả đánh giá',
+allStatus: 'Tất cả trạng thái',
+reviewer: 'Người đánh giá',
+route: 'Tuyến đường',
+rating: 'Đánh giá',
+comment: 'Bình luận',
+date: 'Ngày',
+status: 'Trạng thái',
+actions: 'Thao tác',
+hideReview: 'Ẩn',
+showReview: 'Hiện',
+deleteReview: 'Xóa',
+confirmDelete: 'Xác nhận xóa',
+deleteReviewConfirm: 'Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác.',
+deleting: 'Đang xóa...',
+showing: 'Hiển thị',
+of: 'trên',
+reviews: 'đánh giá',
+ofTotal: 'tổng số',
+
       // Hero
       heroTitle: 'Đặt Vé Xe Khách Trực Tuyến',
       heroSubtitle: 'Nhanh chóng - An toàn - Tiện lợi',
       departure: 'Điểm đi',
       destination: 'Điểm đến',
-      date: 'Ngày đi',
       search: 'Tìm kiếm',
       selectDeparture: 'Chọn điểm đi',
       selectDestination: 'Chọn điểm đến',
@@ -43,7 +75,15 @@ const translations: Record<Language, Record<string, string>> = {
       popularDestinations: 'Điểm đến phổ biến',
       tripsPerDay: 'chuyến/ngày',
       from: 'Từ',
-    
+      selectDepartureFirst: 'Vui lòng chọn điểm đi',
+  selectDestinationFirst: 'Vui lòng chọn điểm đến',
+  sameLocation: 'Điểm đi và điểm đến không thể giống nhau',
+  searching: 'Đang tìm kiếm...',
+  searchSuccess: 'Tìm kiếm thành công!',
+  searchError: 'Có lỗi xảy ra khi tìm kiếm',
+  swapSuccess: 'Đã hoán đổi điểm đi và điểm đến',
+  noLocationsToSwap: 'Chưa có địa điểm để hoán đổi',
+  errorLoadingLocations: 'Không thể tải danh sách địa điểm',
       // Features
       features: 'Tại Sao Chọn Chúng Tôi',
       feature1Title: 'Đặt Vé Nhanh',
@@ -115,7 +155,6 @@ const translations: Record<Language, Record<string, string>> = {
       sortByTime: 'Giờ đi',
       sortByPrice: 'Giá thấp nhất',
       sortByDuration: 'Thời gian',
-      reviews: 'đánh giá',
       seatsAvailable: 'chỗ trống',
       // viewDetails: 'Xem chi tiết', // DUPLICATE REMOVED
       amenityWifi: 'WiFi',
@@ -142,7 +181,6 @@ const translations: Record<Language, Record<string, string>> = {
       lookupButton: 'Tra cứu',
       // ticketConfirmed: 'Vé đã được xác nhận', // DUPLICATE REMOVED
       bookingCode: 'Mã đặt vé',
-      route: 'Tuyến đường',
       time: 'Thời gian',
       passenger: 'Hành khách',
       seatAndPrice: 'Số ghế & Giá vé',
@@ -320,7 +358,6 @@ const translations: Record<Language, Record<string, string>> = {
       driverApplications: 'Đơn đăng ký',
       companyManagement: 'Nhà xe',
       userManagement: 'Người dùng',
-      reviewManagement: 'Đánh giá',
       dataManagement: 'Dữ liệu',
       promoCodeManagement: 'Mã khuyến mãi',
       routeImagesManagement: 'Ảnh tuyến đường',
@@ -483,7 +520,6 @@ const translations: Record<Language, Record<string, string>> = {
       manufacturer: 'Hãng sản xuất',
       // year: 'Năm sản xuất', // DUPLICATE REMOVED
       capacity: 'Số chỗ',
-      status: 'Trạng thái',
       active: 'Hoạt động',
       inactive: 'Ngừng hoạt động',
       maintenance: 'Bảo trì',
@@ -602,7 +638,6 @@ const translations: Record<Language, Record<string, string>> = {
       contactInfo: 'Thông tin liên hệ',
       // licenseInfo: 'Bằng lái', // DUPLICATE REMOVED
       submittedDate: 'Ngày nộp',
-      actions: 'Thao tác',
       // viewDetails: 'Xem chi tiết', // DUPLICATE REMOVED
       // approve: 'Phê duyệt', // DUPLICATE REMOVED
       // reject: 'Từ chối', // DUPLICATE REMOVED
@@ -741,7 +776,6 @@ const translations: Record<Language, Record<string, string>> = {
       employeeCode: 'Mã NV',
       excellentDriver: 'Tài xế xuất sắc',
       // tripsCount: 'Chuyến đi', // DUPLICATE REMOVED
-      rating: 'Đánh giá',
       onTime: 'Đúng giờ',
       thisMonthStats: 'Thống Kê Tháng Này',
       totalTripsThisMonth: 'Tổng chuyến',
@@ -894,7 +928,6 @@ const translations: Record<Language, Record<string, string>> = {
       activeStatus: 'Đang hoạt động',
       totalVehiclesAll: 'Tổng số xe',
       searchByNameEmail: 'Tìm kiếm theo tên, email...',
-      allStatus: 'Tất cả trạng thái',
       activeLabel: 'Hoạt động',
       suspendedLabel: 'Tạm ngưng',
       companyColumn: 'Nhà xe',
@@ -948,21 +981,16 @@ const translations: Record<Language, Record<string, string>> = {
     
       // Review Management
       reviewManagementTitle: 'Quản Lý Đánh Giá',
-      reviewManagementDesc: 'Quản lý đánh giá và phản hồi từ khách hàng',
       publishedReviews: 'Đã đăng',
       flaggedReviews: 'Đã báo cáo',
-      searchReviews: 'Tìm kiếm đánh giá...',
-      allRatings: 'Tất cả đánh giá',
-      stars: 'sao',
+ 
       publishedLabel: 'Đã đăng',
       hiddenLabel: 'Đã ẩn',
       flaggedLabel: 'Đã báo cáo',
       reviewerColumn: 'Người đánh giá',
       companyRouteColumn: 'Nhà xe & Tuyến',
       commentColumn: 'Bình luận',
-      hideReview: 'Ẩn',
-      showReview: 'Hiện',
-      deleteReview: 'Xóa',
+  
       tripDateLabel: 'Chuyến đi:',
       likesLabel: 'lượt thích',
     
@@ -1659,7 +1687,31 @@ const translations: Record<Language, Record<string, string>> = {
       seatNumber: 'Seat Number',
       yearOfManufacture: 'Year of Manufacture',
       manufacturerBrand: 'Manufacturer Brand',
-    
+reviewManagementDesc: 'Manage customer reviews',
+totalReviews: 'Total Reviews',
+published: 'Published',
+hidden: 'Hidden',
+fiveStarReviews: '5-Star Reviews',
+satisfaction: 'Satisfaction',
+ratingDistribution: 'Rating Distribution',
+star: 'star',
+stars: 'stars',
+searchReviews: 'Search reviews...',
+allRatings: 'All Ratings',
+allStatus: 'All Status',
+reviewer: 'Reviewer',
+rating: 'Rating',
+comment: 'Comment',
+actions: 'Actions',
+hideReview: 'Hide',
+showReview: 'Show',
+deleteReview: 'Delete',
+confirmDelete: 'Confirm Delete',
+deleteReviewConfirm: 'Are you sure you want to delete this review? This action cannot be undone.',
+deleting: 'Deleting...',
+showing: 'Showing',
+of: 'of',
+ofTotal: 'of total',
       // Driver Management
       driverManagementTitle: 'Driver Management',
       driverManagementDesc: 'Manage the driver team',
@@ -1741,7 +1793,6 @@ const translations: Record<Language, Record<string, string>> = {
       contactInfo: 'Contact Information',
       // licenseInfo: 'License', // DUPLICATE REMOVED
       submittedDate: 'Submitted Date',
-      actions: 'Actions',
       // viewDetails: 'View Details', // DUPLICATE REMOVED
       // approve: 'Approve', // DUPLICATE REMOVED
       // reject: 'Reject', // DUPLICATE REMOVED
@@ -1880,7 +1931,6 @@ const translations: Record<Language, Record<string, string>> = {
       employeeCode: 'Employee Code',
       excellentDriver: 'Excellent Driver',
       // tripsCount: 'Trips', // DUPLICATE REMOVED
-      rating: 'Rating',
       onTime: 'On Time',
       thisMonthStats: 'This Month\'s Statistics',
       totalTripsThisMonth: 'Total Trips',
@@ -2033,7 +2083,6 @@ const translations: Record<Language, Record<string, string>> = {
       activeStatus: 'Active',
       totalVehiclesAll: 'Total Vehicles',
       searchByNameEmail: 'Search by name, email...',
-      allStatus: 'All Statuses',
       activeLabel: 'Active',
       suspendedLabel: 'Suspended',
       companyColumn: 'Company',
@@ -2087,21 +2136,16 @@ const translations: Record<Language, Record<string, string>> = {
     
       // Review Management
       reviewManagementTitle: 'Review Management',
-      reviewManagementDesc: 'Manage reviews and feedback from customers',
       publishedReviews: 'Published',
       flaggedReviews: 'Flagged',
-      searchReviews: 'Search reviews...',
-      allRatings: 'All Ratings',
-      stars: 'stars',
+
       publishedLabel: 'Published',
       hiddenLabel: 'Hidden',
       flaggedLabel: 'Flagged',
       reviewerColumn: 'Reviewer',
       companyRouteColumn: 'Company & Route',
       commentColumn: 'Comment',
-      hideReview: 'Hide',
-      showReview: 'Show',
-      deleteReview: 'Delete',
+
       tripDateLabel: 'Trip:',
       likesLabel: 'likes',
     

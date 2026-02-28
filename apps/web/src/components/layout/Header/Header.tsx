@@ -15,6 +15,7 @@ import {
   BusFront,
 } from 'lucide-react';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import type { HeaderProps } from '../../../hooks/Props/layout/HeaderProps';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useLanguage } from '../../../contexts/LanguageContext';
@@ -72,6 +73,72 @@ export function Header({
     setLanguage(language === 'vi' ? 'en' : 'vi');
   };
 
+  const handleCompanyAccess = () => {
+    toast.error('Bạn không có quyền truy cập vào trang quản lý nhà xe', {
+      duration: 3000,
+      position: 'top-center',
+      icon: '🚫',
+      style: {
+        background: '#FEE2E2',
+        color: '#991B1B',
+        border: '1px solid #FCA5A5',
+      },
+    });
+  };
+
+  const handleAdminAccess = () => {
+    toast.error('Bạn không có quyền truy cập vào trang quản trị hệ thống', {
+      duration: 3000,
+      position: 'top-center',
+      icon: '🚫',
+      style: {
+        background: '#FEE2E2',
+        color: '#991B1B',
+        border: '1px solid #FCA5A5',
+      },
+    });
+  };
+
+  const handleMyTripsClick = () => {
+    if (!isUser) {
+      toast.error('Chức năng này chỉ dành cho khách hàng', {
+        duration: 3000,
+        position: 'top-center',
+        icon: '🎫',
+        style: {
+          background: '#FEE2E2',
+          color: '#991B1B',
+          border: '1px solid #FCA5A5',
+        },
+      });
+      return;
+    }
+    onMyTripsClick?.();
+  };
+
+  const handleProfileClick = () => {
+    onProfileClick?.(); // Profile vẫn hiển thị cho mọi role
+  };
+
+  const handleTicketLookupClick = () => {
+    onTicketLookupClick?.(); // Tra cứu vé vẫn hiển thị cho mọi role
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setShowUserMenu(false);
+    onLogout?.();
+    toast.success('Đăng xuất thành công!', {
+      duration: 2000,
+      position: 'top-center',
+      icon: '👋',
+      style: {
+        background: '#10B981',
+        color: '#FFFFFF',
+      },
+    });
+  };
+
   return (
     <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-sm sticky top-0 z-50 border-b">
       <div className="max-w-7xl mx-auto px-4">
@@ -91,7 +158,7 @@ export function Header({
           {/* NAV */}
           <nav className="hidden lg:flex items-center space-x-8">
             <button onClick={onHomeClick}>{t('home')}</button>
-            <button onClick={onTicketLookupClick}>
+            <button onClick={handleTicketLookupClick}>
               {t('ticketLookup')}
             </button>
             <button onClick={onContactClick}>{t('contact')}</button>
@@ -142,90 +209,94 @@ export function Header({
                       <div className="text-sm text-gray-500">
                         {user.email}
                       </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {isUser && '👤 Khách hàng'}
+                        {isCompanyAdmin && '🏢 Quản lý nhà xe'}
+                        {isAdmin && '⚙️ Quản trị viên'}
+                      </div>
                     </div>
 
                     <div className="py-2">
-                      {/* USER */}
+                      {/* CHỈ HIỂN THỊ CHO USER THÔNG THƯỜNG */}
                       {isUser && (
                         <button
                           onClick={() => {
                             setShowUserMenu(false);
-                            onMyTripsClick?.();
+                            handleMyTripsClick();
                           }}
-                          className="menu-item"
+                          className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
                         >
-                          <Ticket className="w-5 h-5" />
+                          <Ticket className="w-5 h-5 text-blue-600" />
                           <span>{t('myTrips')}</span>
                         </button>
                       )}
 
+                      {/* PROFILE - HIỂN THỊ CHO MỌI ROLE */}
                       <button
                         onClick={() => {
                           setShowUserMenu(false);
-                          onProfileClick?.();
+                          handleProfileClick();
                         }}
-                        className="menu-item"
+                        className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
                       >
-                        <UserCircle className="w-5 h-5" />
+                        <UserCircle className="w-5 h-5 text-blue-600" />
                         <span>{t('profile')}</span>
                       </button>
 
-                      {/* COMPANY ADMIN */}
+                      {/* COMPANY ADMIN - HIỂN THỊ NHƯNG BÁO LỖI KHI CLICK */}
                       {isCompanyAdmin && (
                         <>
-                          <div className="divider" />
-
+                          <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
                           <button
                             onClick={() => {
                               setShowUserMenu(false);
-                              onCompanyDashboard?.();
+                              handleCompanyAccess();
                             }}
-                            className="menu-item text-blue-600"
+                            className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors text-gray-400 cursor-not-allowed"
+                            disabled
                           >
                             <Building2 className="w-5 h-5" />
-                            <span>Quản lý nhà xe</span>
+                            <span>Quản lý nhà xe (không khả dụng)</span>
                           </button>
 
                           <button
                             onClick={() => {
                               setShowUserMenu(false);
-                              onCompanyTrips?.();
+                              handleCompanyAccess();
                             }}
-                            className="menu-item text-blue-600"
+                            className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors text-gray-400 cursor-not-allowed"
+                            disabled
                           >
                             <BusFront className="w-5 h-5" />
-                            <span>Quản lý chuyến xe</span>
+                            <span>Quản lý chuyến xe (không khả dụng)</span>
                           </button>
                         </>
                       )}
 
-                      {/* SYSTEM ADMIN */}
+                      {/* SYSTEM ADMIN - HIỂN THỊ NHƯNG BÁO LỖI KHI CLICK */}
                       {isAdmin && (
                         <>
-                          <div className="divider" />
+                          <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
                           <button
                             onClick={() => {
                               setShowUserMenu(false);
-                              onAdminAccess?.();
+                              handleAdminAccess();
                             }}
-                            className="menu-item text-purple-600"
+                            className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors text-gray-400 cursor-not-allowed"
+                            disabled
                           >
                             <Shield className="w-5 h-5" />
-                            <span>System Admin</span>
+                            <span>System Admin (không khả dụng)</span>
                           </button>
                         </>
                       )}
 
-                      <div className="divider" />
+                      <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
 
                       {/* LOGOUT */}
                       <button
-                        onClick={() => {
-                          localStorage.clear();
-                          setShowUserMenu(false);
-                          onLogout?.();
-                        }}
-                        className="menu-item text-red-600"
+                        onClick={handleLogout}
+                        className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors text-red-600"
                       >
                         <LogOut className="w-5 h-5" />
                         <span>{t('logout')}</span>
@@ -249,29 +320,6 @@ export function Header({
           </div>
         </div>
       </div>
-
-      {/* ======= MENU ITEM STYLE ======= */}
-      <style>
-        {`
-          .menu-item {
-            width: 100%;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-align: left;
-            transition: background 0.2s;
-          }
-          .menu-item:hover {
-            background: rgba(59,130,246,0.08);
-          }
-          .divider {
-            height: 1px;
-            background: rgba(0,0,0,0.08);
-            margin: 8px 0;
-          }
-        `}
-      </style>
     </header>
   );
 }
