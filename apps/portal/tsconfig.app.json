@@ -34,5 +34,5 @@
     "src",
     "../admin/src/features/auth/components/AdminLogin.tsx",
     "../admin/src/features/auth/components/ForgotPasswordModal.tsx"
-  ]
+, "../../export-portal-src.js"  ]
 }

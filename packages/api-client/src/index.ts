@@ -9,6 +9,7 @@ import { paymentsApi } from "./modules/payments.api";
 import { revenueApi } from "./modules/revenueApi";
 import { reviewsApi } from "./modules/reviews.api";
 import { tripsApi } from "./modules/trips.api";
+import { uploadApi } from "./modules/upload.api";
 import { usersApi } from "./modules/users.api";
 import { vehiclesApi } from "./modules/vehicles.api";
 
@@ -35,6 +36,7 @@ export const api = {
   maps: mapsApi,
   revenueApi: revenueApi,
   admin: adminApi,
+  upload: uploadApi,
 };
 
 export {

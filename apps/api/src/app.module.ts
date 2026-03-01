@@ -3,12 +3,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import * as Joi from 'joi';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { CommonModule } from './common/common.module';
+import { UploadModule } from './common/upload/upload.module';
 import { CompaniesModule } from './companies/companies.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DriversModule } from './drivers/drivers.module';
@@ -22,7 +25,6 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { TripsModule } from './trips/trips.module';
 import { UsersModule } from './users/users.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
-
 
 @Module({
   imports: [
@@ -53,7 +55,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
       validationOptions: {
         allowUnknown: true,
         abortEarly: true,
-         retryWrites: false
+        retryWrites: false,
       },
     }),
     MongooseModule.forRootAsync({
@@ -65,6 +67,12 @@ import { VehiclesModule } from './vehicles/vehicles.module';
       }),
       inject: [ConfigService],
     }),
+
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/api/uploads',
+    }),
+
     CommonModule,
     MailModule,
     AuthModule,
@@ -81,6 +89,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     MapsModule,
     ReviewsModule,
     HealthModule,
+    UploadModule,
     EventEmitterModule.forRoot(),
   ],
   controllers: [AppController],

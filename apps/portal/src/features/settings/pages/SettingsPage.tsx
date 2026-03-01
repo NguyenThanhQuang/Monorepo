@@ -1,10 +1,19 @@
-import { useMemo, useState } from "react";
-import { Trash2, Link2, Moon, Sun } from "lucide-react";
-import { useTheme } from "../../../app/providers";
+import { useState, useMemo } from "react";
+import { Trash2, Link2, Moon, Sun, Monitor, UserCog } from "lucide-react";
+import { useTheme } from "@/app/providers";
+import { useCompanySettings } from "../api/useCompanySettings";
+import { CompanyProfileForm } from "../components/CompanyProfileForm";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export default function SettingsPage() { 
-  const { theme, toggleTheme } = useTheme();
+type Tab = "profile" | "system";
+
+export default function SettingsPage() {
+  const { theme, setTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [cleared, setCleared] = useState(false);
+
+  const { company, isLoading } = useCompanySettings();
 
   const apiBase = useMemo(() => {
     const env = (import.meta as any).env || {};
@@ -12,157 +21,160 @@ export default function SettingsPage() {
   }, []);
 
   const clearTokens = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("authUser");
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("adminUser");
+    localStorage.clear();
     setCleared(true);
-    setTimeout(() => setCleared(false), 1500);
+    setTimeout(() => {
+      setCleared(false);
+      window.location.reload();
+    }, 1000);
   };
 
   return (
-    <div style={{ display: "grid", gap: 14 }}>
+    <div className="space-y-6">
+      {/* Header */}
       <div>
-        <div style={{ fontSize: 28, fontWeight: 900 }}>Cài đặt</div>
-        <div style={{ color: "var(--obtp-muted2)" }}>
-          Thiết lập giao diện và thông tin kết nối (local).
-        </div>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          Cài đặt
+        </h1>
+        <p className="text-slate-500">
+          Quản lý hồ sơ nhà xe và cấu hình hệ thống
+        </p>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: 14,
-        }}
-      >
-        <div className="obtp-card" style={{ padding: 16 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 10,
-            }}
-          >
-            <div
-              className="obtp-auth-logo"
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 14,
-                marginBottom: 0,
-              }}
-            >
-              {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+      {/* Tabs Navigation */}
+      <div className="flex border-b border-slate-200 dark:border-slate-800">
+        <button
+          onClick={() => setActiveTab("profile")}
+          className={cn(
+            "flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors",
+            activeTab === "profile"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300",
+          )}
+        >
+          <UserCog size={18} />
+          Hồ sơ Nhà xe
+        </button>
+        <button
+          onClick={() => setActiveTab("system")}
+          className={cn(
+            "flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors",
+            activeTab === "system"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300",
+          )}
+        >
+          <Monitor size={18} />
+          Hệ thống & Debug
+        </button>
+      </div>
+
+      {/* Content Area */}
+      <div className="py-4">
+        {activeTab === "profile" &&
+          (isLoading ? (
+            <div className="p-12 text-center text-slate-500">
+              Đang tải thông tin nhà xe...
             </div>
-            <div>
-              <div style={{ fontWeight: 900 }}>Giao diện</div>
-              <div style={{ color: "var(--obtp-muted2)", fontSize: 13 }}>
-                Đang dùng: {theme === "light" ? "Sáng" : "Tối"}
+          ) : company ? (
+            <CompanyProfileForm company={company} />
+          ) : (
+            <div className="p-8 text-center text-red-500 bg-red-50 rounded-lg">
+              Không thể tải thông tin nhà xe. Vui lòng thử lại sau.
+            </div>
+          ))}
+
+        {activeTab === "system" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Theme Card */}
+            <div className="obtp-card obtp-card-strong p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  {theme === "light" ? <Sun size={20} /> : <Moon size={20} />}
+                </div>
+                <div>
+                  <div className="font-bold">Giao diện</div>
+                  <div className="text-xs text-slate-500">
+                    Hiện tại:{" "}
+                    {theme === "light"
+                      ? "Sáng"
+                      : theme === "dark"
+                        ? "Tối"
+                        : "Hệ thống"}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTheme("light")}
+                  className={
+                    theme === "light" ? "border-blue-500 bg-blue-50" : ""
+                  }
+                >
+                  Sáng
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTheme("dark")}
+                  className={
+                    theme === "dark" ? "border-blue-500 bg-blue-50/10" : ""
+                  }
+                >
+                  Tối
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTheme("system")}
+                  className={
+                    theme === "system" ? "border-blue-500 bg-blue-50" : ""
+                  }
+                >
+                  Auto
+                </Button>
               </div>
             </div>
-          </div>
 
-          <button
-            className="obtp-btn-secondary"
-            type="button"
-            onClick={toggleTheme}
-          >
-            {theme === "light" ? "Chuyển sang tối" : "Chuyển sang sáng"}
-          </button>
-        </div>
-
-        <div className="obtp-card" style={{ padding: 16 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 10,
-            }}
-          >
-            <div
-              className="obtp-auth-logo"
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 14,
-                marginBottom: 0,
-              }}
-            >
-              <Link2 size={20} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 900 }}>Kết nối API</div>
-              <div style={{ color: "var(--obtp-muted2)", fontSize: 13 }}>
-                Portal dùng base URL từ{" "}
-                <code style={{ opacity: 0.9 }}>.env</code>
+            {/* API Info Card */}
+            <div className="obtp-card obtp-card-strong p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                  <Link2 size={20} />
+                </div>
+                <div>
+                  <div className="font-bold">API Connection</div>
+                  <div className="text-xs text-slate-500">
+                    Endpoint cấu hình
+                  </div>
+                </div>
               </div>
+              <code className="block bg-slate-100 dark:bg-slate-950 p-2 rounded text-xs font-mono mb-2 break-all border border-slate-200 dark:border-slate-800">
+                {apiBase}
+              </code>
             </div>
-          </div>
 
-          <input className="obtp-input" value={apiBase} readOnly />
-
-          <div
-            style={{
-              color: "var(--obtp-muted2)",
-              fontSize: 12,
-              marginTop: 10,
-              lineHeight: 1.6,
-            }}
-          >
-            Nếu bạn đổi API sang IP/domain khác, hãy sửa{" "}
-            <code>VITE_API_BASE_URL</code> và <code>VITE_API_URL</code> trong{" "}
-            <code>apps/portal/.env</code> rồi chạy lại dev server.
-          </div>
-        </div>
-
-        <div className="obtp-card" style={{ padding: 16 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 10,
-            }}
-          >
-            <div
-              className="obtp-auth-logo"
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 14,
-                marginBottom: 0,
-                background:
-                  "linear-gradient(135deg, rgba(239,68,68,.95), rgba(245,158,11,.90))",
-              }}
-            >
-              <Trash2 size={20} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 900 }}>Dọn dẹp</div>
-              <div style={{ color: "var(--obtp-muted2)", fontSize: 13 }}>
-                Xoá token lưu trên trình duyệt để test đăng nhập lại.
+            {/* Danger Zone */}
+            <div className="obtp-card obtp-card-strong p-6 border-red-100 dark:border-red-900/30">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
+                  <Trash2 size={20} />
+                </div>
+                <div>
+                  <div className="font-bold text-red-600">Dọn dẹp Cache</div>
+                  <div className="text-xs text-slate-500">
+                    Xóa token và đăng xuất
+                  </div>
+                </div>
               </div>
+              <Button variant="danger" className="w-full" onClick={clearTokens}>
+                {cleared ? "Đang xử lý..." : "Xóa Token & Reload"}
+              </Button>
             </div>
           </div>
-
-          <button
-            className="obtp-btn-secondary"
-            type="button"
-            onClick={clearTokens}
-          >
-            <span
-              style={{ display: "inline-flex", alignItems: "center", gap: 10 }}
-            >
-              <Trash2 size={18} />
-              <span>{cleared ? "Đã xoá!" : "Xoá token"}</span>
-            </span>
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
