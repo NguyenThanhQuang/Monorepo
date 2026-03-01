@@ -11,7 +11,7 @@ import {
 import { formatDate } from "@obtp/business-logic";
 import { useReviews } from "../hooks/useReviews";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ConfirmActionModal } from "@/features/companies/components/ConfirmActionModal";
+import { ConfirmActionModal } from "@/components/common/ConfirmActionModal";
 
 export function AdminReviewManagement() {
   const { t } = useLanguage();

@@ -20,8 +20,8 @@ import { formatCurrency, formatDate } from "@obtp/business-logic";
 import { useCompanies } from "../hooks/useCompanies";
 import { AddCompanyDialog } from "../components/AddCompanyDialog";
 import { CompanyDetailModal } from "../components/CompanyDetailModal";
-import { ConfirmActionModal } from "../components/ConfirmActionModal";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ConfirmActionModal } from "@/components/common/ConfirmActionModal";
 
 export function CompanyManagement() {
   const { t } = useLanguage();
