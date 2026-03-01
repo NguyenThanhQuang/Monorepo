@@ -194,7 +194,7 @@ export class AuthService {
 
     return {
       accessToken,
-      user: sanitizedUser,
+      user: this.usersService.sanitizeUser(user),
     };
   }
 
@@ -289,32 +289,32 @@ export class AuthService {
       throw new BadRequestException('Token không hợp lệ hoặc hết hạn.');
   }
 
- async activateAccount(
-  payload: ActivateAccountPayload,
-): Promise<LoginResponse> {
-  const user = await this.usersService.findOneByActivationToken(
-    payload.token,
-  );
-
-  if (!user) {
-    throw new BadRequestException(
-      'Token kích hoạt không hợp lệ hoặc đã hết hạn.',
+  async activateAccount(
+    payload: ActivateAccountPayload,
+  ): Promise<LoginResponse> {
+    const user = await this.usersService.findOneByActivationToken(
+      payload.token,
     );
+
+    if (!user) {
+      throw new BadRequestException(
+        'Token kích hoạt không hợp lệ hoặc đã hết hạn.',
+      );
+    }
+
+    const hashedPassword = await hashPassword(payload.newPassword);
+
+    user.passwordHash = hashedPassword;
+    user.isEmailVerified = true;
+
+    user.accountActivationToken = undefined;
+    user.accountActivationExpires = undefined;
+
+    const savedUser = await this.usersService.save(user);
+
+    return {
+      accessToken: this.tokenService.generateAccessToken(savedUser),
+      user: this.usersService.sanitizeUser(savedUser),
+    };
   }
-
-  const hashedPassword = await hashPassword(payload.newPassword);
-
-  user.passwordHash = hashedPassword;
-  user.isEmailVerified = true;
-
-  user.accountActivationToken = undefined;
-  user.accountActivationExpires = undefined;
-
-  const savedUser = await this.usersService.save(user);
-
-  return {
-    accessToken: this.tokenService.generateAccessToken(savedUser),
-    user: this.usersService.sanitizeUser(savedUser),
-  };
-}
 }

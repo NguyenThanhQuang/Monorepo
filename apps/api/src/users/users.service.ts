@@ -5,7 +5,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-// REMOVED: import { InjectConnection } from '@nestjs/mongoose';
 import {
   AUTH_CONSTANTS,
   comparePassword,
@@ -14,7 +13,6 @@ import {
   sanitizeUser,
 } from '@obtp/business-logic';
 import {
-  AuthUserResponse,
   ChangePasswordPayload,
   CreateCompanyAdminPayload,
   CreateUserPayload,
@@ -22,8 +20,7 @@ import {
   UpdateUserPayload,
   UserRole,
 } from '@obtp/shared-types';
-// REMOVED: import { Connection, Types } from 'mongoose';
-import { Types } from 'mongoose'; // CHANGED: chỉ import Types
+import { Types } from 'mongoose';
 import { BookingsRepository } from 'src/bookings/bookings.repository';
 import { UserDocument } from './schemas/user.schema';
 import { UsersRepository } from './users.repository';
@@ -42,7 +39,6 @@ interface CreateInternalUserParams extends CreateUserPayload {
 export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
-    // REMOVED: @InjectConnection() private readonly connection: Connection,
     @Inject(forwardRef(() => BookingsRepository))
     private readonly bookingsRepository: BookingsRepository,
   ) {}
@@ -60,13 +56,8 @@ export class UsersService {
     return this.usersRepository.findOneByPhoneWithPassword(phone);
   }
 
-  sanitizeUser(user: UserDocument): AuthUserResponse {
-    const sanitizedData = sanitizeUser(user);
-
-    return {
-      ...sanitizedData,
-      userId: sanitizedData.id,
-    } as unknown as AuthUserResponse;
+  sanitizeUser(user: UserDocument): SanitizedUserResponse {
+    return sanitizeUser(user);
   }
 
   async create(payload: CreateInternalUserParams): Promise<UserDocument> {
@@ -195,23 +186,19 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  // QUAN TRỌNG: Sửa method này - LOẠI BỎ TRANSACTION
   async createOrPromoteCompanyAdmin(
     payload: CreateCompanyAdminPayload,
   ): Promise<{ user: UserDocument; isNew: boolean }> {
-    // REMOVED: session and transaction logic
     let user = await this.usersRepository.findOne({ email: payload.email });
     let isNew = false;
 
     if (user) {
-      // User đã tồn tại - cập nhật roles và companyId
       if (!user.roles.includes(UserRole.COMPANY_ADMIN)) {
         user.roles.push(UserRole.COMPANY_ADMIN);
       }
       user.companyId = new Types.ObjectId(payload.companyId);
       await this.usersRepository.save(user);
     } else {
-      // Tạo user mới
       isNew = true;
       const activationToken = generateRandomToken();
 
@@ -222,11 +209,10 @@ export class UsersService {
         companyId: new Types.ObjectId(payload.companyId),
         roles: [UserRole.COMPANY_ADMIN],
         isEmailVerified: false,
-        passwordHash: 'temp_placeholder_hash', // Sẽ được set khi user active
+        passwordHash: 'temp_placeholder_hash',
         accountActivationToken: activationToken,
         accountActivationExpires: new Date(
-          Date.now() +
-            AUTH_CONSTANTS.DEFAULTS.EMAIL_VERIFICATION_EXPIRATION_MS,
+          Date.now() + AUTH_CONSTANTS.DEFAULTS.EMAIL_VERIFICATION_EXPIRATION_MS,
         ),
       });
     }
@@ -234,18 +220,18 @@ export class UsersService {
     return { user: user!, isNew };
   }
 
-async findOneByActivationToken(token: string): Promise<UserDocument | null> {
-  const user = await this.usersRepository.findOne({
-    accountActivationToken: token,
-    accountActivationExpires: { $gt: new Date() },
-  });
+  async findOneByActivationToken(token: string): Promise<UserDocument | null> {
+    const user = await this.usersRepository.findOne({
+      accountActivationToken: token,
+      accountActivationExpires: { $gt: new Date() },
+    });
 
-  if (user) {
-    await user.populate('companyId', 'name');
+    if (user) {
+      await user.populate('companyId', 'name');
+    }
+
+    return user;
   }
-
-  return user;
-}
 
   async save(user: UserDocument): Promise<UserDocument> {
     return this.usersRepository.save(user);

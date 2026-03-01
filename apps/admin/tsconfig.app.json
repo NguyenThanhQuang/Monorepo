@@ -27,8 +27,7 @@
       "@obtp/shared-types": ["../../packages/shared-types/src"],
       "@obtp/validation": ["../../packages/validation/src"],
       "@obtp/business-logic": ["../../packages/business-logic/src"],
-      "@obtp/api-client": ["../../packages/api-client/src"],
-      "@admin/*": ["src/*"]
+      "@obtp/api-client": ["../../packages/api-client/src"]
     }
   },
   "include": [

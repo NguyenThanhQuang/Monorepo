@@ -39,7 +39,6 @@ export class UsersController {
     if (!fullUser) {
       throw new NotFoundException('Không tìm thấy thông tin người dùng.');
     }
-    // @ts-expect-error FullUser could be null, handled by guards/service
     return this.usersService.sanitizeUser(fullUser);
   }
 

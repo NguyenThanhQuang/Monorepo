@@ -1,34 +1,37 @@
 import { useState, useMemo } from "react";
 import {
   TrendingUp,
-  DollarSign,
   RefreshCw,
+  DollarSign,
   Building2,
   Ticket,
   Search,
   FileText,
+  Calendar,
+  Filter,
+  ArrowUpRight,
 } from "lucide-react";
-import { adminApi } from "@obtp/api-client";
 import { formatCurrency, formatNumber } from "@obtp/business-logic";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useRevenueStats } from "../hooks/useRevenueStats";
-
-const getInitialDates = () => {
-  const today = new Date();
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-  return {
-    start: firstDay.toISOString().split("T")[0],
-    end: today.toISOString().split("T")[0],
-  };
-};
+import { adminApi } from "@obtp/api-client";
+import toast from "react-hot-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function AdminRevenuePage() {
   const { t } = useLanguage();
-  const initDates = getInitialDates();
+
+  const today = new Date().toISOString().split("T")[0];
+  const firstDayOfMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1,
+  )
+    .toISOString()
+    .split("T")[0];
 
   const [dateRange, setDateRange] = useState({
-    start: initDates.start,
-    end: initDates.end,
+    start: firstDayOfMonth,
+    end: today,
   });
   const [selectedCompany, setSelectedCompany] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,20 +64,23 @@ export function AdminRevenuePage() {
     return result;
   }, [data, selectedCompany, searchTerm]);
 
-  const totalRevenue = data.reduce(
-    (sum, item) => sum + (item.totalRevenue || 0),
-    0,
+  const totalRevenue = useMemo(
+    () => data.reduce((sum, item) => sum + (item.totalRevenue || 0), 0),
+    [data],
   );
-  const totalBookings = data.reduce(
-    (sum, item) => sum + (item.totalBookings || 0),
-    0,
+  const totalBookings = useMemo(
+    () => data.reduce((sum, item) => sum + (item.totalBookings || 0), 0),
+    [data],
   );
-  const companyList = data.map((item) => ({
-    id: item.companyId,
-    name: item.companyName,
-  }));
+  const averageRating = useMemo(() => {
+    if (data.length === 0) return 0;
+    return (
+      data.reduce((sum, item) => sum + (item.averageRating || 0), 0) /
+      data.length
+    );
+  }, [data]);
 
-  const handleExport = async (type: "excel" | "pdf") => {
+  const handleExport = async () => {
     try {
       setIsExporting(true);
       const blob = await adminApi.exportRevenueReport({
@@ -86,208 +92,281 @@ export function AdminRevenuePage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Doanh_Thu_${dateRange.start}_${dateRange.end}.${type === "excel" ? "xlsx" : "pdf"}`;
+      a.download = `Bao_Cao_Doanh_Thu_${dateRange.start}_den_${dateRange.end}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      alert("Lỗi xuất file");
+      document.body.removeChild(a);
+      toast.success("Xuất báo cáo thành công");
+    } catch (err) {
+      toast.error("Không thể xuất file báo cáo");
     } finally {
       setIsExporting(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading)
     return (
-      <div className="flex justify-center p-12">
-        <div className="w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
+      <div className="flex items-center justify-center h-96">
+        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6 bg-red-50 text-red-600 rounded-2xl">
-        Lỗi tải dữ liệu doanh thu.{" "}
-        <button onClick={() => refetch()} className="underline font-bold">
-          Thử lại
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Báo cáo doanh thu
+            Thống kê doanh thu
           </h1>
-          <p className="text-gray-500">Quản lý doanh thu theo nhà xe</p>
+          <p className="text-gray-500 dark:text-gray-400">
+            Quản lý tài chính toàn hệ thống và từng nhà xe
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => refetch()}
-            disabled={isRefetching}
-            className="p-2 border rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="p-2.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
           >
             <RefreshCw
               className={`w-5 h-5 ${isRefetching ? "animate-spin" : ""}`}
             />
           </button>
           <button
-            onClick={() => handleExport("excel")}
+            onClick={handleExport}
             disabled={isExporting || data.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-500/20 disabled:opacity-50 font-bold"
           >
-            <FileText className="w-4 h-4" /> Xuất Excel
+            <FileText className="w-4 h-4" />
+            {isExporting ? "Đang xuất..." : "Xuất Excel"}
           </button>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-          <label className="text-sm text-gray-500">Từ ngày</label>
-          <input
-            type="date"
-            value={dateRange.start}
-            onChange={(e) =>
-              setDateRange((p) => ({ ...p, start: e.target.value }))
-            }
-            className="w-full mt-1 p-2 border rounded-xl dark:bg-gray-700"
-          />
-        </div>
-        <div>
-          <label className="text-sm text-gray-500">Đến ngày</label>
-          <input
-            type="date"
-            value={dateRange.end}
-            onChange={(e) =>
-              setDateRange((p) => ({ ...p, end: e.target.value }))
-            }
-            className="w-full mt-1 p-2 border rounded-xl dark:bg-gray-700"
-          />
-        </div>
-        <div>
-          <label className="text-sm text-gray-500">Nhà xe</label>
-          <select
-            value={selectedCompany}
-            onChange={(e) => setSelectedCompany(e.target.value)}
-            className="w-full mt-1 p-2 border rounded-xl dark:bg-gray-700"
-          >
-            <option value="all">Tất cả</option>
-            {companyList.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-sm text-gray-500">Tìm kiếm</label>
-          <div className="relative mt-1">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tên, mã nhà xe..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 p-2 border rounded-xl dark:bg-gray-700"
-            />
+      {/* Filter Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+              Từ ngày
+            </label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) =>
+                  setDateRange((p) => ({ ...p, start: e.target.value }))
+                }
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white font-medium"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+              Đến ngày
+            </label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) =>
+                  setDateRange((p) => ({ ...p, end: e.target.value }))
+                }
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white font-medium"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+              Lọc theo nhà xe
+            </label>
+            <div className="relative">
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <select
+                value={selectedCompany}
+                onChange={(e) => setSelectedCompany(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white font-medium appearance-none"
+              >
+                <option value="all">Tất cả đơn vị</option>
+                {data.map((c) => (
+                  <option key={c.companyId} value={c.companyId}>
+                    {c.companyName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+              Tìm kiếm nhanh
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Tên, mã nhà xe..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white font-medium"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Kpis */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border dark:border-gray-700">
-          <div className="flex items-center gap-3 mb-2">
-            <DollarSign className="text-purple-500" />{" "}
-            <span className="text-gray-500">Tổng doanh thu</span>
+      {/* KPI Cards Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Doanh thu */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm relative overflow-hidden">
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-2xl text-purple-600 dark:text-purple-400">
+              <DollarSign className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-400">TỔNG DOANH THU</p>
+              <h2 className="text-2xl font-black dark:text-white">
+                {formatCurrency(totalRevenue, true)}
+              </h2>
+            </div>
           </div>
-          <p className="text-2xl font-bold dark:text-white">
-            {formatCurrency(totalRevenue, true)}
-          </p>
+          <ArrowUpRight className="absolute -right-2 -bottom-2 w-20 h-20 text-purple-500/5" />
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border dark:border-gray-700">
-          <div className="flex items-center gap-3 mb-2">
-            <Ticket className="text-blue-500" />{" "}
-            <span className="text-gray-500">Tổng vé</span>
+
+        {/* Tổng số vé */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm relative overflow-hidden">
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-2xl text-blue-600 dark:text-blue-400">
+              <Ticket className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-400">TỔNG VÉ BÁN RA</p>
+              <h2 className="text-2xl font-black dark:text-white">
+                {formatNumber(totalBookings)}
+              </h2>
+            </div>
           </div>
-          <p className="text-2xl font-bold dark:text-white">
-            {formatNumber(totalBookings)}
-          </p>
+          <ArrowUpRight className="absolute -right-2 -bottom-2 w-20 h-20 text-blue-500/5" />
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border dark:border-gray-700">
-          <div className="flex items-center gap-3 mb-2">
-            <Building2 className="text-green-500" />{" "}
-            <span className="text-gray-500">Nhà xe hoạt động</span>
+
+        {/* Nhà xe hoạt động */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm relative overflow-hidden">
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-2xl text-green-600 dark:text-green-400">
+              <Building2 className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-400">
+                NHÀ XE CÓ DOANH THU
+              </p>
+              <h2 className="text-2xl font-black dark:text-white">
+                {filteredData.length}
+              </h2>
+            </div>
           </div>
-          <p className="text-2xl font-bold dark:text-white">
-            {filteredData.length}
-          </p>
+          <ArrowUpRight className="absolute -right-2 -bottom-2 w-20 h-20 text-green-500/5" />
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border dark:border-gray-700">
-          <div className="flex items-center gap-3 mb-2">
-            <TrendingUp className="text-orange-500" />{" "}
-            <span className="text-gray-500">Trung bình / Đơn</span>
+
+        {/* Đánh giá hệ thống */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm relative overflow-hidden">
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-2xl text-orange-600 dark:text-orange-400">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-400">
+                ĐIỂM HỆ THỐNG TB
+              </p>
+              <h2 className="text-2xl font-black dark:text-white">
+                {averageRating.toFixed(1)} / 5.0
+              </h2>
+            </div>
           </div>
-          <p className="text-2xl font-bold dark:text-white">
-            {totalBookings > 0
-              ? formatCurrency(totalRevenue / totalBookings)
-              : "0đ"}
-          </p>
+          <ArrowUpRight className="absolute -right-2 -bottom-2 w-20 h-20 text-orange-500/5" />
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-500 text-sm">
-            <tr>
-              <th className="p-4">Nhà xe</th>
-              <th className="p-4">Số vé</th>
-              <th className="p-4">Đánh giá</th>
-              <th className="p-4">Doanh thu</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y dark:divide-gray-700">
-            {filteredData.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-500">
-                  Không có dữ liệu
-                </td>
+      {/* Main Table - Giữ nguyên layout tràn viền với rounded-3xl */}
+      <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 dark:bg-gray-700/50">
+              <tr className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                <th className="px-6 py-5">Đơn vị kinh doanh</th>
+                <th className="px-6 py-5 text-right">Lượng vé</th>
+                <th className="px-6 py-5 text-right">Tăng trưởng</th>
+                <th className="px-6 py-5 text-right">Doanh thu ghi nhận</th>
               </tr>
-            ) : (
-              filteredData.map((item) => (
-                <tr
-                  key={item.companyId}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                >
-                  <td className="p-4">
-                    <div className="font-medium dark:text-white">
-                      {item.companyName}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {item.companyCode}
-                    </div>
-                  </td>
-                  <td className="p-4 dark:text-white">
-                    {formatNumber(item.totalBookings)}
-                  </td>
-                  <td className="p-4 text-yellow-500 font-medium">
-                    ★ {item.averageRating.toFixed(1)}
-                  </td>
-                  <td className="p-4 font-bold text-green-600">
-                    {formatCurrency(item.totalRevenue)}
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredData.length > 0 ? (
+                filteredData.map((item) => (
+                  <tr
+                    key={item.companyId}
+                    className="group hover:bg-gray-50 dark:hover:bg-gray-700/60 transition-all cursor-default"
+                  >
+                    <td className="px-6 py-5">
+                      <div className="font-bold text-gray-900 dark:text-white group-hover:text-purple-600 transition-colors">
+                        {item.companyName}
+                      </div>
+                      <div className="text-xs text-gray-400 font-mono tracking-tighter">
+                        REF-CODE: {item.companyCode}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-right font-medium dark:text-gray-300">
+                      {formatNumber(item.totalBookings)} vé
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <div
+                        className={`inline-flex items-center text-xs font-black px-2 py-1 rounded-lg ${
+                          item.revenueGrowth >= 0
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
+                            : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"
+                        }`}
+                      >
+                        {item.revenueGrowth >= 0 ? "+" : ""}
+                        {item.revenueGrowth}%
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-right font-black text-lg text-gray-900 dark:text-white">
+                      {formatCurrency(item.totalRevenue)}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-6 py-20 text-center text-gray-400 font-medium"
+                  >
+                    <Filter className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                    Không tìm thấy dữ liệu doanh thu khớp với bộ lọc
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+            {/* Table Footer - Hiển thị tổng nhanh */}
+            <tfoot className="bg-gray-50/50 dark:bg-gray-900/50">
+              <tr className="text-gray-900 dark:text-white font-black italic">
+                <td className="px-6 py-4 tracking-tighter text-gray-400 uppercase text-xs">
+                  TỔNG HỢP KỲ BÁO CÁO
+                </td>
+                <td className="px-6 py-4 text-right underline underline-offset-4">
+                  {formatNumber(totalBookings)} VÉ
+                </td>
+                <td></td>
+                <td className="px-6 py-4 text-right text-xl font-black text-purple-600 dark:text-purple-400 uppercase tracking-tighter">
+                  {formatCurrency(totalRevenue)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </div>
   );

@@ -11,9 +11,9 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  Shield,
   Globe,
   MessageCircle,
+  Shield,
 } from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
@@ -79,7 +79,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div
-      className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
       style={
         { ["--admin-sidebar-width" as any]: sidebarWidth } as CSSProperties
       }
@@ -107,11 +107,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div
             className={`flex items-center ${!sidebarOpen ? "justify-center w-full" : ""}`}
           >
-            <div className="w-8 h-8 rounded-lg bg-linear-to-r from-purple-600 to-pink-500 flex items-center justify-center mr-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-600 to-pink-500 flex items-center justify-center mr-2">
               <Shield className="w-5 h-5 text-white" />
             </div>
             {sidebarOpen && (
-              <span className="text-xl font-bold bg-linear-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
                 {t("adminPanel")}
               </span>
             )}
@@ -120,7 +120,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="admin-desktop-only p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label="Toggle sidebar"
           >
             <ChevronRight
               className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${
@@ -132,7 +131,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <button
             onClick={() => setMobileSidebarOpen(false)}
             className="admin-mobile-only p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            aria-label="Close sidebar"
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -151,7 +149,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200
                 ${
                   isActive(item.path)
-                    ? "bg-linear-to-r from-purple-600 to-pink-500 text-white shadow-lg shadow-purple-500/20"
+                    ? "bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg shadow-purple-500/20"
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                 }
                 ${!sidebarOpen ? "justify-center" : ""}
@@ -177,7 +175,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Bottom Section */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl">
-          {/* Language Toggle */}
           <button
             onClick={toggleLanguage}
             className={`
@@ -194,7 +191,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             )}
           </button>
 
-          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
             className={`
@@ -219,7 +215,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div
             className={`flex items-center ${!sidebarOpen ? "justify-center" : ""}`}
           >
-            <div className="w-8 h-8 rounded-full bg-linear-to-r from-purple-600 to-pink-500 flex items-center justify-center text-white font-semibold shrink-0 shadow-lg shadow-purple-500/20">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 flex items-center justify-center text-white font-semibold flex-shrink-0 shadow-lg shadow-purple-500/20">
               {user?.name?.charAt(0)?.toUpperCase() || "A"}
             </div>
             {sidebarOpen && (
@@ -234,7 +230,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             )}
           </div>
 
-          {/* Logout (neo dưới + nổi bật) */}
           <button
             onClick={handleLogout}
             className={`
@@ -249,23 +244,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main
-        className={`
-          admin-main transition-all duration-300 min-h-screen
-        `}
-      >
+      {/* Main Content Area */}
+      <main className="admin-main transition-all duration-300 min-h-screen">
         {/* Mobile Header */}
         <div className="admin-mobile-header fixed top-0 left-0 right-0 h-16 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 z-30 flex items-center px-4">
           <button
             onClick={() => setMobileSidebarOpen(true)}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            aria-label="Open sidebar"
           >
             <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
           </button>
 
-          <div className="ml-4 text-xl font-bold bg-linear-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+          <div className="ml-4 text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
             {t("adminPanel")}
           </div>
 
@@ -273,26 +263,22 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <button
               onClick={toggleLanguage}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              aria-label="Toggle language"
             >
               <Globe className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
-
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              aria-label="Toggle theme"
             >
               {theme === "light" ? (
-                <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                <Moon className="w-5 h-5 text-gray-600" />
               ) : (
-                <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                <Sun className="w-5 h-5 text-gray-300" />
               )}
             </button>
           </div>
         </div>
 
-        {/* Content Area */}
         <div className="admin-content-wrap">
           <div className="p-6 lg:p-8">{children}</div>
         </div>
