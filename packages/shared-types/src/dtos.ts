@@ -1,10 +1,4 @@
-import {
-  CompanyStatus,
-  LocationType,
-  ReportPeriod,
-  UserRole,
-  VehicleStatus,
-} from "./enums";
+import { CompanyStatus, LocationType, UserRole, VehicleStatus } from "./enums";
 import type { Company, GeoJsonPoint, Location } from "./models";
 
 // --- AUTH INFRASTRUCTURE ---
@@ -30,13 +24,7 @@ export interface AuthUserResponse {
 
 export interface LoginResponse {
   accessToken: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    roles: UserRole[];
-    companyId?: string;
-  };
+  user: SanitizedUserResponse;
 }
 
 // --- AUTH REQUEST PAYLOADS ---
@@ -145,12 +133,9 @@ export interface CreateCompanyAdminPayload {
   companyId: string;
 }
 
-// --- RESPONSES ---
-
-// Response này giống hệt AuthUserResponse (tên mới SanitizedUserResponse cho chuẩn nghĩa)
 export interface SanitizedUserResponse {
   id: string;
-  _id: string; // Legacy support
+  _id: string;
   email: string;
   name: string;
   phone: string;
@@ -160,7 +145,6 @@ export interface SanitizedUserResponse {
   isBanned: boolean;
   lastLoginDate?: Date;
   createdAt: Date;
-
   totalTrips?: number;
   totalSpent?: number;
 }
@@ -434,15 +418,6 @@ export interface AdminUpdateReviewPayload {
   isVisible: boolean;
 }
 
-// Requests
-export interface FinanceReportQuery {
-  period?: ReportPeriod;
-  startDate?: string;
-  endDate?: string;
-  companyId?: string; // Dùng cho Admin lọc
-}
-
-// Chart Data Elements
 export interface ChartDataPoint {
   date: string; // YYYY-MM-DD
   revenue: number;
@@ -453,17 +428,6 @@ export interface TopCompanyStat {
   name: string;
   revenue: number;
   bookings: number;
-}
-
-// Responses
-export interface AdminDashboardStats {
-  totalCompanies: number;
-  totalUsers: number;
-  totalBookings: number;
-  totalRevenue: number;
-  activeTrips: number;
-  newCompaniesToday: number;
-  todayBookings: number;
 }
 
 export interface FinancialReportResponse {
@@ -505,4 +469,122 @@ export interface RouteInfoResponse {
   polyline: string; // Chuỗi mã hóa đường đi
   duration: number; // Giây
   distance: number; // Mét
+}
+
+export interface CompanyRevenueStats {
+  companyId: string;
+  companyName: string;
+  companyCode: string;
+  logoUrl?: string;
+  totalRevenue: number;
+  totalBookings: number;
+  totalTrips: number;
+  averageRating: number;
+  revenueGrowth: number;
+  monthlyData?: {
+    month: string; // Tháng (VD: "2024-01")
+    revenue: number;
+    bookings: number;
+  }[];
+}
+
+export interface RevenueFilterParams {
+  month?: number;
+  year?: number;
+  companyId?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export interface DashboardStats {
+  totalRevenue: number;
+  totalBookings: number;
+  totalCompanies: number;
+  totalVehicles: number;
+  totalUsers: number;
+  totalTrips: number;
+  revenueGrowth: number;
+  bookingGrowth: number;
+  userGrowth: number;
+}
+
+export interface RecentActivity {
+  id: string;
+  type: "booking" | "company" | "user";
+  description: string;
+  amount?: number;
+  time: string;
+  createdAt: string;
+}
+
+// Interface cho dashboard stats từ backend
+export interface AdminDashboardStats {
+  totalCompanies: number;
+  totalUsers: number;
+  totalBookings: number;
+  totalRevenue: number;
+  activeTrips: number;
+  newCompaniesToday: number;
+  todayBookings: number;
+}
+
+export interface FinanceReportQuery {
+  period?: "7d" | "30d" | "90d" | "12m";
+  startDate?: string;
+  endDate?: string;
+  companyId?: string;
+}
+
+export interface TopCompanyData {
+  name: string;
+  revenue: number;
+  bookings: number;
+}
+
+export interface RecentTransactionData {
+  id: string;
+  date: string;
+  companyName: string;
+  type: "booking" | "refund" | "commission";
+  description: string;
+  amount: number;
+}
+
+export interface RevenueChartData {
+  date: string;
+  revenue: number;
+  bookings: number;
+}
+
+export interface CreateDriverPayload {
+  name: string;
+  phone: string;
+  licenseNumber: string;
+  idCardNumber: string;
+  experienceYears?: number;
+}
+
+export interface UpdateDriverPayload extends Partial<CreateDriverPayload> {
+  status?: "active" | "inactive";
+}
+
+export interface DriverResponse {
+  id: string;
+  name: string;
+  phone: string;
+  licenseNumber: string;
+  idCardNumber: string;
+  experienceYears: number;
+  status: "active" | "inactive";
+  tripCount: number;
+  createdAt: string | Date;
+}
+
+export interface AssignDriverPayload {
+  driverId: string;
+}
+
+export interface UpdateBookingCustomerPayload {
+  contactName: string;
+  contactPhone: string;
 }

@@ -12,6 +12,8 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Star,
+  Ticket,
 } from "lucide-react";
 import { useTheme } from "@/app/providers";
 
@@ -39,6 +41,12 @@ export function AppShell() {
     { path: "/company/vehicles", name: "Quản lý xe", icon: <Bus size={20} /> },
     { path: "/company/trips", name: "Chuyến đi", icon: <Calendar size={20} /> },
     { path: "/company/drivers", name: "Tài xế", icon: <Users size={20} /> },
+    {
+      path: "/company/bookings",
+      name: "Vé đã đặt",
+      icon: <Ticket size={20} />,
+    },
+    { path: "/company/reviews", name: "Đánh giá", icon: <Star size={20} /> },
     {
       path: "/company/settings",
       name: "Cài đặt",

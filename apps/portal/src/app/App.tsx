@@ -30,6 +30,8 @@ const SettingsPage = lazy(
   () => import("@/features/settings/pages/SettingsPage"),
 );
 
+const ReviewsPage = lazy(() => import("@/features/reviews/pages/ReviewsPage"));
+
 const PageLoader = () => (
   <div className="h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-slate-950">
     <div className="flex flex-col items-center gap-2">
@@ -73,6 +75,7 @@ export default function App() {
                   <Route path="/company/drivers" element={<DriversPage />} />
                   <Route path="/company/bookings" element={<BookingsPage />} />
                   <Route path="/company/settings" element={<SettingsPage />} />
+                  <Route path="/company/reviews" element={<ReviewsPage />} />
 
                   {/* Default Redirect */}
                   <Route

@@ -1,5 +1,6 @@
 import { api } from "@obtp/api-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export const useTripMutations = () => {
   const queryClient = useQueryClient();
@@ -10,19 +11,47 @@ export const useTripMutations = () => {
 
   const cancelMutation = useMutation({
     mutationFn: api.trips.cancel,
-    onSuccess: invalidateTrips,
+    onSuccess: () => {
+      toast.success("Hủy chuyến thành công!");
+      invalidateTrips();
+    },
   });
 
   const assignDriverMutation = useMutation({
-    mutationFn: async (data: { tripId: string; driverId: string }) => {
-      console.log(data);
-      return new Promise((resolve) => setTimeout(resolve, 1000));
+    mutationFn: async ({
+      tripId,
+      driverId,
+    }: {
+      tripId: string;
+      driverId: string;
+    }) => {
+      return await api.trips.assignDriver(tripId, driverId);
     },
-    onSuccess: invalidateTrips,
+    onSuccess: () => {
+      toast.success("Phân công tài xế thành công!");
+      invalidateTrips();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Phân công thất bại");
+    },
+  });
+
+  const toggleRecurrenceMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => {
+      return api.trips.toggleRecurrence(id, isActive);
+    },
+    onSuccess: () => {
+      toast.success("Cập nhật trạng thái tự động lặp thành công!");
+      invalidateTrips();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Cập nhật thất bại");
+    },
   });
 
   return {
     cancelTrip: cancelMutation,
     assignDriver: assignDriverMutation,
+    toggleRecurrence: toggleRecurrenceMutation,
   };
 };

@@ -1,67 +1,71 @@
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { api } from "@obtp/api-client";
+import type {
+  CreateDriverPayload,
+  UpdateDriverPayload,
+} from "@obtp/shared-types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-export interface Driver {
-  id: string;
-  name: string;
-  phone: string;
-  licenseNumber: string;
-  status: "active" | "inactive";
-  avatar?: string;
-  tripCount?: number;
-}
+import { toast } from "sonner";
 
 export const useDrivers = () => {
-  const user = useCurrentUser();
-
   return useQuery({
-    queryKey: ["drivers", user?.companyId],
+    queryKey: ["drivers"],
     queryFn: async () => {
-      return new Promise<Driver[]>((resolve) => {
-        setTimeout(
-          () =>
-            resolve([
-              {
-                id: "1",
-                name: "Nguyễn Văn A",
-                phone: "0909123456",
-                licenseNumber: "B2-12345",
-                status: "active",
-                tripCount: 150,
-              },
-              {
-                id: "2",
-                name: "Trần Văn B",
-                phone: "0918123456",
-                licenseNumber: "C-67890",
-                status: "inactive",
-                tripCount: 45,
-              },
-            ]),
-          500,
-        );
-      });
+      return await api.drivers.getCompanyDrivers();
     },
-    enabled: !!user?.companyId,
   });
 };
 
 export const useDriverMutations = () => {
   const queryClient = useQueryClient();
 
+  const invalidateList = () => {
+    queryClient.invalidateQueries({ queryKey: ["drivers"] });
+  };
+
   const createDriver = useMutation({
-    mutationFn: async (_data: any) => {
-      /* call api.drivers.create(data) */
+    mutationFn: async (data: CreateDriverPayload) => {
+      return await api.drivers.createDriver(data);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["drivers"] }),
+    onSuccess: () => {
+      toast.success("Thêm tài xế thành công");
+      invalidateList();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Lỗi khi thêm tài xế");
+    },
+  });
+
+  const updateDriver = useMutation({
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: UpdateDriverPayload;
+    }) => {
+      return await api.drivers.updateDriver(id, payload);
+    },
+    onSuccess: () => {
+      toast.success("Cập nhật thông tin tài xế thành công");
+      invalidateList();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Lỗi khi cập nhật");
+    },
   });
 
   const deleteDriver = useMutation({
-    mutationFn: async (_id: string) => {
-      /* call api.drivers.delete(id) */
+    mutationFn: async (id: string) => {
+      return await api.drivers.deleteDriver(id);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["drivers"] }),
+    onSuccess: () => {
+      toast.success("Đã vô hiệu hóa tài xế");
+      invalidateList();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Lỗi khi xóa");
+    },
   });
 
-  return { createDriver, deleteDriver };
+  return { createDriver, updateDriver, deleteDriver };
 };

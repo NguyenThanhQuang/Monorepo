@@ -1,4 +1,3 @@
-// src/components/layout/AdminLayout.tsx
 import { useState, useEffect, type ReactNode, type CSSProperties } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -6,7 +5,6 @@ import {
   TrendingUp,
   Building2,
   Users,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -14,7 +12,6 @@ import {
   Sun,
   Moon,
   Shield,
-  DollarSign,
   Globe,
   MessageCircle,
 } from "lucide-react";
@@ -68,16 +65,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       name: t("reviewManagement"),
       icon: <MessageCircle className="w-5 h-5" />,
     },
-    {
-      path: "/admin/finance",
-      name: t("finance"),
-      icon: <DollarSign className="w-5 h-5" />,
-    },
-    {
-      path: "/admin/settings",
-      name: t("settings"),
-      icon: <Settings className="w-5 h-5" />,
-    },
   ];
 
   const handleLogout = () => {
@@ -88,15 +75,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
 
-  // Keep the main content from being hidden behind the fixed sidebar.
-  // We use a CSS variable + media query (in src/style/overrides.css) so the layout
-  // works even if the checked-in Tailwind output is missing responsive variants.
-  const sidebarWidth = sidebarOpen ? "16rem" : "5rem"; // matches w-64 / w-20
+  const sidebarWidth = sidebarOpen ? "16rem" : "5rem";
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
-      style={{ ["--admin-sidebar-width" as any]: sidebarWidth } as CSSProperties}
+      className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
+      style={
+        { ["--admin-sidebar-width" as any]: sidebarWidth } as CSSProperties
+      }
     >
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
@@ -118,12 +104,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className={`flex items-center ${!sidebarOpen ? "justify-center w-full" : ""}`}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-600 to-pink-500 flex items-center justify-center mr-2">
+          <div
+            className={`flex items-center ${!sidebarOpen ? "justify-center w-full" : ""}`}
+          >
+            <div className="w-8 h-8 rounded-lg bg-linear-to-r from-purple-600 to-pink-500 flex items-center justify-center mr-2">
               <Shield className="w-5 h-5 text-white" />
             </div>
             {sidebarOpen && (
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-linear-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
                 {t("adminPanel")}
               </span>
             )}
@@ -163,16 +151,26 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200
                 ${
                   isActive(item.path)
-                    ? "bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg shadow-purple-500/20"
+                    ? "bg-linear-to-r from-purple-600 to-pink-500 text-white shadow-lg shadow-purple-500/20"
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                 }
                 ${!sidebarOpen ? "justify-center" : ""}
               `}
             >
-              <span className={isActive(item.path) ? "text-white" : "text-gray-500 dark:text-gray-400"}>
+              <span
+                className={
+                  isActive(item.path)
+                    ? "text-white"
+                    : "text-gray-500 dark:text-gray-400"
+                }
+              >
                 {item.icon}
               </span>
-              {sidebarOpen && <span className="ml-3 font-medium whitespace-nowrap">{item.name}</span>}
+              {sidebarOpen && (
+                <span className="ml-3 font-medium whitespace-nowrap">
+                  {item.name}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -190,7 +188,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           >
             <Globe className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             {sidebarOpen && (
-              <span className="ml-3 font-medium">{language === "vi" ? "English" : "Tiếng Việt"}</span>
+              <span className="ml-3 font-medium">
+                {language === "vi" ? "English" : "Tiếng Việt"}
+              </span>
             )}
           </button>
 
@@ -209,13 +209,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <Sun className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             )}
             {sidebarOpen && (
-              <span className="ml-3 font-medium">{theme === "light" ? t("darkTheme") : t("lightTheme")}</span>
+              <span className="ml-3 font-medium">
+                {theme === "light" ? t("darkTheme") : t("lightTheme")}
+              </span>
             )}
           </button>
 
           {/* User Info */}
-          <div className={`flex items-center ${!sidebarOpen ? "justify-center" : ""}`}>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 flex items-center justify-center text-white font-semibold flex-shrink-0 shadow-lg shadow-purple-500/20">
+          <div
+            className={`flex items-center ${!sidebarOpen ? "justify-center" : ""}`}
+          >
+            <div className="w-8 h-8 rounded-full bg-linear-to-r from-purple-600 to-pink-500 flex items-center justify-center text-white font-semibold shrink-0 shadow-lg shadow-purple-500/20">
               {user?.name?.charAt(0)?.toUpperCase() || "A"}
             </div>
             {sidebarOpen && (
@@ -223,7 +227,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {user?.name || t("admin")}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email || ""}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {user?.email || ""}
+                </p>
               </div>
             )}
           </div>
@@ -259,7 +265,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
           </button>
 
-          <div className="ml-4 text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+          <div className="ml-4 text-xl font-bold bg-linear-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
             {t("adminPanel")}
           </div>
 

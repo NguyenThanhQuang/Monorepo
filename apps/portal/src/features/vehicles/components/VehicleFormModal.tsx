@@ -7,9 +7,6 @@ import { VehicleStatus } from "@obtp/shared-types";
 import { CreateVehicleSchema } from "@obtp/validation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
 const PRESETS = [
   { label: "Ghế ngồi 16 chỗ", f: 1, r: 4, c: 4, a: [2] },
   { label: "Giường nằm 40 chỗ", f: 2, r: 5, c: 4, a: [2] },

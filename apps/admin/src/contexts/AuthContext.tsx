@@ -1,55 +1,66 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import type { SanitizedUserResponse } from "@obtp/shared-types";
+import { authStorage } from "@/core/auth/storage";
 
-export interface AuthUser {
-  id: string;
-  name:string;
-  email: string;
-  roles: string[];
-  companyId?: string;
-}
+type AuthUser = SanitizedUserResponse | null;
 
 interface AuthContextType {
-  user: AuthUser | null;
-  accessToken: string | null;
-  login: (token: string, user: AuthUser) => void;
+  user: AuthUser;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (token: string, userData: SanitizedUserResponse) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<AuthUser>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load từ localStorage khi reload
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const userData = localStorage.getItem('authUser');
+    const initAuth = () => {
+      const token = authStorage.getToken();
+      const storedUser = authStorage.getUser();
 
-    if (token && userData) {
-      setAccessToken(token);
-      setUser(JSON.parse(userData));
-    }
+      if (token && storedUser) {
+        setUser(storedUser as SanitizedUserResponse);
+      }
+      setIsLoading(false);
+    };
+
+    initAuth();
   }, []);
 
-  const login = (token: string, userData: AuthUser) => {
-    localStorage.setItem('accessToken', token);
-    localStorage.setItem('authUser', JSON.stringify(userData));
-
-    setAccessToken(token);
+  const login = (token: string, userData: SanitizedUserResponse) => {
+    authStorage.setToken(token);
+    authStorage.setUser(userData);
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('authUser');
-
-    setAccessToken(null);
+    authStorage.clearAll();
     setUser(null);
+
+    window.location.href = "/login";
   };
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -57,10 +68,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-
   if (!context) {
-    throw new Error('useAuth must be used inside AuthProvider');
+    throw new Error("useAuth must be used inside AuthProvider");
   }
-
   return context;
 };

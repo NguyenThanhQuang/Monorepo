@@ -416,13 +416,10 @@ export class BookingsService {
     const booking = await this.bookingsRepository.findById(bookingId);
     if (!booking) return;
 
-    // chỉ xử lý HOLD
     if (booking.status !== BookingStatus.HELD) return;
 
-    // nếu chưa có heldUntil thì coi như không có expiry (an toàn)
     if (!booking.heldUntil) return;
 
-    // chỉ cancel khi quá hạn thật
     if (new Date(booking.heldUntil).getTime() > Date.now()) return;
 
     booking.status = BookingStatus.CANCELLED;
@@ -441,5 +438,30 @@ export class BookingsService {
     });
 
     this.eventEmitter.emit('booking.expired', booking);
+  }
+
+  async updateCustomerInfo(
+    bookingId: string,
+    payload: { contactName: string; contactPhone: string },
+    user: AuthUserResponse,
+  ): Promise<BookingDocument> {
+    if (!this.isObjectId(bookingId)) {
+      throw new BadRequestException('bookingId không hợp lệ.');
+    }
+
+    const booking = await this.bookingsRepository.findById(bookingId);
+    if (!booking) throw new NotFoundException('Vé không tồn tại');
+
+    if (user.roles.includes(UserRole.COMPANY_ADMIN)) {
+      const bookingCompanyId = this.extractId(booking.companyId);
+      if (bookingCompanyId !== user.companyId) {
+        throw new ForbiddenException('Không có quyền sửa vé của nhà xe khác.');
+      }
+    }
+
+    booking.contactName = payload.contactName;
+    booking.contactPhone = payload.contactPhone;
+
+    return this.bookingsRepository.save(booking);
   }
 }

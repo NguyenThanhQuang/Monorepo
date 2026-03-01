@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   calculateDateRange,
   fillMissingChartDates,
+  FINANCE_CONSTANTS,
 } from '@obtp/business-logic';
 import {
   BookingStatus,
@@ -67,7 +68,7 @@ export class DashboardService {
 
     const commissionRate = this.configService.get<number>(
       'COMMISSION_RATE',
-      0.15,
+      FINANCE_CONSTANTS.PLATFORM_COMMISSION_RATE,
     );
 
     const filledChartData = fillMissingChartDates(

@@ -38,3 +38,16 @@ export const ReviewQuerySchema = z.object({
   userId: z.string().regex(BUSINESS_CONSTANTS.REGEX.MONGO_ID).optional(),
   rating: z.coerce.number().min(1).max(5).optional(),
 });
+
+export const CreateDriverReviewSchemaLocal = z.object({
+  bookingId: z.string().min(1),
+  rating: z.coerce.number().min(1).max(5),
+  comment: z.string().max(2000).optional(),
+  isAnonymous: z.coerce.boolean().optional(),
+});
+
+export const DriverReviewsQuerySchemaLocal = z.object({
+  driverId: z.string().min(1),
+  limit: z.coerce.number().optional(),
+  skip: z.coerce.number().optional(),
+});

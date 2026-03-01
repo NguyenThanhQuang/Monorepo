@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -12,8 +13,10 @@ import {
 } from '@nestjs/common';
 import * as sharedTypes from '@obtp/shared-types';
 import {
+  CreateDriverReviewSchemaLocal,
   CreateGuestReviewSchema,
   CreateReviewSchema,
+  DriverReviewsQuerySchemaLocal,
   ReviewQuerySchema,
   UpdateUserReviewSchema,
   UpdateVisibilitySchema,
@@ -24,21 +27,6 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { ReviewsService } from './reviews.service';
-import { z } from 'zod';
-
-// Local schemas for Driver Rating feature
-const CreateDriverReviewSchemaLocal = z.object({
-  bookingId: z.string().min(1),
-  rating: z.coerce.number().min(1).max(5),
-  comment: z.string().max(2000).optional(),
-  isAnonymous: z.coerce.boolean().optional(),
-});
-
-const DriverReviewsQuerySchemaLocal = z.object({
-  driverId: z.string().min(1),
-  limit: z.coerce.number().optional(),
-  skip: z.coerce.number().optional(),
-});
 
 @Controller('reviews')
 export class ReviewsController {
@@ -71,7 +59,6 @@ export class ReviewsController {
     return this.reviewsService.createAsGuest(payload);
   }
 
-
   @Post('driver')
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(CreateDriverReviewSchemaLocal))
@@ -92,7 +79,11 @@ export class ReviewsController {
   @UsePipes(new ZodValidationPipe(DriverReviewsQuerySchemaLocal))
   getDriverReviews(
     @Query()
-    query: { driverId: string; limit?: number; skip?: number },
+    query: {
+      driverId: string;
+      limit?: number;
+      skip?: number;
+    },
   ) {
     return this.reviewsService.getDriverReviews(query.driverId, {
       limit: query.limit,
@@ -153,5 +144,34 @@ export class ReviewsController {
   @Roles(sharedTypes.UserRole.ADMIN)
   remove(@Param('id') id: string) {
     return this.reviewsService.remove(id);
+  }
+
+  @Get('company')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
+  findCompanyReviews(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Query() query: sharedTypes.ReviewQuery,
+  ) {
+    if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
+      query.companyId = user.companyId;
+    }
+    return this.reviewsService.findAllForAdmin(query);
+  }
+
+  @Get('company')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(sharedTypes.UserRole.COMPANY_ADMIN, sharedTypes.UserRole.ADMIN)
+  findAllForCompany(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Query() query: sharedTypes.ReviewQuery,
+  ) {
+    if (!user.companyId)
+      throw new ForbiddenException('Tài khoản chưa liên kết nhà xe.');
+
+    return this.reviewsService.findAllForAdmin({
+      ...query,
+      companyId: user.companyId,
+    });
   }
 }

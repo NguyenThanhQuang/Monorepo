@@ -218,11 +218,11 @@ export interface Trip {
 
   companyId: string;
 
-  vehicleId: string; // backend ref
+  vehicleId: string;
   vehicle?: {
     id: string;
     vehicleNumber: string;
-  }; // ✅ UI dùng
+  };
 
   route: RouteInfo;
 
@@ -239,6 +239,9 @@ export interface Trip {
   isRecurrenceTemplate: boolean;
   isRecurrenceActive: boolean;
   recurrenceParentId?: string;
+
+  driverId?: string;
+  driver?: { id: string; name: string; phone: string };
 
   createdAt: Date;
   updatedAt: Date;
@@ -317,23 +320,26 @@ export interface Review {
   id: string;
   _id: string;
 
-  userId?: string; // Có thể null nếu Guest review hoặc logic xóa user
+  userId?: string;
 
-  bookingId: string; // Unique
-  tripId: string; // Reference
-  companyId: string; // Reference (Denormalized)
+  targetType: "trip" | "driver";
+  driverId?: string;
 
-  displayName: string; // Tên hiển thị (User thật hoặc Tên khách)
+  bookingId: string;
+  tripId: string;
+  companyId: string;
 
-  rating: number; // 1-5
+  displayName: string;
+
+  rating: number;
   comment?: string;
 
-  isAnonymous: boolean; // Nếu true -> Frontend tự mask tên
+  isAnonymous: boolean;
 
   editCount: number;
   lastEditedAt?: Date;
 
-  isVisible: boolean; // Moderation flag
+  isVisible: boolean;
 
   createdAt: Date;
   updatedAt: Date;

@@ -24,7 +24,7 @@ export class UserDefinition {
   name: string;
 
   @Prop({
-    type: [{ type: String, enum: [...Object.values(UserRole), "driver"] }],
+    type: [{ type: String, enum: [...Object.values(UserRole), 'driver'] }],
     required: true,
     default: [UserRole.USER],
   })
@@ -77,6 +77,9 @@ export class UserDefinition {
 
   @Prop({ type: Boolean, default: false })
   isBanned: boolean;
+
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserDefinition);

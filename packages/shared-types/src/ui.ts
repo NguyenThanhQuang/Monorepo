@@ -1,7 +1,13 @@
-import type { LucideIcon } from "lucide-react";
-import { BookingStatus, CompanyStatus, LocationType,  SeatStatus,  TripStatus,  TripStopStatus,  UserAccountStatus, UserRole, VehicleStatus } from "./enums";
 import { Dayjs } from "dayjs";
-
+import type { LucideIcon } from "lucide-react";
+import {
+  BookingStatus,
+  CompanyStatus,
+  LocationType,
+  UserAccountStatus,
+  UserRole,
+  VehicleStatus,
+} from "./enums";
 
 export interface CompanyDashboardStat {
   label: string;
@@ -16,7 +22,6 @@ export type CompanyTripStatus =
   | "aboutToDepart"
   | "completed"
   | "cancelled";
-
 
 export interface BookingUI {
   id: string;
@@ -113,18 +118,12 @@ export interface CompanyUI {
   rating: number;
   revenue: number;
 
-  status: CompanyStatus,
+  status: CompanyStatus;
   joinDate: string;
 }
 // src/features/admin-auth/types.ts
 
 // src/features/system-dashboard/types.ts
-export interface SystemDashboardStats {
-  totalCompanies: number;
-  totalUsers: number;
-  totalTrips: number;
-  totalRevenue: number;
-}
 
 export interface CompanyRow {
   id: string;
@@ -132,18 +131,16 @@ export interface CompanyRow {
   vehicles: number;
   trips: number;
   revenue: string;
-  status: 'active' | 'pending' | 'suspended';
+  status: "active" | "pending" | "suspended";
   rating: number;
 }
 
-
-
 export type SettingsTab =
-  | 'general'
-  | 'company'
-  | 'notifications'
-  | 'security'
-  | 'payment';
+  | "general"
+  | "company"
+  | "notifications"
+  | "security"
+  | "payment";
 
 export interface CompanySettings {
   name: string;
@@ -181,7 +178,6 @@ export interface NotificationSettings {
 export interface SecuritySettings {
   twoFactorAuth: boolean;
 }
-
 
 export type UserRoleUI = UserRole | "driver";
 
@@ -261,7 +257,7 @@ export interface CompanyDashboardTrip {
 
 /* ---------- Revenue Chart ---------- */
 export interface CompanyDashboardRevenuePoint {
-  date: string;   // yyyy-mm-dd
+  date: string; // yyyy-mm-dd
   revenue: number;
   bookings: number;
 }
@@ -276,7 +272,7 @@ export interface CompanyDashboardResponse {
 
   revenueChart: CompanyDashboardRevenuePoint[];
 }
-export type ReviewStatus = 'published' | 'hidden';
+export type ReviewStatus = "published" | "hidden";
 
 export interface ReviewDTO {
   _id: string;
@@ -303,7 +299,7 @@ export interface ReviewUI {
   status: ReviewStatus;
   likes: number;
 }
-export type TripStatusUI = 'scheduled' | 'running' | 'completed' | 'cancelled';
+export type TripStatusUI = "scheduled" | "running" | "completed" | "cancelled";
 
 export interface RouteManagementTrip {
   id: string;
@@ -312,8 +308,8 @@ export interface RouteManagementTrip {
   toName: string;
 
   departureTime: string; // HH:mm
-  arrivalTime: string;   // HH:mm
-  date: string;          // yyyy-mm-dd
+  arrivalTime: string; // HH:mm
+  date: string; // yyyy-mm-dd
 
   vehiclePlate: string;
 
@@ -363,19 +359,19 @@ export type VehicleStatusDisplay = {
   [K in VehicleStatus]: string;
 };
 export const CompanyStatusDisplayMap: CompanyStatusDisplay = {
-  [CompanyStatus.ACTIVE]: '✅ Đang hoạt động',
-  [CompanyStatus.INACTIVE]: '⛔ Ngừng hoạt động',
-  [CompanyStatus.PENDING]: '⏳ Đang chờ',
-  [CompanyStatus.SUSPENDED]: '🚫 Tạm ngưng',
+  [CompanyStatus.ACTIVE]: "✅ Đang hoạt động",
+  [CompanyStatus.INACTIVE]: "⛔ Ngừng hoạt động",
+  [CompanyStatus.PENDING]: "⏳ Đang chờ",
+  [CompanyStatus.SUSPENDED]: "🚫 Tạm ngưng",
 };
 export type CompanyStatusDisplay = {
   [K in CompanyStatus]: string;
 };
 
 export const VehicleStatusDisplayMap: VehicleStatusDisplay = {
-  [VehicleStatus.ACTIVE]: '✅ Sẵn sàng',
-  [VehicleStatus.MAINTENANCE]: '🔧 Bảo trì',
-  [VehicleStatus.INACTIVE]: '⛔ Không khả dụng',
+  [VehicleStatus.ACTIVE]: "✅ Sẵn sàng",
+  [VehicleStatus.MAINTENANCE]: "🔧 Bảo trì",
+  [VehicleStatus.INACTIVE]: "⛔ Không khả dụng",
 };
 
 export interface RouteStopFormState {

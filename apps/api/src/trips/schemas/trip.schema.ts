@@ -1,27 +1,31 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { TripStatus, SeatStatus, TripStopStatus } from '@obtp/shared-types';
+import { SeatStatus, TripStatus, TripStopStatus } from '@obtp/shared-types';
 import { Document, Types } from 'mongoose';
 
 export type TripDocument = TripDefinition & Document;
 
 @Schema({ timestamps: true, collection: 'trips' })
 export class TripDefinition {
-  @Prop({ type: Types.ObjectId, ref: 'Company', required: true }) // ref phải khớp với tên model
+  @Prop({ type: Types.ObjectId, ref: 'Company', required: true })
   companyId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Vehicle', required: true }) // ref phải khớp với tên model
+  @Prop({ type: Types.ObjectId, ref: 'Vehicle', required: true })
   vehicleId: Types.ObjectId;
 
   @Prop({
     type: {
-      fromLocationId: { type: Types.ObjectId, ref: 'Location', required: true }, // ref phải khớp
-      toLocationId: { type: Types.ObjectId, ref: 'Location', required: true }, // ref phải khớp
+      fromLocationId: { type: Types.ObjectId, ref: 'Location', required: true },
+      toLocationId: { type: Types.ObjectId, ref: 'Location', required: true },
       stops: [
         {
-          locationId: { type: Types.ObjectId, ref: 'Location', required: true }, // ref phải khớp
+          locationId: { type: Types.ObjectId, ref: 'Location', required: true },
           expectedArrivalTime: { type: Date, required: true },
           expectedDepartureTime: Date,
-          status: { type: String, enum: TripStopStatus, default: TripStopStatus.PENDING },
+          status: {
+            type: String,
+            enum: TripStopStatus,
+            default: TripStopStatus.PENDING,
+          },
         },
       ],
       duration: Number,
@@ -89,23 +93,24 @@ export class TripDefinition {
 
   @Prop({ type: Types.ObjectId, ref: 'Trip' })
   recurrenceParentId?: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'UserDefinition' })
+  driverId?: Types.ObjectId;
 }
 
 export const TripSchema = SchemaFactory.createForClass(TripDefinition);
 
-// Indexes for better query performance
 TripSchema.index({ departureTime: 1, status: 1 });
 TripSchema.index({ 'route.fromLocationId': 1, 'route.toLocationId': 1 });
 TripSchema.index({ companyId: 1, departureTime: -1 });
 TripSchema.index({ recurrenceParentId: 1 });
 
-// Middleware để log khi query (chỉ dùng trong development)
 if (process.env.NODE_ENV !== 'production') {
-  TripSchema.pre('find', function() {
+  TripSchema.pre('find', function () {
     console.log('Mongoose Query:', this.getFilter());
   });
 
-  TripSchema.pre('findOne', function() {
+  TripSchema.pre('findOne', function () {
     console.log('Mongoose FindOne:', this.getFilter());
   });
 }

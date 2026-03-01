@@ -4,14 +4,13 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  NotFoundException,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { initializeTripSeats } from '@obtp/business-logic';
 import {
   CreateTripPayload,
-  SearchTripQuery,
   SeatStatus,
   TripStatus,
   TripStopStatus,
@@ -21,6 +20,8 @@ import {
   VehicleStatus,
 } from '@obtp/shared-types';
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import { Types } from 'mongoose';
 import { BookingsRepository } from 'src/bookings/bookings.repository';
 import { LocationsRepository } from 'src/locations/locations.repository';
@@ -29,14 +30,11 @@ import { CompaniesService } from '../companies/companies.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { TripDocument } from './schemas/trip.schema';
 import { TripsRepository } from './trips.repository';
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const TZ = "Asia/Ho_Chi_Minh";
+const TZ = 'Asia/Ho_Chi_Minh';
 
 @Injectable()
 export class TripsService {
@@ -66,11 +64,15 @@ export class TripsService {
     );
   }
 
-    async findActiveTrips(date?: string): Promise<any[]> {
-    const targetDate = date || dayjs().tz(TZ).format("YYYY-MM-DD");
+  async findActiveTrips(date?: string): Promise<any[]> {
+    const targetDate = date || dayjs().tz(TZ).format('YYYY-MM-DD');
 
-    const startOfDay = dayjs.tz(targetDate, TZ).startOf("day").toDate();
-    const endOfDay = dayjs.tz(targetDate, TZ).add(1, "day").startOf("day").toDate();
+    const startOfDay = dayjs.tz(targetDate, TZ).startOf('day').toDate();
+    const endOfDay = dayjs
+      .tz(targetDate, TZ)
+      .add(1, 'day')
+      .startOf('day')
+      .toDate();
 
     const filter: any = {
       departureTime: { $gte: startOfDay, $lt: endOfDay },
@@ -419,5 +421,18 @@ export class TripsService {
       throw new NotFoundException('Không tìm thấy chuyến hoặc trạm.');
     }
     return result;
+  }
+
+  async assignDriver(
+    tripId: string,
+    driverId: string,
+  ): Promise<TripDocument | null> {
+    const trip = await this.findOne(tripId);
+
+    // Check trip.status === TripStatus.SCHEDULED
+
+    return this.tripsRepository.update(tripId, {
+      $set: { driverId: new Types.ObjectId(driverId) },
+    } as any);
   }
 }

@@ -64,10 +64,19 @@ export class ReviewsRepository {
       .find(filter)
       .populate('userId', 'name email')
       .populate('companyId', 'name')
+      .populate({
+        path: 'tripId',
+        select: 'route vehicleId departureTime',
+        populate: [
+          { path: 'route.fromLocationId', select: 'name' },
+          { path: 'route.toLocationId', select: 'name' },
+          { path: 'vehicleId', select: 'vehicleNumber' },
+        ],
+      })
+      .populate('driverId', 'name phone')
       .sort({ createdAt: -1 })
       .exec();
   }
-
 
   async findDriverReviews(
     driverId: Types.ObjectId,

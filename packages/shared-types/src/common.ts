@@ -1,7 +1,8 @@
 export interface ApiResponse<T> {
-  statusCode: number;
-  message: string;
-  data: T | null;
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
 }
 
 export interface PaginationMeta {

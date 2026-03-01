@@ -58,3 +58,9 @@ export const SearchTripQuerySchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Date format YYYY-MM-DD" }),
   passengers: z.coerce.number().min(1).default(1),
 });
+
+export const AssignDriverSchema = z.object({
+  driverId: z.string().regex(BUSINESS_CONSTANTS.REGEX.MONGO_ID, {
+    message: "Tài xế không hợp lệ",
+  }),
+});

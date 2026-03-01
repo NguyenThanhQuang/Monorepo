@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  Model,
-  Types,
-  UpdateQuery,
-} from 'mongoose'; // REMOVED: ClientSession
+import { Model, Types, UpdateQuery } from 'mongoose';
 import { UserDefinition, UserDocument } from './schemas/user.schema';
 
 @Injectable()
@@ -13,7 +9,6 @@ export class UsersRepository {
     @InjectModel(UserDefinition.name) private userModel: Model<UserDocument>,
   ) {}
 
-  // REMOVED session parameter
   async create(userData: Partial<UserDefinition>): Promise<UserDocument> {
     const newUser = new this.userModel(userData);
     return newUser.save();
@@ -48,7 +43,6 @@ export class UsersRepository {
     return this.userModel.findOne(filter).exec();
   }
 
-  // REMOVED session parameter
   async update(
     id: string,
     updateData: UpdateQuery<UserDocument>,
@@ -58,7 +52,6 @@ export class UsersRepository {
       .exec();
   }
 
-  // REMOVED session parameter
   async save(user: UserDocument): Promise<UserDocument> {
     return user.save();
   }
@@ -69,5 +62,9 @@ export class UsersRepository {
 
   async delete(id: string | Types.ObjectId): Promise<UserDocument | null> {
     return this.userModel.findByIdAndDelete(id).exec();
+  }
+
+  async findMany(filter: Record<string, any>): Promise<UserDocument[]> {
+    return this.userModel.find(filter).sort({ createdAt: -1 }).exec();
   }
 }

@@ -1,18 +1,25 @@
 import { api } from "@obtp/api-client";
+import { calculateCommission, calculateNetProfit } from "@obtp/business-logic";
 import { BookingStatus, type Booking } from "@obtp/shared-types";
 import { useQuery } from "@tanstack/react-query";
 
 export interface DashboardData {
   stats: {
     totalRevenue: number;
+    commissionFee: number;
+    netProfit: number;
     currentMonthRevenue: number;
     revenueGrowth: number;
     totalBookings: number;
     completedBookings: number;
     cancelledBookings: number;
-    averageTicketPrice: number;
   };
-  monthlyRevenue: { month: string; revenue: number; bookings: number }[];
+  monthlyRevenue: {
+    month: string;
+    revenue: number;
+    netRevenue: number;
+    bookings: number;
+  }[];
   recentBookings: Booking[];
   rawBookings: Booking[];
 }
@@ -37,8 +44,25 @@ export const useDashboardData = () => {
       let completedBookings = 0;
       let cancelledBookings = 0;
 
+      const monthlyDataMap: Record<
+        string,
+        { month: string; revenue: number; netRevenue: number; bookings: number }
+      > = {};
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+        monthlyDataMap[key] = {
+          month: key,
+          revenue: 0,
+          netRevenue: 0,
+          bookings: 0,
+        };
+      }
+
       bookings.forEach((b) => {
         const date = new Date(b.createdAt);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
         if (b.status === BookingStatus.CONFIRMED) {
           totalRevenue += b.totalAmount;
           completedBookings++;
@@ -54,8 +78,17 @@ export const useDashboardData = () => {
           ) {
             previousMonthRevenue += b.totalAmount;
           }
+
+          if (monthlyDataMap[key]) {
+            monthlyDataMap[key].revenue += b.totalAmount;
+            monthlyDataMap[key].netRevenue += calculateNetProfit(b.totalAmount);
+          }
         } else if (b.status === BookingStatus.CANCELLED) {
           cancelledBookings++;
+        }
+
+        if (monthlyDataMap[key]) {
+          monthlyDataMap[key].bookings += 1;
         }
       });
 
@@ -68,29 +101,8 @@ export const useDashboardData = () => {
             ? 100
             : 0;
 
-      const averageTicketPrice =
-        completedBookings > 0 ? totalRevenue / completedBookings : 0;
-
-      const monthlyDataMap: Record<
-        string,
-        { month: string; revenue: number; bookings: number }
-      > = {};
-      for (let i = 5; i >= 0; i--) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-        monthlyDataMap[key] = { month: key, revenue: 0, bookings: 0 };
-      }
-
-      bookings.forEach((b) => {
-        const date = new Date(b.createdAt);
-        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-        if (monthlyDataMap[key]) {
-          if (b.status === BookingStatus.CONFIRMED) {
-            monthlyDataMap[key].revenue += b.totalAmount;
-          }
-          monthlyDataMap[key].bookings += 1;
-        }
-      });
+      const commissionFee = calculateCommission(totalRevenue);
+      const netProfit = calculateNetProfit(totalRevenue);
 
       const recentBookings = [...bookings]
         .sort(
@@ -102,12 +114,13 @@ export const useDashboardData = () => {
       return {
         stats: {
           totalRevenue,
+          commissionFee,
+          netProfit,
           currentMonthRevenue,
           revenueGrowth,
           totalBookings: bookings.length,
           completedBookings,
           cancelledBookings,
-          averageTicketPrice,
         },
         monthlyRevenue: Object.values(monthlyDataMap),
         recentBookings,

@@ -34,7 +34,7 @@ export interface User {
   email: string;
   name: string;
   phone?: string;
-  role: 'user' | 'driver';
+  role: "user" | "driver";
   companyId?: string;
 }
 
@@ -44,7 +44,7 @@ export interface Booking {
   tripId: string;
   selectedSeats: string[];
   totalAmount: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  status: "pending" | "confirmed" | "cancelled" | "completed";
   createdAt: string;
   updatedAt: string;
 }
@@ -55,7 +55,7 @@ export interface Company {
   email: string;
   phone: string;
   address: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
 }
 
 export interface Vehicle {
@@ -64,7 +64,7 @@ export interface Vehicle {
   totalSeats: number;
   companyId: string;
   licensePlate: string;
-  status: 'active' | 'inactive' | 'maintenance';
+  status: "active" | "inactive" | "maintenance";
 }
 
 // Form Types
@@ -100,14 +100,6 @@ export type RootStackParamList = {
   BusTracking: undefined;
   LoyaltyProgram: undefined;
 };
-
-// API Response Types
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-}
 
 export interface PaginatedResponse<T> {
   data: T[];

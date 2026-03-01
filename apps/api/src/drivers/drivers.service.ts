@@ -1,20 +1,22 @@
 import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
-import * as sharedTypes from '@obtp/shared-types';
 import { InjectModel } from '@nestjs/mongoose';
+import { hashPassword } from '@obtp/business-logic';
+import * as sharedTypes from '@obtp/shared-types';
 import { Model, Types } from 'mongoose';
+import { BookingsRepository } from '../bookings/bookings.repository';
+import { BookingsService } from '../bookings/bookings.service';
 import { UsersRepository } from '../users/users.repository';
 import {
   DriverProfileDefinition,
   DriverProfileDocument,
   DriverProfileStatus,
 } from './schemas/driver-profile.schema';
-import { BookingsRepository } from '../bookings/bookings.repository';
-import { BookingsService } from '../bookings/bookings.service';
 
 @Injectable()
 export class DriversService {
@@ -50,7 +52,9 @@ export class DriversService {
     const userId = user.id;
     if (!userId) throw new BadRequestException('Missing user id');
     if (!payload?.licenseNumber || !payload?.idCardNumber) {
-      throw new BadRequestException('licenseNumber and idCardNumber are required');
+      throw new BadRequestException(
+        'licenseNumber and idCardNumber are required',
+      );
     }
 
     const existed = await this.driverProfileModel.findOne({
@@ -60,7 +64,8 @@ export class DriversService {
     if (existed) {
       existed.licenseNumber = payload.licenseNumber;
       existed.idCardNumber = payload.idCardNumber;
-      existed.experienceYears = payload.experienceYears ?? existed.experienceYears;
+      existed.experienceYears =
+        payload.experienceYears ?? existed.experienceYears;
       existed.status = DriverProfileStatus.APPROVED;
       await existed.save();
     } else {
@@ -73,7 +78,6 @@ export class DriversService {
       } as Partial<DriverProfileDefinition>);
     }
 
-    // add role driver
     const doc = await this.usersRepository.findById(userId);
     if (doc) {
       const roles = (doc as any).roles ?? [];
@@ -94,21 +98,30 @@ export class DriversService {
     return { ok: true, data: profile };
   }
 
-  async validateTicket(ticketId: string, driver?: sharedTypes.AuthUserResponse) {
+  async validateTicket(
+    ticketId: string,
+    driver?: sharedTypes.AuthUserResponse,
+  ) {
     if (!ticketId) throw new BadRequestException('ticketId is required');
     const booking = await this.bookingsRepo.findByCodeOrId(ticketId);
     if (!booking) throw new NotFoundException('Ticket not found');
 
-    // ✅ Nếu driver có companyId -> chỉ được quét/xác nhận vé của company đó
     const driverCompanyId = this.toIdString((driver as any)?.companyId);
     const bookingCompanyId = this.toIdString((booking as any)?.companyId);
-    if (driverCompanyId && bookingCompanyId && driverCompanyId !== bookingCompanyId) {
-      throw new ForbiddenException('Bạn không có quyền quét vé của nhà xe khác.');
+    if (
+      driverCompanyId &&
+      bookingCompanyId &&
+      driverCompanyId !== bookingCompanyId
+    ) {
+      throw new ForbiddenException(
+        'Bạn không có quyền quét vé của nhà xe khác.',
+      );
     }
 
-    // ✅ Chỉ cho quét vé đã thanh toán/confirmed
     const status = String((booking as any)?.status || '').toUpperCase();
-    const payStatus = String((booking as any)?.paymentStatus || '').toUpperCase();
+    const payStatus = String(
+      (booking as any)?.paymentStatus || '',
+    ).toUpperCase();
     if (status !== 'CONFIRMED' || payStatus !== 'PAID') {
       return {
         ok: false,
@@ -148,24 +161,32 @@ export class DriversService {
     const booking = await this.bookingsRepo.findByCodeOrId(ticketId);
     if (!booking) throw new NotFoundException('Ticket not found');
 
-    // ✅ Nếu driver có companyId -> chỉ được xác nhận vé của company đó
     const driverCompanyId = this.toIdString((driver as any)?.companyId);
     const bookingCompanyId = this.toIdString((booking as any)?.companyId);
-    if (driverCompanyId && bookingCompanyId && driverCompanyId !== bookingCompanyId) {
-      throw new ForbiddenException('Bạn không có quyền xác nhận vé của nhà xe khác.');
+    if (
+      driverCompanyId &&
+      bookingCompanyId &&
+      driverCompanyId !== bookingCompanyId
+    ) {
+      throw new ForbiddenException(
+        'Bạn không có quyền xác nhận vé của nhà xe khác.',
+      );
     }
 
     const status = String((booking as any)?.status || '').toUpperCase();
-    const payStatus = String((booking as any)?.paymentStatus || '').toUpperCase();
+    const payStatus = String(
+      (booking as any)?.paymentStatus || '',
+    ).toUpperCase();
     if (status !== 'CONFIRMED' || payStatus !== 'PAID') {
-      throw new BadRequestException('Vé chưa thanh toán hoặc chưa được xác nhận.');
+      throw new BadRequestException(
+        'Vé chưa thanh toán hoặc chưa được xác nhận.',
+      );
     }
 
     if ((booking as any).checkedInAt) {
       return { ok: false, message: 'Vé đã được sử dụng trước đó.' };
     }
 
-    // mark checked-in
     (booking as any).checkedInAt = new Date();
     if (driver?.id) {
       (booking as any).checkedInBy = driver.name || driver.id;
@@ -174,5 +195,131 @@ export class DriversService {
     await this.bookingsRepo.save(booking);
 
     return { ok: true, message: 'Confirmed' };
+  }
+
+  async getCompanyDrivers(
+    companyId: string,
+  ): Promise<sharedTypes.DriverResponse[]> {
+    const users = await this.usersRepository.findMany({
+      companyId: new Types.ObjectId(companyId),
+      roles: { $in: [(sharedTypes.UserRole as any).DRIVER ?? 'driver'] },
+    });
+
+    const userIds = users.map((u) => u._id);
+    const profiles = await this.driverProfileModel
+      .find({ userId: { $in: userIds } })
+      .exec();
+
+    return users.map((user) => {
+      const profile = profiles.find(
+        (p) => p.userId.toString() === user._id.toString(),
+      );
+      return {
+        id: user._id.toString(),
+        userId: user._id.toString(),
+        name: user.name,
+        phone: user.phone,
+        licenseNumber: profile?.licenseNumber || 'N/A',
+        idCardNumber: profile?.idCardNumber || 'N/A',
+        experienceYears: profile?.experienceYears || 0,
+        status: user.isBanned ? 'inactive' : 'active',
+        tripCount: 0,
+        createdAt: user.createdAt,
+      } as sharedTypes.DriverResponse;
+    });
+  }
+
+  async createCompanyDriver(
+    companyId: string,
+    payload: sharedTypes.CreateDriverPayload,
+  ) {
+    const existingUser = await this.usersRepository.findOneByPhoneWithPassword(
+      payload.phone,
+    );
+    if (existingUser) {
+      throw new ConflictException(
+        'Số điện thoại này đã được sử dụng trong hệ thống.',
+      );
+    }
+
+    const randomPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await hashPassword(randomPassword);
+
+    const newUser = await this.usersRepository.create({
+      name: payload.name,
+      phone: payload.phone,
+      email: `driver_${Date.now()}@obtp.local`,
+      passwordHash: hashedPassword,
+      roles: [(sharedTypes.UserRole as any).DRIVER ?? 'driver'],
+      companyId: new Types.ObjectId(companyId),
+      isEmailVerified: true,
+    });
+
+    await this.driverProfileModel.create({
+      userId: newUser._id,
+      licenseNumber: payload.licenseNumber,
+      idCardNumber: payload.idCardNumber,
+      experienceYears: payload.experienceYears || 0,
+      status: DriverProfileStatus.APPROVED,
+    });
+
+    return this.getDriverDetail(newUser._id.toString());
+  }
+
+  async updateCompanyDriver(
+    companyId: string,
+    driverId: string,
+    payload: sharedTypes.UpdateDriverPayload,
+  ) {
+    const user = await this.usersRepository.findById(driverId);
+    if (!user || user.companyId?.toString() !== companyId) {
+      throw new NotFoundException('Không tìm thấy tài xế.');
+    }
+
+    if (payload.name) user.name = payload.name;
+    if (payload.phone) user.phone = payload.phone;
+    if (payload.status) user.isBanned = payload.status === 'inactive';
+    await this.usersRepository.save(user);
+
+    const profile = await this.driverProfileModel.findOne({
+      userId: new Types.ObjectId(driverId),
+    });
+    if (profile) {
+      if (payload.licenseNumber) profile.licenseNumber = payload.licenseNumber;
+      if (payload.idCardNumber) profile.idCardNumber = payload.idCardNumber;
+      if (payload.experienceYears !== undefined)
+        profile.experienceYears = payload.experienceYears;
+      await profile.save();
+    }
+
+    return this.getDriverDetail(driverId);
+  }
+
+  async deleteCompanyDriver(companyId: string, driverId: string) {
+    const user = await this.usersRepository.findById(driverId);
+    if (!user || user.companyId?.toString() !== companyId) {
+      throw new NotFoundException('Không tìm thấy tài xế.');
+    }
+    user.isBanned = true;
+    await this.usersRepository.save(user);
+    return { message: 'Đã vô hiệu hóa tài xế thành công.' };
+  }
+
+  private async getDriverDetail(driverId: string) {
+    const user = await this.usersRepository.findById(driverId);
+    const profile = await this.driverProfileModel.findOne({
+      userId: new Types.ObjectId(driverId),
+    });
+    return {
+      id: user!._id.toString(),
+      name: user!.name,
+      phone: user!.phone,
+      licenseNumber: profile?.licenseNumber || '',
+      idCardNumber: profile?.idCardNumber || '',
+      experienceYears: profile?.experienceYears || 0,
+      status: user!.isBanned ? 'inactive' : 'active',
+      tripCount: 0,
+      createdAt: user!.createdAt,
+    };
   }
 }

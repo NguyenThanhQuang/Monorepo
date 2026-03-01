@@ -1,4 +1,4 @@
-import { ChartDataPoint } from "@obtp/shared-types";
+import { ChartDataPoint, RevenueChartData } from "@obtp/shared-types";
 import dayjs from "dayjs";
 
 /**
@@ -45,4 +45,56 @@ export function fillMissingChartDates(
   }
 
   return filledData;
+}
+
+/**
+ * Group dữ liệu biểu đồ theo tháng (Logic gốc của bạn)
+ */
+export function groupChartDataByMonth(
+  data: RevenueChartData[],
+): { month: string; revenue: number; bookings: number }[] {
+  const monthMap = new Map<string, { revenue: number; bookings: number }>();
+
+  data.forEach((item) => {
+    const date = new Date(item.date);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+    const existing = monthMap.get(monthKey);
+    if (existing) {
+      existing.revenue += item.revenue;
+      existing.bookings += item.bookings;
+    } else {
+      monthMap.set(monthKey, {
+        revenue: item.revenue,
+        bookings: item.bookings,
+      });
+    }
+  });
+
+  return Array.from(monthMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, value]) => ({
+      month: key,
+      revenue: value.revenue,
+      bookings: value.bookings,
+    }));
+}
+
+/**
+ * Lấy params tháng hiện tại
+ */
+export function getCurrentMonthParams() {
+  const now = new Date();
+  return {
+    month: now.getMonth() + 1,
+    year: now.getFullYear(),
+  };
+}
+
+/**
+ * Format string date sang text hiển thị "Tháng X/YYYY"
+ */
+export function formatMonthFromDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return `Tháng ${date.getMonth() + 1}/${date.getFullYear()}`;
 }

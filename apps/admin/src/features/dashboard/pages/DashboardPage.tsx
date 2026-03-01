@@ -1,76 +1,39 @@
-// src/features/admin/pages/AdminDashboard.tsx
-import { useState, useEffect } from "react";
-import { 
-  DollarSign, 
-  Building2, 
-  Users, 
+import {
+  DollarSign,
+  Building2,
+  Users,
   Ticket,
-  Calendar,
   RefreshCw,
-  TrendingUp
+  TrendingUp,
 } from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import { adminApi } from "@obtp/api-client";
-import type { AdminDashboardStats } from "@obtp/shared-types";
+import { useDashboardStats } from "../hooks/useDashboardStats";
+import { formatCurrency, formatNumber } from "@obtp/business-logic";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function AdminDashboard() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [retryCount]);
+  const {
+    data: stats,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useDashboardStats();
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // CHỈ gọi API dashboard stats, KHÔNG gọi activities
-      const statsData = await adminApi.getDashboardStats();
-      console.log('Dashboard stats received:', statsData);
-      
-      setStats(statsData);
-    } catch (error: any) {
-      console.error("Error fetching dashboard data:", error);
-      
-      // Xử lý lỗi cụ thể
-      if (error?.response?.status === 404) {
-        setError('API dashboard chưa được triển khai. Vui lòng kiểm tra lại đường dẫn API.');
-      } else if (error?.response?.status === 401 || error?.response?.status === 403) {
-        setError('Bạn không có quyền truy cập dữ liệu này.');
-      } else if (error?.response?.status === 500) {
-        setError('Lỗi máy chủ. Vui lòng thử lại sau.');
-      } else if (error?.message?.includes('Network Error')) {
-        setError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
-      } else {
-        setError(error?.message || 'Không thể tải dữ liệu');
-      }
-    } finally {
-      setLoading(false);
-    }
+  const getErrorMessage = (err: any) => {
+    if (err?.response?.status === 404)
+      return "API dashboard chưa được triển khai. Vui lòng kiểm tra lại đường dẫn API.";
+    if (err?.response?.status === 401 || err?.response?.status === 403)
+      return "Bạn không có quyền truy cập dữ liệu này.";
+    if (err?.response?.status === 500)
+      return "Lỗi máy chủ. Vui lòng thử lại sau.";
+    if (err?.message?.includes("Network Error"))
+      return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.";
+    return err?.message || "Không thể tải dữ liệu";
   };
 
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-  };
-
-  // Helper functions an toàn - kiểm tra undefined
-  const formatCurrency = (amount?: number) => {
-    if (amount === undefined || amount === null) return '0đ';
-    return adminApi.formatCompactCurrency(amount);
-  };
-
-  const formatNumber = (num?: number) => {
-    if (num === undefined || num === null) return '0';
-    return adminApi.formatNumber(num);
-  };
-
-  // Hiển thị loading
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4" />
@@ -79,7 +42,6 @@ export function AdminDashboard() {
     );
   }
 
-  // Hiển thị lỗi
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
@@ -89,21 +51,23 @@ export function AdminDashboard() {
             Không thể tải dữ liệu
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {error}
+            {getErrorMessage(error)}
           </p>
           <button
-            onClick={handleRetry}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50"
           >
-            <RefreshCw className="w-4 h-4" />
-            Thử lại
+            <RefreshCw
+              className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`}
+            />
+            {isRefetching ? "Đang thử lại..." : "Thử lại"}
           </button>
         </div>
       </div>
     );
   }
 
-  // Hiển thị khi không có dữ liệu
   if (!stats) {
     return (
       <div className="text-center py-12">
@@ -121,15 +85,18 @@ export function AdminDashboard() {
             Tổng quan hệ thống
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Chào mừng trở lại, {user?.name || 'Admin'}!
+            Chào mừng trở lại, {user?.name || "Admin"}!
           </p>
         </div>
         <button
-          onClick={handleRetry}
-          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          onClick={() => refetch()}
+          disabled={isRefetching}
+          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
           title="Làm mới"
         >
-          <RefreshCw className="w-5 h-5" />
+          <RefreshCw
+            className={`w-5 h-5 ${isRefetching ? "animate-spin" : ""}`}
+          />
         </button>
       </div>
 
@@ -142,9 +109,12 @@ export function AdminDashboard() {
               <DollarSign className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Tổng doanh thu</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            Tổng doanh thu
+          </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {formatCurrency(stats.totalRevenue)}
+            {/* Sử dụng compact=true để hiển thị dạng 1.5 tỷ / 500 triệu */}
+            {formatCurrency(stats.totalRevenue, true)}
           </p>
           <p className="text-xs text-gray-400 mt-2">Toàn thời gian</p>
         </div>
@@ -156,7 +126,9 @@ export function AdminDashboard() {
               <Ticket className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Tổng số vé</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            Tổng số vé
+          </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatNumber(stats.totalBookings)}
           </p>
@@ -172,7 +144,9 @@ export function AdminDashboard() {
               <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Người dùng</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            Người dùng
+          </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatNumber(stats.totalUsers)}
           </p>
@@ -185,12 +159,14 @@ export function AdminDashboard() {
               <Building2 className="w-6 h-6 text-orange-600 dark:text-orange-400" />
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Nhà xe</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            Nhà xe
+          </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {stats.totalCompanies}
+            {formatNumber(stats.totalCompanies)}
           </p>
           <p className="text-xs text-gray-400 mt-2">
-            Mới hôm nay: {stats.newCompaniesToday}
+            Mới hôm nay: {formatNumber(stats.newCompaniesToday)}
           </p>
         </div>
       </div>
@@ -202,9 +178,11 @@ export function AdminDashboard() {
             <TrendingUp className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Chuyến đi đang hoạt động</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Chuyến đi đang hoạt động
+            </p>
             <p className="text-3xl font-bold text-gray-900 dark:text-white">
-              {stats.activeTrips}
+              {formatNumber(stats.activeTrips)}
             </p>
           </div>
         </div>

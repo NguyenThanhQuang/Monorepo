@@ -43,3 +43,10 @@ export const ConfirmBookingSchema = z.object({
   paymentMethod: z.string().min(1),
   transactionDateTime: z.string(),
 });
+
+export const UpdateBookingCustomerSchema = z.object({
+  contactName: z.string().min(1, "Tên liên hệ bắt buộc"),
+  contactPhone: z
+    .string()
+    .regex(AUTH_CONSTANTS.VN_PHONE_REGEX, "Số điện thoại không hợp lệ"),
+});

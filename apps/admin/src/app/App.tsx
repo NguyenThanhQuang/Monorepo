@@ -1,12 +1,15 @@
-// src/app/App.tsx
 import type { ReactNode } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import { ThemeProvider } from "./providers";
-
 import { AdminLayout } from "../components/layout/AdminLayout";
 import LoginPage from "../features/auth/pages/LoginPage";
 import { AdminDashboard } from "../features/dashboard/pages/DashboardPage";
@@ -15,14 +18,24 @@ import { CompanyManagement } from "../features/companies/pages/CompanyManagement
 import { UserManagement } from "../features/users/pages/UserManagement";
 import { AdminReviewManagement } from "../features/review/page/AdminReviewManagement";
 import ActivateAccountPage from "../features/ActivateAccountPage";
+import { UserRole } from "@obtp/shared-types";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // nếu role khác tên (ADMIN/admin) thì sửa ở đây
-  if (!user.roles?.includes("admin")) return <Navigate to="/login" replace />;
+  if (!user.roles?.includes(UserRole.ADMIN))
+    return <Navigate to="/login" replace />;
 
   return <AdminLayout>{children}</AdminLayout>;
 }
@@ -33,16 +46,13 @@ function AppContent() {
   return (
     <Router>
       <Routes>
-        {/* Public */}
         <Route path="/login" element={<LoginPage />} />
-
-        {/* Default */}
         <Route
           path="/"
-          element={<Navigate to={user ? "/admin/dashboard" : "/login"} replace />}
+          element={
+            <Navigate to={user ? "/admin/dashboard" : "/login"} replace />
+          }
         />
-
-        {/* Admin */}
         <Route
           path="/admin/dashboard"
           element={
@@ -51,10 +61,7 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-<Route
-  path="/activate-account"
-  element={<ActivateAccountPage />}
-/>
+        <Route path="/activate-account" element={<ActivateAccountPage />} />
         <Route
           path="/admin/revenue"
           element={
@@ -63,7 +70,6 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/admin/companies"
           element={
@@ -72,7 +78,6 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/admin/users"
           element={
@@ -81,7 +86,6 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/admin/reviews"
           element={
@@ -90,8 +94,6 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
-        {/* 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
@@ -100,37 +102,33 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <AppContent />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: "#363636",
-                color: "#fff",
-                borderRadius: "12px",
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: "#10b981",
-                  secondary: "#fff",
-                },
-              },
-              error: {
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <AppContent />
+            <Toaster
+              position="top-right"
+              toastOptions={{
                 duration: 4000,
-                iconTheme: {
-                  primary: "#ef4444",
-                  secondary: "#fff",
+                style: {
+                  background: "#363636",
+                  color: "#fff",
+                  borderRadius: "12px",
                 },
-              },
-            }}
-          />
-        </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+                success: {
+                  duration: 3000,
+                  iconTheme: { primary: "#10b981", secondary: "#fff" },
+                },
+                error: {
+                  duration: 4000,
+                  iconTheme: { primary: "#ef4444", secondary: "#fff" },
+                },
+              }}
+            />
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

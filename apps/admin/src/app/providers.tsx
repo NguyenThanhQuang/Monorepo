@@ -1,4 +1,3 @@
-// App-wide providers: Theme (dark/light)
 import {
   createContext,
   useContext,
@@ -23,7 +22,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = (localStorage.getItem("theme") as Theme | null) ?? null;
-    const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+    const prefersDark =
+      window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
     const initial = stored ?? (prefersDark ? "dark" : "light");
 
     setThemeState(initial);
@@ -38,12 +38,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
 
-  const value = useMemo(
-    () => ({ theme, toggleTheme, setTheme }),
-    [theme]
-  );
+  const value = useMemo(() => ({ theme, toggleTheme, setTheme }), [theme]);
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {
