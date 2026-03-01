@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { getAccessToken } from "@/lib/auth";
 
 export function RequireAuth({ children }: { children: ReactNode }) {
   const token = getAccessToken();
@@ -11,4 +10,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   }
 
   return <>{children}</>;
+}
+function getAccessToken() {
+  throw new Error("Function not implemented.");
 }

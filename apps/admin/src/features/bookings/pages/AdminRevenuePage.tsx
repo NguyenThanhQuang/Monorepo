@@ -11,7 +11,7 @@ import {
 import { adminApi } from "@obtp/api-client";
 import { formatCurrency, formatNumber } from "@obtp/business-logic";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useRevenueStats } from "./hooks/useRevenueStats";
+import { useRevenueStats } from "../hooks/useRevenueStats";
 
 const getInitialDates = () => {
   const today = new Date();
