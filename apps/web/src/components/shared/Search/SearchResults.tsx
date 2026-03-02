@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import type { Trip, Company, Vehicle, Location } from '@obtp/shared-types';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { getCompanyLogo, getCompanyName, getFromLocationName, getToLocationName, getVehicleAmenities, getVehicleType, tripApi } from '../../../api/service/trips/trips.api';
+import { tripsApi } from '@obtp/api-client';
 
 interface SearchResultsProps {
   fromProvince: string;
@@ -44,7 +44,7 @@ export function SearchResults({
       try {
         const finalDate = date ?? new Date().toISOString().split('T')[0];
 
-        const data = await tripApi.searchByProvinces(
+        const data = await tripsApi.searchByProvinces(
           fromProvince,
           toProvince,
           finalDate,
@@ -215,12 +215,12 @@ export function SearchResults({
             );
             
             // Lấy thông tin an toàn bằng helpers
-            const companyName = getCompanyName(trip);
-            const companyLogo = getCompanyLogo(trip);
-            const vehicleType = getVehicleType(trip);
-            const amenities = getVehicleAmenities(trip);
-            const fromLocationName = getFromLocationName(trip) || fromProvince;
-            const toLocationName = getToLocationName(trip) || toProvince;
+            const companyName = tripsApi.getCompanyName(trip);
+            const companyLogo = tripsApi.getCompanyLogo(trip);
+            const vehicleType = tripsApi.getVehicleType(trip);
+            const amenities = tripsApi.getVehicleAmenities(trip);
+            const fromLocationName = tripsApi.getFromLocationName(trip) || fromProvince;
+            const toLocationName = tripsApi.getToLocationName(trip) || toProvince;
             
             // Lấy thông tin company từ object nếu có
             const companyObj = typeof trip.companyId === 'object' ? trip.companyId as Company : null;

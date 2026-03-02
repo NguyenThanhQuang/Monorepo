@@ -25,5 +25,5 @@
     "noUncheckedSideEffectImports": true,
     "@obtp/api-client": ["../../packages/api-client/src"]
   },
-  "include": ["src", "../portal/src/api/api.ts", "../portal/src/features/trips/add-trip"]
+  "include": ["src", "../portal/src/api/api.ts", "../portal/src/features/trips/add-trip", "src/api/service/api/api.ts"]
 }

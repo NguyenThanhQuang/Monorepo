@@ -14,28 +14,16 @@ export function useTripDetailLogic(tripId: string) {
   useEffect(() => {
     const fetchTripDetail = async () => {
       if (!tripId) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        
-        // Gọi API và lấy dữ liệu
+
+        // Gọi API, response có kiểu TripDetailResponse (dựa trên interface đã cho)
         const response = await tripsApi.getTripDetail(tripId);
-        
-        // Xử lý response dựa trên cấu trúc thực tế
-        // Nếu API trả về { data: TripDetailResponse }
-        if (response.data && response.data.data) {
-          setTrip(response.data.data);
-        } 
-        // Nếu API trả về TripDetailResponse trực tiếp trong data
-        else if (response.data) {
-          setTrip(response.data);
-        }
-        // Nếu response là TripDetailResponse trực tiếp
-        else {
-          setTrip(response as unknown as TripDetailResponse);
-        }
-        
+
+        // Gán trực tiếp response vào state
+        setTrip(response);
       } catch (error) {
         console.error('Error fetching trip detail:', error);
         setError('Không thể tải thông tin chuyến đi. Vui lòng thử lại sau.');

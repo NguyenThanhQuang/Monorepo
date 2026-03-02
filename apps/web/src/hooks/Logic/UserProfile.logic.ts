@@ -7,9 +7,7 @@ import {
   updateMyProfile,
   changeMyPassword,
 } from '../../api/userProfile.api';
-import { getMyReviewsApi } from '../../api/service/review/review.api';
-import { reviewsApi } from '@obtp/api-client';
-
+import { reviewsApi } from '@obtp/api-client'; // ✅ chỉ dùng reviewsApi, đã có getMyReviews
 
 export function useUserProfileLogic() {
   const [user, setUser] = useState<UserProfileResponse | null>(null);
@@ -94,7 +92,8 @@ export function useUserProfileLogic() {
         });
 
         /* ===== REVIEWS ===== */
-        const reviewsRes: any = await reviewsApi.getMyReviewsApi();
+        // ✅ Sử dụng đúng method getMyReviews (không có hậu tố Api)
+        const reviewsRes: any = await reviewsApi.getMyReviews();
         console.log('REVIEWS API 👉', reviewsRes);
 
         setReviews(

@@ -4,7 +4,7 @@ import type {
   SanitizedUserResponse,
  
 } from "@obtp/shared-types";
-import api from "../trips/trips.api";
+import api from "../api/api";
 
 export const usersApi = {
   getAllForAdmin(): Promise<SanitizedUserResponse[]> {

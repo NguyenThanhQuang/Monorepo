@@ -8,7 +8,7 @@ import type {
   LookupBookingPayload 
 } from "@obtp/shared-types";
 import type { AxiosResponse } from 'axios';
-import api from "../trips/trips.api";
+import api from "../api/api";
 
 // Interface cho response từ API
 interface ApiResponse<T> {

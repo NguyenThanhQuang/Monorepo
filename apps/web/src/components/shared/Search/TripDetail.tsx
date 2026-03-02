@@ -23,28 +23,9 @@ import {
 import type { Trip, TripSeat } from '@obtp/shared-types';
 import { SeatStatus } from '@obtp/shared-types';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { 
-  getCompanyLogo, 
-  getCompanyName, 
-  getCompanyPhone,
-  getFromLocationName, 
-  getFromLocationProvince,
-  getFromLocationAddress,
-  getToLocationName, 
-  getToLocationProvince,
-  getToLocationAddress,
-  getVehicleAmenities, 
-  getVehicleType,
-  getVehicleNumber,
-  getTotalSeats,
-  getVehicleFloors,
-  formatTripTime,
-  formatTripDate,
-  calculateTripDuration,
-  tripApi,
-  isValidTripId
-} from '../../../api/service/trips/trips.api';
+
 import { PaymentModal } from '../../payment/PaymentModal';
+import { tripsApi } from '@obtp/api-client';
 
 interface TripDetailProps {
   tripId: string;
@@ -93,7 +74,7 @@ export function TripDetail({ tripId, onBack, onBooking }: TripDetailProps) {
         }
 
         console.log('🔍 Fetching trip detail for ID:', tripId);
-        const data = await tripApi.getTripById(tripId);
+        const data = await tripsApi.getTripById(tripId);
         
         console.log('📦 Data received from API:', data);
         
@@ -101,9 +82,9 @@ export function TripDetail({ tripId, onBack, onBooking }: TripDetailProps) {
           // Kiểm tra dữ liệu có đầy đủ không
           console.log('✅ Trip data received:', {
             id: data._id,
-            company: getCompanyName(data),
-            from: getFromLocationName(data),
-            to: getToLocationName(data),
+            company: tripsApi.getCompanyName(data),
+            from: tripsApi.getFromLocationName(data),
+            to: tripsApi.getToLocationName(data),
             departureTime: data.departureTime,
             hasSeats: data.seats ? data.seats.length : 0
           });
@@ -248,28 +229,28 @@ export function TripDetail({ tripId, onBack, onBooking }: TripDetailProps) {
   }
 
   // Lấy dữ liệu từ helpers
-  const companyName = getCompanyName(trip);
-  const companyLogo = getCompanyLogo(trip);
-  const companyPhone = getCompanyPhone(trip);
-  const vehicleType = getVehicleType(trip);
-  const vehicleNumber = getVehicleNumber(trip);
-  const amenities = getVehicleAmenities(trip);
-  const totalSeats = getTotalSeats(trip);
-  const totalFloors = getVehicleFloors(trip);
+  const companyName = tripsApi.getCompanyName(trip);
+  const companyLogo = tripsApi.getCompanyLogo(trip);
+  const companyPhone = tripsApi.getCompanyPhone(trip);
+  const vehicleType = tripsApi.getVehicleType(trip);
+  const vehicleNumber = tripsApi.getVehicleNumber(trip);
+  const amenities = tripsApi.getVehicleAmenities(trip);
+  const totalSeats = tripsApi.getTotalSeats(trip);
+  const totalFloors = tripsApi.getVehicleFloors(trip);
   
-  const fromLocationName = getFromLocationName(trip);
-  const fromLocationProvince = getFromLocationProvince(trip);
-  const fromLocationAddress = getFromLocationAddress(trip);
+  const fromLocationName = tripsApi.getFromLocationName(trip);
+  const fromLocationProvince = tripsApi.getFromLocationProvince(trip);
+  const fromLocationAddress = tripsApi.getFromLocationAddress(trip);
   
-  const toLocationName = getToLocationName(trip);
-  const toLocationProvince = getToLocationProvince(trip);
-  const toLocationAddress = getToLocationAddress(trip);
+  const toLocationName = tripsApi.getToLocationName(trip);
+  const toLocationProvince = tripsApi.getToLocationProvince(trip);
+  const toLocationAddress = tripsApi.getToLocationAddress(trip);
   
-  const departureTime = formatTripTime(trip.departureTime);
-  const departureDate = formatTripDate(trip.departureTime);
-  const arrivalTime = formatTripTime(trip.expectedArrivalTime);
-  const arrivalDate = formatTripDate(trip.expectedArrivalTime);
-  const duration = calculateTripDuration(trip.departureTime, trip.expectedArrivalTime);
+  const departureTime = tripsApi.formatTripTime(trip.departureTime);
+  const departureDate = tripsApi.formatTripDate(trip.departureTime);
+  const arrivalTime = tripsApi.formatTripTime(trip.expectedArrivalTime);
+  const arrivalDate = tripsApi.formatTripDate(trip.expectedArrivalTime);
+  const duration = tripsApi.calculateTripDuration(trip.departureTime, trip.expectedArrivalTime);
 
   // Lấy tất cả ghế và sắp xếp
   const allSeats = sortSeatsByNumber(getAllSeats());
