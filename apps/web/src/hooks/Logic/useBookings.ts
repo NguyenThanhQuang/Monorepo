@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { mapBookingFromApi } from '../../contexts/mappers/booking.mapper';
-import { fetchBookings } from '../../api/service/booking/booking.api';
 import type { BookingUI } from '@obtp/shared-types';
+import { bookingsApi } from '@obtp/api-client';
 
 export function useBookings() {
   const [data, setData] = useState<BookingUI[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchBookings()
+    bookingsApi.fetchBookings()
       .then((res) => setData(res.map(mapBookingFromApi)))
       .finally(() => setLoading(false));
   }, []);

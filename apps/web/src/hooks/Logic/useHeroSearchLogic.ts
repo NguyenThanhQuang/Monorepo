@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { Location } from '@obtp/shared-types';
 import toast from 'react-hot-toast';
-import { locationApi } from '../../api/service/location/apiLocation';
+import { locationsApi } from '@obtp/api-client';
 
 export interface UseHeroSearchLogicProps {
   onSearch?: (params: { fromProvince: string; toProvince: string; date?: string }) => void;
@@ -42,7 +42,7 @@ export function useHeroSearchLogic({
   /* ================= LOAD ALL ================= */
   const loadAllFromLocations = async () => {
     try {
-      const res = await locationApi.search('');
+      const res = await locationsApi.search('');
       setFromSuggestions(Array.isArray(res) ? res : []);
     } catch (error) {
       console.error('Error loading from locations:', error);
@@ -53,7 +53,7 @@ export function useHeroSearchLogic({
 
   const loadAllToLocations = async () => {
     try {
-      const res = await locationApi.search('');
+      const res = await locationsApi.search('');
       setToSuggestions(Array.isArray(res) ? res : []);
     } catch (error) {
       console.error('Error loading to locations:', error);
@@ -71,7 +71,7 @@ export function useHeroSearchLogic({
 
     const timer = setTimeout(async () => {
       try {
-        const res = await locationApi.search(fromText);
+        const res = await locationsApi.search(fromText);
         setFromSuggestions(Array.isArray(res) ? res : []);
       } catch (error) {
         console.error('Error searching from locations:', error);
@@ -91,7 +91,7 @@ export function useHeroSearchLogic({
 
     const timer = setTimeout(async () => {
       try {
-        const res = await locationApi.search(toText);
+        const res = await locationsApi.search(toText);
         setToSuggestions(Array.isArray(res) ? res : []);
       } catch (error) {
         console.error('Error searching to locations:', error);

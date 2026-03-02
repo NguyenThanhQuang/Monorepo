@@ -22,7 +22,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { ReviewModal } from './ReviewModal';
 import type { Booking } from '@obtp/shared-types';
-import { bookingsApi } from '../api/service/booking/booking.api';
+import { bookingsApi } from '@obtp/api-client';
 
 interface MyTripsPageProps {
   onBack: () => void;
@@ -137,7 +137,7 @@ export function MyTripsPage({ onBack }: MyTripsPageProps) {
     if (!booking.tripId) return 'unknown';
     
     const now = new Date();
-    const departureTime = new Date(booking.tripId.departureTime);
+    const departureTime = new Date(booking.tripId.departureTime.toString());
     
     if (booking.status === 'cancelled') return 'cancelled';
     if (departureTime > now) return 'upcoming';

@@ -1,13 +1,9 @@
+// src/features/auth/hooks/useAuthLogic.ts
+
 import { useState } from 'react';
-import {
-  forgotPasswordApi,
-  loginApi,
-  registerApi,
-} from '../../api/service/auth/auth.api';
 import toast from 'react-hot-toast';
-import { UserRole } from '@obtp/shared-types';
-
-
+import { UserRole, type LoginResponse } from '@obtp/shared-types';
+import { authApi } from '@obtp/api-client';
 
 export function useAuthLogic({
   onLoginSuccess,
@@ -105,12 +101,13 @@ export function useAuthLogic({
 
       // LOGIN
       if (mode === 'login') {
-        const res = await loginApi({
+        const response = await authApi.login({
           identifier: email,
           password,
         });
 
-        const loginData = res.data?.data;
+        // Với LoginResponse, dữ liệu trả về trực tiếp là { accessToken, user }
+        const loginData = response;
 
         if (!loginData) {
           throw new Error('Login response is empty');
@@ -189,9 +186,10 @@ export function useAuthLogic({
         }
 
         try {
-          const res = await registerApi({
+          const response = await authApi.register({
             email,
             password,
+            confirmPassword,
             name: fullName,
             phone,
           });
@@ -241,7 +239,7 @@ export function useAuthLogic({
       // FORGOT PASSWORD
       if (mode === 'forgot-password') {
         try {
-          await forgotPasswordApi({ email });
+          await authApi.forgotPassword({ email });
           
           toast.success(
             (t) => (
@@ -297,7 +295,7 @@ export function useAuthLogic({
     
     try {
       setLoading(true);
-      // TODO: Gọi API resend verification
+      await authApi.resendVerificationEmail({ email: registeredEmail });
       
       toast.success('Đã gửi lại email xác thực!', {
         duration: 3000,

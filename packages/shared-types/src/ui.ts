@@ -8,6 +8,7 @@ import {
   UserRole,
   VehicleStatus,
 } from "./enums";
+import { Trip } from "./models";
 
 export interface CompanyDashboardStat {
   label: string;
@@ -398,6 +399,7 @@ export interface TripUI {
   amenities: string[];
 }
 export interface TripResponse {
+  data: Trip[];
   _id: string;
   companyId: {
     name: string;

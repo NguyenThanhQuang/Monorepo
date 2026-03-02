@@ -2,6 +2,7 @@ import { Star, X, User, Phone, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import type { Booking } from '@obtp/shared-types';
+import { getMyReviewsApi } from '../api/service/review/review.api';
 
 interface ReviewModalProps {
   booking: Booking;

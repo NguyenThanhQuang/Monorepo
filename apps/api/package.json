@@ -34,6 +34,7 @@
     "@nestjs/schedule": "^6.1.0",
     "@nestjs/serve-static": "^5.0.4",
     "@nestjs/terminus": "^11.0.0",
+    
     "@obtp/business-logic": "workspace:*",
     "@obtp/shared-types": "workspace:*",
     "@obtp/validation": "workspace:*",

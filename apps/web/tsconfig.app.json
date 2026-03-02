@@ -22,7 +22,8 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "@obtp/api-client": ["../../packages/api-client/src"]
   },
   "include": ["src", "../portal/src/api/api.ts", "../portal/src/features/trips/add-trip"]
 }

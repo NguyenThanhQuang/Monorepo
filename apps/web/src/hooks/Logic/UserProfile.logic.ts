@@ -7,8 +7,9 @@ import {
   updateMyProfile,
   changeMyPassword,
 } from '../../api/userProfile.api';
-
 import { getMyReviewsApi } from '../../api/service/review/review.api';
+import { reviewsApi } from '@obtp/api-client';
+
 
 export function useUserProfileLogic() {
   const [user, setUser] = useState<UserProfileResponse | null>(null);
@@ -93,7 +94,7 @@ export function useUserProfileLogic() {
         });
 
         /* ===== REVIEWS ===== */
-        const reviewsRes: any = await getMyReviewsApi();
+        const reviewsRes: any = await reviewsApi.getMyReviewsApi();
         console.log('REVIEWS API 👉', reviewsRes);
 
         setReviews(

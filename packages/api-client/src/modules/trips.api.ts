@@ -2,27 +2,16 @@ import {
   CreateTripPayload,
   SearchTripQuery,
   Trip,
+  TripDetailResponse,
+  TripResponse,
   UpdateTripPayload,
 } from "@obtp/shared-types";
 import { http } from "../core/http-client";
 
 // ================= TYPES =================
 
-export interface TripResponse {
-  success: boolean;
-  data: Trip[];
-  count?: number;
-  message?: string;
-}
 
-export interface TripDetailResponse {
-  statusCode: number;
-  message: string;
-  data: {
-    success: boolean;
-    data: Trip; // Trip object nằm ở đây
-  };
-}
+
 
 export interface TripSearchParams {
   fromId: string;
@@ -30,11 +19,6 @@ export interface TripSearchParams {
   date: string;
 }
 
-export interface TripSearchByProvincesParams {
-  from: string;
-  to: string;
-  date: string;
-}
 
 export interface TripStats {
   totalTrips: number;
@@ -60,7 +44,9 @@ export const tripsApi = {
   searchPublic: (query: SearchTripQuery) => {
     return http.get<Trip[]>("/trips", { params: query });
   },
-
+  searchTrips: (params: TripSearchParams) => {
+    return http.get<TripResponse>('/trips/search', { params });
+  },
   /* ===== SEARCH BY LOCATION IDS ===== */
   search: async (params: TripSearchParams): Promise<Trip[]> => {
     try {
@@ -690,7 +676,13 @@ export const tripsApi = {
       return "Invalid Time";
     }
   },
-
+ async getTripDetail(
+  tripId: string,
+): Promise<TripDetailResponse> {
+  const res = await fetch(`/api/trips/${tripId}`);
+  if (!res.ok) throw new Error('Không lấy được chi tiết chuyến đi');
+  return res.json();
+},
   // Helper function để format price
   formatPrice: (price: number): string => {
     return new Intl.NumberFormat("vi-VN").format(price) + "đ";

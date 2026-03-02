@@ -16,10 +16,10 @@ export default defineConfig({
         __dirname,
         "../../packages/validation/src/index.ts",
       ),
-      "@obtp/api-client": path.resolve(
-        __dirname,
-        "../../packages/api-client/src/index.ts",
-      ),
+    "@obtp/api-client": path.resolve(
+           __dirname,
+           "../../packages/api-client/src",
+         ),
     },
   },
 });

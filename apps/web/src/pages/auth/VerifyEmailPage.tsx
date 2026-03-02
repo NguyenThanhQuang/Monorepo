@@ -7,7 +7,7 @@ import {
   Loader2,
   ArrowLeft,
 } from 'lucide-react';
-import api from '../../../../portal/src/api/api';
+import { api } from '@obtp/api-client';
 
 type Status = 'loading' | 'success' | 'error';
 

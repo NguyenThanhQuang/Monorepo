@@ -1,6 +1,6 @@
   import { useEffect, useState } from 'react';
-  import { locationApi } from '../../api/service/location/apiLocation';
   import type { Location as AppLocation } from '@obtp/shared-types';
+import { locationsApi } from '@obtp/api-client';
 
   export function useHeroLocationSlider() {
     const [locations, setLocations] = useState<AppLocation[]>([]);
@@ -14,7 +14,7 @@
       LOAD POPULAR LOCATIONS
     ===================== */
   useEffect(() => {
-    locationApi
+    locationsApi
       .getPopular()
       .then(locationsData => {
         console.log('Locations loaded:', locationsData);

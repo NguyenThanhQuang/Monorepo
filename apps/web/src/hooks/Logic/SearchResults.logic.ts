@@ -1,7 +1,7 @@
 import type { SearchTripQuery, TripCardVM } from '@obtp/shared-types';
 import { useEffect, useState } from 'react';
-import { searchTrips } from '../../api/searchResults.api';
 import { mapTripToCardVM } from '../../contexts/mappers/searchResults.mapper';
+import { tripsApi } from '@obtp/api-client';
 
 
 export function useSearchResults(query: SearchTripQuery) {
@@ -10,7 +10,7 @@ export function useSearchResults(query: SearchTripQuery) {
 
   useEffect(() => {
     setLoading(true);
-    searchTrips(query)
+    tripsApi.searchTrips(query)
       .then((data) => setTrips(data.map(mapTripToCardVM)))
       .finally(() => setLoading(false));
   }, [query]);
