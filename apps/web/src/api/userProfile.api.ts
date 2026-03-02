@@ -3,7 +3,7 @@ import type {
   UpdateUserPayload,
   ChangePasswordPayload,
 } from '@obtp/shared-types';
-import api from '../../../portal/src/api/api';
+import api from './service/trips/trips.api';
 
 /**
  * GET /users/me

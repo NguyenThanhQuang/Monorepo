@@ -2,8 +2,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { Location } from '@obtp/shared-types';
-import { locationApi } from '../../api/service/location/apiLocation';
 import toast from 'react-hot-toast';
+import { locationApi } from '../../api/service/location/apiLocation';
 
 export interface UseHeroSearchLogicProps {
   onSearch?: (params: { fromProvince: string; toProvince: string; date?: string }) => void;

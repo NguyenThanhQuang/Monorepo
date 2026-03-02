@@ -1,5 +1,5 @@
 import type { Location } from '@obtp/shared-types';
-import api from '../../../../../portal/src/api/api';
+import api from '../trips/trips.api';
 
 interface ApiResponse<T> {
   statusCode: number;

@@ -14,10 +14,7 @@ import { UserProfilePage } from './pages/UserProfile';
 import { MyTripsPage } from './pages/MyTripsPage'; // Import MyTripsPage
 
 /* ===== ADMIN ===== */
-import { AdminLoginContainer } from './hooks/Logic/AdminLogin.container';
-import { SystemDashboardContainer } from './hooks/Logic/SystemDashboard.container';
-import { UserManagementContainer } from './hooks/Logic/UserManagement.container';
-import AddTripContainer from '../../portal/src/features/trips/add-trip/AddTripContainer';
+// import { SystemDashboardContainer } from './hooks/Logic/SystemDashboard.container';
 import { TripDetail } from './components/shared/Search/TripDetail';
 
 /* ===== COMPANY DASHBOARD ===== */
@@ -211,8 +208,6 @@ const App = () => {
       case 'myTrips':
         return <MyTripsPage onBack={() => setPage('home')} />;
 
-      case 'add-trip':
-        return <AddTripContainer />;
 
       case 'faq':
         return <FAQPage onBack={() => setPage('home')} />;
@@ -232,23 +227,13 @@ const App = () => {
           />
         );
 
-      case 'admin-login':
-        return (
-          <AdminLoginContainer
-            adminType={adminType}
-            onLoginSuccess={handleAdminLoginSuccess}
-            onBack={() => setPage('home')}
-          />
-        );
+   
 
-      /* ===== SYSTEM ===== */
-      case 'system-dashboard':
-        return <SystemDashboardContainer />;
+      // /* ===== SYSTEM ===== */
+      // case 'system-dashboard':
+      //   return <SystemDashboardContainer />;
 
-      case 'user-management':
-        return <UserManagementContainer />;
-
-
+ 
 
       case 'home':
       default:

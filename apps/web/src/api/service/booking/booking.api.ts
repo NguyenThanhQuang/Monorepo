@@ -1,5 +1,5 @@
 import type { Booking, BookingUI, ConfirmBookingPayload, CreateBookingPayload, LookupBookingPayload } from "@obtp/shared-types";
-import api from "../../../../../portal/src/api/api";
+import api from "../trips/trips.api";
 
 
 export async function fetchBookings(): Promise<BookingUI[]> {
