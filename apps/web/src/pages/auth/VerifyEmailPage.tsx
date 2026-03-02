@@ -7,7 +7,7 @@ import {
   Loader2,
   ArrowLeft,
 } from 'lucide-react';
-import { api } from '@obtp/api-client';
+import { authApi } from '@obtp/api-client';
 
 type Status = 'loading' | 'success' | 'error';
 
@@ -32,25 +32,35 @@ export default function VerifyEmailPage() {
 
     const verifyEmail = async () => {
       try {
-        const res = await api.get('/auth/verify-email', {
-          params: { token },
-        });
+        // Gọi API – response có thể là LoginResponse trực tiếp hoặc wrapper { data: LoginResponse, success, message }
+        const res = await authApi.verifyEmail(token);
 
-        const { success, message, accessToken, user } = res.data;
+        // Xử lý linh hoạt: nếu có trường data thì lấy data, nếu không thì dùng res
+        const body = (res as any).data ?? res;
 
-        if (!success) throw new Error(message);
+        // Xác định success, message, accessToken, user từ body
+        const success = body?.success ?? !!body?.accessToken;
+        const responseMessage =
+          body?.message || (success ? 'Xác thực email thành công' : 'Xác thực email thất bại');
+        const accessToken = body?.accessToken || body?.data?.accessToken;
+        const user = body?.user || body?.data?.user;
 
+        if (!success) {
+          throw new Error(responseMessage);
+        }
+
+        // Lưu thông tin đăng nhập nếu có
         if (accessToken) {
           localStorage.setItem('accessToken', accessToken);
         }
-
         if (user) {
           localStorage.setItem('user', JSON.stringify(user));
         }
 
         setStatus('success');
-        setMessage(message || 'Xác thực email thành công');
+        setMessage(responseMessage);
 
+        // Tự động chuyển về trang chủ sau 2 giây
         setTimeout(() => {
           navigate('/', { replace: true });
         }, 2000);
@@ -80,11 +90,9 @@ export default function VerifyEmailPage() {
             >
               <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300" />
             </button>
-
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Xác thực Email
             </h2>
-
             <div className="w-10" />
           </div>
 
@@ -108,13 +116,10 @@ export default function VerifyEmailPage() {
           {status === 'success' && (
             <div className="text-center space-y-4">
               <CheckCircle className="w-16 h-16 mx-auto text-green-500" />
-              <p className="text-lg font-semibold text-green-600">
-                {message}
-              </p>
+              <p className="text-lg font-semibold text-green-600">{message}</p>
               <p className="text-sm text-gray-500">
                 Đang đăng nhập và chuyển hướng...
               </p>
-
               <button
                 onClick={() => navigate('/', { replace: true })}
                 className="w-full mt-4 py-3 bg-gradient-to-r from-blue-600 to-teal-500 text-white rounded-2xl"
@@ -131,7 +136,6 @@ export default function VerifyEmailPage() {
                 Xác thực thất bại
               </p>
               <p className="text-sm text-gray-500">{message}</p>
-
               <div className="space-y-3 mt-4">
                 <button
                   onClick={() => navigate('/login')}
@@ -139,7 +143,6 @@ export default function VerifyEmailPage() {
                 >
                   Đi tới đăng nhập
                 </button>
-
                 <button
                   onClick={() => navigate('/')}
                   className="w-full py-3 border-2 border-gray-300 dark:border-gray-700 rounded-2xl text-gray-700 dark:text-gray-300"
