@@ -29,8 +29,13 @@ export const useTrips = () => {
       let totalTicketsSold = 0;
       let scheduledTrips = 0;
       let runningTrips = 0;
+      let actualTotalTrips = 0;
 
       trips.forEach((trip) => {
+        if (trip.isRecurrenceTemplate) return;
+
+        actualTotalTrips++;
+
         if (trip.status === TripStatus.SCHEDULED) scheduledTrips++;
         if (trip.status === TripStatus.DEPARTED) runningTrips++;
 
@@ -43,7 +48,7 @@ export const useTrips = () => {
       return {
         rawTrips: trips,
         stats: {
-          totalTrips: trips.length,
+          totalTrips: actualTotalTrips,
           scheduledTrips,
           runningTrips,
           totalTicketsSold,

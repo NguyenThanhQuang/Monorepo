@@ -1,14 +1,13 @@
 import { useState } from "react";
 import type { Vehicle } from "@obtp/shared-types";
 import { Plus } from "lucide-react";
-
 import { useVehicles } from "../api/useVehicles";
 import { useVehicleMutations } from "../api/useVehicleMutations";
-
 import { VehicleStats } from "../components/VehicleStats";
 import { VehicleTable } from "../components/VehicleTable";
 import { VehicleFormModal } from "../components/VehicleFormModal";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function VehiclesPage() {
   const { data: vehicles = [], isLoading } = useVehicles();
@@ -34,7 +33,8 @@ export default function VehiclesPage() {
       )
     ) {
       deleteVehicle.mutate(id, {
-        onError: (err: any) => alert(err.message || "Xóa thất bại"),
+        onSuccess: () => toast.success("Đã xóa xe thành công"),
+        onError: (err: any) => toast.error(err.message || "Xóa thất bại"),
       });
     }
   };
@@ -44,14 +44,24 @@ export default function VehiclesPage() {
       updateVehicle.mutate(
         { id: editingVehicle.id, payload: formData },
         {
-          onSuccess: () => setIsModalOpen(false),
-          onError: (err: any) => alert(err.message),
+          onSuccess: () => {
+            toast.success("Cập nhật xe thành công!");
+            setIsModalOpen(false);
+          },
+          onError: (err: any) => {
+            toast.error(err.message || "Cập nhật thất bại");
+          },
         },
       );
     } else {
       createVehicle.mutate(formData, {
-        onSuccess: () => setIsModalOpen(false),
-        onError: (err: any) => alert(err.message),
+        onSuccess: () => {
+          toast.success("Thêm xe mới thành công!");
+          setIsModalOpen(false);
+        },
+        onError: (err: any) => {
+          toast.error(err.message || "Thêm xe thất bại");
+        },
       });
     }
   };

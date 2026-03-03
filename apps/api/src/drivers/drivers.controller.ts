@@ -11,16 +11,13 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import * as sharedTypes from '@obtp/shared-types';
-import {
-  CreateDriverSchema,
-  UpdateDriverSchema,
-} from '@obtp/validation/src/driver.zod';
-import { ZodValidationPipe } from 'nestjs-zod';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { DriversService } from './drivers.service';
+import { ZodValidationPipe } from 'src/common/pipes/zod-validation.pipe';
+import { CreateDriverSchema, UpdateDriverSchema } from '@obtp/validation';
 
 @Controller('drivers')
 export class DriversController {

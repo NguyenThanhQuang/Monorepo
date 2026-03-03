@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useForm,
   FormProvider,
@@ -6,14 +6,15 @@ import {
   type Path,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
-
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, ArrowRight, CheckCircle, Save } from "lucide-react";
+import { toast } from "sonner";
 import { CreateTripSchema } from "@obtp/validation";
 import type { CreateTripPayload } from "@obtp/shared-types";
 import { useCreateTrip } from "../../api/useCreateTrip";
 import { useTripDependencies } from "../../api/useTripDependencies";
-
+import { useTripDetail } from "../../api/useTripDetail";
+import { useTripMutations } from "../../api/useTripMutations";
 import { Button } from "@/components/ui/button";
 import { StepBasicInfo } from "./StepBasicInfo";
 import { StepSchedule } from "./StepSchedule";
@@ -40,26 +41,30 @@ const STEPS: StepConfig[] = [
     component: StepSchedule,
     fields: ["departureTime", "expectedArrivalTime"],
   },
-  {
-    id: "pricing",
-    title: "Giá vé",
-    component: StepPricing,
-    fields: ["price"],
-  },
-  {
-    id: "preview",
-    title: "Xem trước",
-    component: StepPreview,
-    fields: [],
-  },
+  { id: "pricing", title: "Giá vé", component: StepPricing, fields: ["price"] },
+  { id: "preview", title: "Xem trước", component: StepPreview, fields: [] },
 ];
+
+const formatDateTimeForInput = (isoString?: string | Date) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+};
 
 export function TripFormWizard() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditMode = !!id;
+
   const [activeStep, setActiveStep] = useState(0);
 
-  const { isLoading, companyId } = useTripDependencies();
+  const { isLoading: isDepLoading, companyId } = useTripDependencies();
+  const { data: tripData, isLoading: isTripLoading } = useTripDetail(id);
+
   const createTripMutation = useCreateTrip();
+  const { updateTrip } = useTripMutations();
 
   const methods = useForm<CreateTripPayload>({
     resolver: zodResolver(
@@ -77,22 +82,51 @@ export function TripFormWizard() {
     },
   });
 
-  const { handleSubmit, trigger } = methods;
+  const { handleSubmit, trigger, reset } = methods;
+
+  useEffect(() => {
+    if (isEditMode && tripData) {
+      reset({
+        companyId: companyId || "",
+        vehicleId: tripData.vehicleId?._id || tripData.vehicleId || "",
+        price: tripData.price,
+        isRecurrenceTemplate: tripData.isRecurrenceTemplate || false,
+        departureTime: formatDateTimeForInput(tripData.departureTime),
+        expectedArrivalTime: formatDateTimeForInput(
+          tripData.expectedArrivalTime,
+        ),
+        route: {
+          fromLocationId:
+            tripData.route?.fromLocationId?._id ||
+            tripData.route?.fromLocationId ||
+            "",
+          toLocationId:
+            tripData.route?.toLocationId?._id ||
+            tripData.route?.toLocationId ||
+            "",
+          stops: (tripData.route?.stops || []).map((stop: any) => ({
+            locationId: stop.locationId?._id || stop.locationId,
+            expectedArrivalTime: formatDateTimeForInput(
+              stop.expectedArrivalTime,
+            ),
+            expectedDepartureTime: formatDateTimeForInput(
+              stop.expectedDepartureTime,
+            ),
+          })),
+        },
+      });
+    }
+  }, [isEditMode, tripData, reset, companyId]);
 
   const handleNext = async () => {
     const fieldsToValidate = STEPS[activeStep].fields;
-
     if (fieldsToValidate.length === 0) {
       if (activeStep < STEPS.length - 1) setActiveStep((prev) => prev + 1);
       return;
     }
-
     const isValid = await trigger(fieldsToValidate);
-
-    if (isValid) {
-      if (activeStep < STEPS.length - 1) {
-        setActiveStep((prev) => prev + 1);
-      }
+    if (isValid && activeStep < STEPS.length - 1) {
+      setActiveStep((prev) => prev + 1);
     }
   };
 
@@ -101,26 +135,44 @@ export function TripFormWizard() {
   };
 
   const onSubmitForm = (data: CreateTripPayload) => {
-    createTripMutation.mutate(data, {
-      onSuccess: () => {
-        alert("🎉 Tạo chuyến đi thành công!");
-        navigate("/company/trips");
-      },
-      onError: (err: any) => {
-        alert("❌ Lỗi: " + (err.message || "Không thể tạo chuyến đi"));
-      },
-    });
+    if (isEditMode && id) {
+      updateTrip.mutate(
+        {
+          id: id,
+          payload: {
+            price: data.price,
+            departureTime: data.departureTime,
+            expectedArrivalTime: data.expectedArrivalTime,
+            isRecurrenceActive: data.isRecurrenceTemplate,
+          },
+        },
+        {
+          onSuccess: () => navigate("/company/trips"),
+        },
+      );
+    } else {
+      createTripMutation.mutate(data, {
+        onSuccess: () => {
+          toast.success("Tạo chuyến đi thành công!");
+          navigate("/company/trips");
+        },
+        onError: (err: any) => {
+          toast.error(err.message || "Không thể tạo chuyến đi");
+        },
+      });
+    }
   };
 
-  if (isLoading) {
+  if (isDepLoading || (isEditMode && isTripLoading)) {
     return (
-      <div className="p-12 flex justify-center text-slate-500">
+      <div className="p-12 text-center text-slate-500">
         Đang tải dữ liệu cấu hình hệ thống...
       </div>
     );
   }
 
   const CurrentStepComponent = STEPS[activeStep].component;
+  const isPending = createTripMutation.isPending || updateTrip.isPending;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
@@ -130,7 +182,9 @@ export function TripFormWizard() {
             <ArrowLeft size={18} />
           </Button>
           <div>
-            <h1 className="text-2xl font-black">Tạo chuyến đi mới</h1>
+            <h1 className="text-2xl font-black">
+              {isEditMode ? "Chỉnh sửa chuyến đi" : "Tạo chuyến đi mới"}
+            </h1>
             <div className="flex items-center text-sm text-slate-500 mt-1">
               <span
                 className={`font-bold mr-2 ${activeStep === STEPS.length - 1 ? "text-green-600" : "text-blue-600"}`}
@@ -150,6 +204,15 @@ export function TripFormWizard() {
         ></div>
       </div>
 
+      {isEditMode && (
+        <div className="bg-amber-50 text-amber-800 p-3 rounded-lg text-sm border border-amber-200">
+          <strong>Lưu ý:</strong> Đối với chuyến đi đã tạo, hệ thống chỉ cho
+          phép cập nhật <b>Giờ khởi hành, Giờ đến và Giá vé</b>. Việc thay đổi
+          Biển số xe hoặc Lộ trình sẽ không có tác dụng. Nếu cần đổi xe, vui
+          lòng Hủy chuyến và tạo lại.
+        </div>
+      )}
+
       <FormProvider {...methods}>
         <form
           onSubmit={handleSubmit(onSubmitForm)}
@@ -164,7 +227,7 @@ export function TripFormWizard() {
               type="button"
               variant="secondary"
               onClick={handleBack}
-              disabled={activeStep === 0 || createTripMutation.isPending}
+              disabled={activeStep === 0 || isPending}
             >
               Quay lại
             </Button>
@@ -173,14 +236,19 @@ export function TripFormWizard() {
               <Button
                 type="submit"
                 className="bg-green-600 hover:bg-green-700 text-white"
-                disabled={createTripMutation.isPending}
+                disabled={isPending}
               >
-                {createTripMutation.isPending
+                {isPending
                   ? "Đang xử lý..."
-                  : "Xác nhận & Tạo chuyến"}
-                {!createTripMutation.isPending && (
-                  <CheckCircle size={18} className="ml-2" />
-                )}
+                  : isEditMode
+                    ? "Lưu thay đổi"
+                    : "Xác nhận & Tạo chuyến"}
+                {!isPending &&
+                  (isEditMode ? (
+                    <Save size={18} className="ml-2" />
+                  ) : (
+                    <CheckCircle size={18} className="ml-2" />
+                  ))}
               </Button>
             ) : (
               <Button type="button" onClick={handleNext}>

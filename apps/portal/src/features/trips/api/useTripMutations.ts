@@ -1,4 +1,5 @@
 import { api } from "@obtp/api-client";
+import type { UpdateTripPayload } from "@obtp/shared-types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -49,9 +50,29 @@ export const useTripMutations = () => {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: UpdateTripPayload;
+    }) => {
+      return api.trips.update(id, payload);
+    },
+    onSuccess: () => {
+      toast.success("Cập nhật chuyến đi thành công!");
+      invalidateTrips();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Cập nhật thất bại");
+    },
+  });
+
   return {
     cancelTrip: cancelMutation,
     assignDriver: assignDriverMutation,
     toggleRecurrence: toggleRecurrenceMutation,
+    updateTrip: updateMutation,
   };
 };
