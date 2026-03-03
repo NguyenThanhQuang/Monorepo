@@ -1,11 +1,4 @@
-import {
-  RefreshCw,
-  DollarSign,
-  Ticket,
-  Users,
-  Building2,
-  TrendingUp,
-} from "lucide-react";
+import { RefreshCw, DollarSign, Ticket, Users, Building2, TrendingUp } from "lucide-react";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 import { formatCurrency, formatNumber } from "@obtp/business-logic";
 import { useAuth } from "@/contexts/AuthContext";
@@ -68,7 +61,7 @@ export function AdminDashboard() {
         </button>
       </div>
 
-      {/* Stats Grid - Khôi phục class nguyên gốc của bạn */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Revenue */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">

@@ -5,6 +5,7 @@ import "./style/index.css";
 import App from "./app/App";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { queryClient } from "./core/query-client";
+import "./style/overrides.css";
 
 function Bootstrap() {
   useEffect(() => {

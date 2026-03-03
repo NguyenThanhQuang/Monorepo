@@ -1,16 +1,10 @@
 import React from "react";
-import {
-  X,
-  AlertTriangle,
-  CheckCircle,
-  Loader2,
-  AlertCircle,
-} from "lucide-react";
+import { X, AlertTriangle, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * [STRICT TYPING]
- * Định nghĩa rõ ràng các kiểu Modal được hỗ trợ
+ * Define modal types clearly.
  */
 type ModalType = "danger" | "warning" | "success" | "info";
 
@@ -42,7 +36,7 @@ export const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
   if (!isOpen) return null;
 
   /**
-   * Cấu hình UI dựa trên Type của Modal
+   * UI configuration based on modal type
    */
   const config = {
     danger: {

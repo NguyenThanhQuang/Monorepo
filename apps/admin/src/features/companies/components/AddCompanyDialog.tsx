@@ -17,13 +17,11 @@ interface TotalCompanyFormValues extends CreateCompanyPayload {
   adminEmail: string;
   adminPhone: string;
 }
+
 interface AddCompanyDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (
-    data: CreateCompanyPayload | UpdateCompanyPayload,
-    id?: string,
-  ) => Promise<void>;
+  onSave: (data: CreateCompanyPayload | UpdateCompanyPayload, id?: string) => Promise<void>;
   companyToEdit?: CompanyStatsResponse | null;
   loading: boolean;
 }
@@ -44,9 +42,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
     reset,
     formState: { errors },
   } = useForm<TotalCompanyFormValues>({
-    resolver: zodResolver(
-      isEditMode ? updateCompanySchema : createCompanySchema,
-    ) as any,
+    resolver: zodResolver(isEditMode ? updateCompanySchema : createCompanySchema) as any,
     defaultValues: {
       name: "",
       code: "",
@@ -97,10 +93,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
   const onSubmit = async (data: any) => {
     if (isEditMode && companyToEdit) {
-      await onSave(
-        data as UpdateCompanyPayload,
-        companyToEdit.id || companyToEdit._id,
-      );
+      await onSave(data as UpdateCompanyPayload, companyToEdit.id || companyToEdit._id);
     } else {
       await onSave(data as CreateCompanyPayload);
     }
@@ -129,7 +122,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
               {t("companyInformation")}
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* Tên nhà xe */}
+              {/* Company Name */}
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t("companyName")} <span className="text-red-500">*</span>
@@ -138,9 +131,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   type="text"
                   {...register("name")}
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white ${
-                    errors.name
-                      ? "border-red-500"
-                      : "border-gray-200 dark:border-gray-600"
+                    errors.name ? "border-red-500" : "border-gray-200 dark:border-gray-600"
                   }`}
                   placeholder={t("companyNamePlaceholder")}
                 />
@@ -151,7 +142,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                 )}
               </div>
 
-              {/* Mã nhà xe (Chỉ cho phép sửa/nhập khi tạo mới - Hoặc cho phép Edit tùy requirement) */}
+              {/* Company Code */}
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t("companyCode")}{" "}
@@ -162,9 +153,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   {...register("code")}
                   disabled={isEditMode}
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white uppercase ${
-                    errors.code
-                      ? "border-red-500"
-                      : "border-gray-200 dark:border-gray-600"
+                    errors.code ? "border-red-500" : "border-gray-200 dark:border-gray-600"
                   } ${isEditMode ? "opacity-60 cursor-not-allowed" : ""}`}
                   placeholder={t("companyCodePlaceholder")}
                 />
@@ -184,9 +173,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   type="email"
                   {...register("email")}
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white ${
-                    errors.email
-                      ? "border-red-500"
-                      : "border-gray-200 dark:border-gray-600"
+                    errors.email ? "border-red-500" : "border-gray-200 dark:border-gray-600"
                   }`}
                   placeholder={t("emailPlaceholder")}
                 />
@@ -206,9 +193,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   type="tel"
                   {...register("phone")}
                   className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white ${
-                    errors.phone
-                      ? "border-red-500"
-                      : "border-gray-200 dark:border-gray-600"
+                    errors.phone ? "border-red-500" : "border-gray-200 dark:border-gray-600"
                   }`}
                   placeholder={t("phonePlaceholder")}
                 />
@@ -219,7 +204,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                 )}
               </div>
 
-              {/* Trạng thái */}
+              {/* Status */}
               <div className="md:col-span-2">
                 <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t("status")}
@@ -228,18 +213,10 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   {...register("status")}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white"
                 >
-                  <option value={CompanyStatus.ACTIVE}>
-                    {t("companyStatusActive")}
-                  </option>
-                  <option value={CompanyStatus.PENDING}>
-                    {t("companyStatusPending")}
-                  </option>
-                  <option value={CompanyStatus.SUSPENDED}>
-                    {t("companyStatusSuspended")}
-                  </option>
-                  <option value={CompanyStatus.INACTIVE}>
-                    {t("companyStatusInactive")}
-                  </option>
+                  <option value={CompanyStatus.ACTIVE}>{t("companyStatusActive")}</option>
+                  <option value={CompanyStatus.PENDING}>{t("companyStatusPending")}</option>
+                  <option value={CompanyStatus.SUSPENDED}>{t("companyStatusSuspended")}</option>
+                  <option value={CompanyStatus.INACTIVE}>{t("companyStatusInactive")}</option>
                 </select>
                 {errors.status && (
                   <p className="mt-1 text-sm text-red-500">
@@ -297,7 +274,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             </div>
           </div>
 
-          {/* Group 2: Admin Information (Chỉ hiện khi Create) */}
+          {/* Admin Information (Only for Create) */}
           {!isEditMode && (
             <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
               <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
@@ -390,11 +367,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             >
               {loading && <Spinner className="text-white" size={16} />}
               <span>
-                {loading
-                  ? t("processing")
-                  : isEditMode
-                    ? t("update")
-                    : t("createCompany")}
+                {loading ? t("processing") : isEditMode ? t("update") : t("createCompany")}
               </span>
             </button>
           </div>

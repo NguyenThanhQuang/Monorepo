@@ -46,16 +46,14 @@ export function ForgotPasswordModal({ onClose }: ForgotPasswordModalProps) {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden">
         {/* HEADER */}
-        <div className="bg-linear-to-r from-purple-600 to-pink-500 p-6 relative">
+        <div className="bg-gradient-to-r from-purple-600 to-pink-500 p-6 relative">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-xl transition-colors"
           >
             <X className="text-white" />
           </button>
-          <h2 className="text-2xl text-white font-bold">
-            {t("forgotPasswordSystem")}
-          </h2>
+          <h2 className="text-2xl text-white font-bold">{t("forgotPasswordSystem")}</h2>
           <p className="text-white/80 mt-1">{t("enterEmailToReset")}</p>
         </div>
 
@@ -81,16 +79,14 @@ export function ForgotPasswordModal({ onClose }: ForgotPasswordModalProps) {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.email.message}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
                 )}
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-4 bg-linear-to-r from-purple-600 to-pink-500 text-white rounded-xl font-medium hover:opacity-90 disabled:opacity-50 flex justify-center items-center"
+                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-xl font-medium hover:opacity-90 disabled:opacity-50 flex justify-center items-center"
               >
                 {isLoading ? (
                   <>
@@ -105,12 +101,9 @@ export function ForgotPasswordModal({ onClose }: ForgotPasswordModalProps) {
           ) : (
             <div className="text-center space-y-4">
               <CheckCircle className="mx-auto text-green-500 w-16 h-16" />
-              <p className="font-medium text-gray-900 dark:text-white text-lg">
-                {t("emailSentSuccess")}
-              </p>
+              <p className="font-medium text-gray-900 dark:text-white text-lg">{t("emailSentSuccess")}</p>
               <p className="text-gray-500 text-sm">
-                Chúng tôi đã gửi link reset mật khẩu đến{" "}
-                <strong>{getValues("email")}</strong>.
+                {t("emailSentMessage")} <strong>{getValues("email")}</strong>.
               </p>
               <button
                 onClick={onClose}

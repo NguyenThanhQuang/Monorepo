@@ -42,6 +42,7 @@ export default function LoginPage() {
 
       const { accessToken, user } = res;
 
+      // Ensure only Admin role has access
       if (!user.roles?.includes(UserRole.ADMIN)) {
         setErrorMessage("Tài khoản không có quyền quản trị hệ thống.");
         return;
@@ -66,10 +67,7 @@ export default function LoginPage() {
               <Shield className="w-10 h-10 text-white" />
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Quản trị hệ thống
-            </h1>
-
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản trị hệ thống</h1>
             <p className="text-gray-500">Đăng nhập để quản lý hệ thống</p>
           </div>
 
@@ -106,9 +104,7 @@ export default function LoginPage() {
 
             {/* Password Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mật khẩu
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
 
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -121,9 +117,7 @@ export default function LoginPage() {
                 />
               </div>
               {errors.password && (
-                <p className="text-red-500 text-xs mt-1 ml-1">
-                  {errors.password.message}
-                </p>
+                <p className="text-red-500 text-xs mt-1 ml-1">{errors.password.message}</p>
               )}
             </div>
 

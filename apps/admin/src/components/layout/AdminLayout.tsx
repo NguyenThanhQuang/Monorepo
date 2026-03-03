@@ -5,15 +5,17 @@ import {
   TrendingUp,
   Building2,
   Users,
+  Settings,
   LogOut,
   Menu,
   X,
   ChevronRight,
   Sun,
   Moon,
+  Shield,
+  DollarSign,
   Globe,
   MessageCircle,
-  Shield,
 } from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
@@ -65,6 +67,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       name: t("reviewManagement"),
       icon: <MessageCircle className="w-5 h-5" />,
     },
+    {
+      path: "/admin/finance",
+      name: t("finance"),
+      icon: <DollarSign className="w-5 h-5" />,
+    },
+    {
+      path: "/admin/settings",
+      name: t("settings"),
+      icon: <Settings className="w-5 h-5" />,
+    },
   ];
 
   const handleLogout = () => {
@@ -80,9 +92,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
-      style={
-        { ["--admin-sidebar-width" as any]: sidebarWidth } as CSSProperties
-      }
+      style={{
+        ["--admin-sidebar-width" as any]: sidebarWidth,
+      } as CSSProperties}
     >
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
@@ -94,13 +106,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`
-          admin-sidebar ${mobileSidebarOpen ? "is-mobile-open" : ""}
-          fixed top-0 left-0 h-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl
-          border-r border-gray-200/50 dark:border-gray-700/50 shadow-2xl shadow-black/5
-          transition-all duration-300 ease-in-out z-50
-          ${sidebarOpen ? "w-64" : "w-20"}
-        `}
+        className={`admin-sidebar ${mobileSidebarOpen ? "is-mobile-open" : ""} 
+          fixed top-0 left-0 h-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl 
+          border-r border-gray-200/50 dark:border-gray-700/50 shadow-2xl shadow-black/5 
+          transition-all duration-300 ease-in-out z-50 
+          ${sidebarOpen ? "w-64" : "w-20"}`}
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200/50 dark:border-gray-700/50">
@@ -145,15 +155,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 navigate(item.path);
                 setMobileSidebarOpen(false);
               }}
-              className={`
-                w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200
-                ${
-                  isActive(item.path)
-                    ? "bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg shadow-purple-500/20"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                }
-                ${!sidebarOpen ? "justify-center" : ""}
-              `}
+              className={`w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                isActive(item.path)
+                  ? "bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg shadow-purple-500/20"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+              } ${!sidebarOpen ? "justify-center" : ""}`}
             >
               <span
                 className={
@@ -175,13 +181,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Bottom Section */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl">
+          {/* Language Toggle */}
           <button
             onClick={toggleLanguage}
-            className={`
-              w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 mb-2
-              text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50
-              ${!sidebarOpen ? "justify-center" : ""}
-            `}
+            className={`w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 mb-2 
+            text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 ${!sidebarOpen ? "justify-center" : ""}`}
           >
             <Globe className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             {sidebarOpen && (
@@ -191,13 +195,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             )}
           </button>
 
+          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className={`
-              w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 mb-2
-              text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50
-              ${!sidebarOpen ? "justify-center" : ""}
-            `}
+            className={`w-full flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 mb-2 
+            text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 ${!sidebarOpen ? "justify-center" : ""}`}
           >
             {theme === "light" ? (
               <Moon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -230,13 +232,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             )}
           </div>
 
+          {/* Logout */}
           <button
             onClick={handleLogout}
-            className={`
-              w-full mt-3 flex items-center px-3 py-2 text-sm text-red-600 dark:text-red-400
-              hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200
-              ${!sidebarOpen ? "justify-center" : ""}
-            `}
+            className={`w-full mt-3 flex items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 
+            hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200 ${!sidebarOpen ? "justify-center" : ""}`}
           >
             <LogOut className="w-4 h-4" />
             {sidebarOpen && <span className="ml-3">{t("logout")}</span>}

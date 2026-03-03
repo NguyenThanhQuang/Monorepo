@@ -330,7 +330,7 @@ export function AdminRevenuePage() {
                         }`}
                       >
                         {item.revenueGrowth >= 0 ? "+" : ""}
-                        {item.revenueGrowth}%
+                        {item.revenueGrowth}%  
                       </div>
                     </td>
                     <td className="px-6 py-5 text-right font-black text-lg text-gray-900 dark:text-white">

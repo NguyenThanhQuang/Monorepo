@@ -1,4 +1,3 @@
-// src/features/companies/components/CompanyDetailModal.tsx
 import { X, Mail, Phone, MapPin, Building2, Calendar, Users, Bus, Star, DollarSign, Clock } from 'lucide-react';
 import type { CompanyStatsResponse } from '@obtp/shared-types';
 import { CompanyStatus } from '@obtp/shared-types';

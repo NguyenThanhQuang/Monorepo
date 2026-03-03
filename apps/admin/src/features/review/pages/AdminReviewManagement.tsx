@@ -109,38 +109,53 @@ export function AdminReviewManagement() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border p-4">
-        <div className="flex gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+        <div className="flex flex-wrap items-end gap-4">
+          {/* Search */}
+          <div className="flex-1 min-w-[260px] relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Tìm nội dung, tên khách..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 p-2 bg-gray-50 rounded-xl border dark:bg-gray-900"
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-gray-300 dark:border-gray-600 
+        bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
+        focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
             />
           </div>
-          <select
-            value={filterRating}
-            onChange={(e) => setFilterRating(e.target.value)}
-            className="p-2 border rounded-xl bg-gray-50"
-          >
-            <option value="all">Mọi đánh giá</option>
-            <option value="5">5 Sao</option>
-            <option value="4">4 Sao</option>
-            <option value="3">3 Sao</option>
-            <option value="1">1-2 Sao</option>
-          </select>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="p-2 border rounded-xl bg-gray-50"
-          >
-            <option value="all">Mọi trạng thái</option>
-            <option value="published">Đang hiện</option>
-            <option value="hidden">Bị ẩn</option>
-          </select>
+
+          {/* Rating Filter */}
+          <div className="min-w-[200px]">
+            <select
+              value={filterRating}
+              onChange={(e) => setFilterRating(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-gray-300 dark:border-gray-600
+        bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
+        focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+            >
+              <option value="all">Mọi đánh giá</option>
+              <option value="5">5 Sao</option>
+              <option value="4">4 Sao</option>
+              <option value="3">3 Sao</option>
+              <option value="1">1-2 Sao</option>
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="min-w-[200px]">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-gray-300 dark:border-gray-600
+        bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
+        focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+            >
+              <option value="all">Mọi trạng thái</option>
+              <option value="published">Đang hiện</option>
+              <option value="hidden">Bị ẩn</option>
+            </select>
+          </div>
         </div>
       </div>
 

@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { SanitizedUserResponse } from "@obtp/shared-types";
 import { authStorage } from "@/core/auth/storage";
 
@@ -14,6 +8,7 @@ interface AuthContextType {
   user: AuthUser;
   isAuthenticated: boolean;
   isLoading: boolean;
+  accessToken: string | null;
   login: (token: string, userData: SanitizedUserResponse) => void;
   logout: () => void;
 }
@@ -23,6 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
     const initAuth = () => {
@@ -31,6 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (token && storedUser) {
         setUser(storedUser as SanitizedUserResponse);
+        setAccessToken(token);
       }
       setIsLoading(false);
     };
@@ -42,12 +39,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     authStorage.setToken(token);
     authStorage.setUser(userData);
     setUser(userData);
+    setAccessToken(token);
   };
 
   const logout = () => {
     authStorage.clearAll();
     setUser(null);
-
+    setAccessToken(null);
     window.location.href = "/login";
   };
 
@@ -57,6 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         isAuthenticated: !!user,
         isLoading,
+        accessToken,
         login,
         logout,
       }}
