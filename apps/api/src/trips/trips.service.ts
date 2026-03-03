@@ -80,7 +80,6 @@ export class TripsService {
       isRecurrenceTemplate: false,
     };
 
-    // dùng repo method sẵn có (management trips) vì đã populate đủ dữ liệu
     return this.tripsRepository.findManagementTrips(filter);
   }
 
@@ -96,8 +95,6 @@ export class TripsService {
       this.vehiclesService.findOne(vehicleId),
     ]);
 
-    // NOTE: bạn có import CompanyStatus nhưng đang so sánh string,
-    // mình giữ nguyên theo code hiện tại của bạn
     if ((company as any).status !== 'active') {
       throw new BadRequestException('Nhà xe đang ngừng hoạt động.');
     }
@@ -108,8 +105,22 @@ export class TripsService {
       );
     }
 
-    if (vehicle.companyId.toString() !== companyId) {
-      throw new BadRequestException('Xe không thuộc về nhà xe này.');
+    const rawVehicleCoId = (vehicle.companyId as any)?._id || vehicle.companyId;
+
+    const vehicleCoIdStr = String(rawVehicleCoId).trim();
+    const payloadCoIdStr = String(companyId).trim();
+
+    // Bước 3: Log type ra để vạch mặt kẻ thủ ác (bạn có thể xóa sau khi fix xong)
+    console.log('🔍 DEBUG OWNERSHIP CHECK:', {
+      Vehicle: { val: vehicleCoIdStr, type: typeof vehicleCoIdStr },
+      Payload: { val: payloadCoIdStr, type: typeof payloadCoIdStr },
+      IsMatch: vehicleCoIdStr === payloadCoIdStr,
+    });
+
+    if (vehicleCoIdStr !== payloadCoIdStr) {
+      throw new BadRequestException(
+        `Xe không thuộc về nhà xe này. (Xe: ${vehicleCoIdStr} vs Yêu cầu: ${payloadCoIdStr})`,
+      );
     }
 
     const mapInfo = { polyline: '', duration: 0, distance: 0 };
@@ -119,7 +130,6 @@ export class TripsService {
       _id: vehicle._id.toString(),
     } as unknown as Partial<Vehicle>;
 
-    // ✅ FIX: tạo seats đúng biến
     const initialSeats = initializeTripSeats(vehicleParam);
 
     const readySeats = initialSeats.map((s) => ({

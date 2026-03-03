@@ -6,64 +6,64 @@ import type {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+const getErrorMessage = (error: any) => {
+  if (error?.message && Array.isArray(error.message)) {
+    return error.message.map((e: any) => e.message).join(" | ");
+  }
+  if (error?.errors && Array.isArray(error.errors)) {
+    return error.errors.map((e: any) => e.message).join(" | ");
+  }
+  return error?.message || "Đã có lỗi xảy ra.";
+};
+
 export const useDrivers = () => {
   return useQuery({
     queryKey: ["drivers"],
-    queryFn: async () => {
-      return await api.drivers.getCompanyDrivers();
-    },
+    queryFn: async () => await api.drivers.getCompanyDrivers(),
   });
 };
 
 export const useDriverMutations = () => {
   const queryClient = useQueryClient();
-
-  const invalidateList = () => {
+  const invalidateList = () =>
     queryClient.invalidateQueries({ queryKey: ["drivers"] });
-  };
 
   const createDriver = useMutation({
-    mutationFn: async (data: CreateDriverPayload) => {
-      return await api.drivers.createDriver(data);
-    },
+    mutationFn: (data: CreateDriverPayload) => api.drivers.createDriver(data),
     onSuccess: () => {
       toast.success("Thêm tài xế thành công");
       invalidateList();
     },
     onError: (error: any) => {
-      toast.error(error.message || "Lỗi khi thêm tài xế");
+      toast.error(getErrorMessage(error));
     },
   });
 
   const updateDriver = useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       id,
       payload,
     }: {
       id: string;
       payload: UpdateDriverPayload;
-    }) => {
-      return await api.drivers.updateDriver(id, payload);
-    },
+    }) => api.drivers.updateDriver(id, payload),
     onSuccess: () => {
-      toast.success("Cập nhật thông tin tài xế thành công");
+      toast.success("Cập nhật thông tin thành công");
       invalidateList();
     },
     onError: (error: any) => {
-      toast.error(error.message || "Lỗi khi cập nhật");
+      toast.error(getErrorMessage(error));
     },
   });
 
   const deleteDriver = useMutation({
-    mutationFn: async (id: string) => {
-      return await api.drivers.deleteDriver(id);
-    },
+    mutationFn: (id: string) => api.drivers.deleteDriver(id),
     onSuccess: () => {
       toast.success("Đã vô hiệu hóa tài xế");
       invalidateList();
     },
     onError: (error: any) => {
-      toast.error(error.message || "Lỗi khi xóa");
+      toast.error(getErrorMessage(error));
     },
   });
 

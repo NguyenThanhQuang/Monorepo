@@ -31,6 +31,7 @@ export function DriverFormModal({
     resolver: zodResolver(
       CreateDriverSchema,
     ) as unknown as Resolver<CreateDriverPayload>,
+
     defaultValues: {
       name: "",
       phone: "",
@@ -44,11 +45,11 @@ export function DriverFormModal({
     if (isOpen) {
       if (driverToEdit) {
         reset({
-          name: driverToEdit.name,
-          phone: driverToEdit.phone,
-          licenseNumber: driverToEdit.licenseNumber,
-          idCardNumber: driverToEdit.idCardNumber,
-          experienceYears: driverToEdit.experienceYears,
+          name: driverToEdit.name || "",
+          phone: driverToEdit.phone || "",
+          licenseNumber: driverToEdit.licenseNumber || "",
+          idCardNumber: driverToEdit.idCardNumber || "",
+          experienceYears: driverToEdit.experienceYears || 0,
         });
       } else {
         reset({

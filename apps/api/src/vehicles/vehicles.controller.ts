@@ -85,17 +85,15 @@ export class VehiclesController {
     const vehicle = await this.vehiclesService.findOne(id);
 
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      const ownerId = vehicle.companyId.toString();
-      if (ownerId !== user.companyId) {
+      const vehicleCompanyId =
+        (vehicle.companyId as any)._id?.toString() ||
+        vehicle.companyId.toString();
+
+      if (vehicleCompanyId !== user.companyId) {
         throw new ForbiddenException('Không có quyền sửa xe công ty khác.');
       }
-      // Protect changing owner is handled implicitly: service update payload filters unauthorized fields?
-      // Zod validation should also prevent unexpected fields but manually ensuring logic safety:
-      // Service update() allows partial... payload in controller shouldn't contain companyId ideally
-      // In legacy code controller, it forbid changing companyId
-      // We will assume Service update respects logical limits, or Payload interface shouldn't include companyId.
-      // UpdateVehiclePayload DOES NOT have companyId usually in DTO design (from step 1).
     }
+
     return this.vehiclesService.update(id, payload);
   }
 

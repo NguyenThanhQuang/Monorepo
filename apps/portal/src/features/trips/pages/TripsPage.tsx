@@ -16,45 +16,60 @@ type ViewMode = "actual" | "template";
 export default function TripsPage() {
   const navigate = useNavigate();
 
-  // -- API Hooks --
   const { data, isLoading, refetch, isFetching } = useTrips();
   const { cancelTrip, assignDriver, toggleRecurrence } = useTripMutations();
 
-  // -- Local UI State --
   const [viewMode, setViewMode] = useState<ViewMode>("actual");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
+
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
-  // -- Logic lọc dữ liệu dựa trên ViewMode và Search --
   const filteredTrips = useMemo(() => {
     if (!data?.rawTrips) return [];
 
     return data.rawTrips.filter((trip) => {
-      // 1. Lọc theo Tab (Chuyến thực tế vs Chuyến mẫu)
       if (viewMode === "actual" && trip.isRecurrenceTemplate) return false;
       if (viewMode === "template" && !trip.isRecurrenceTemplate) return false;
 
-      // 2. Lọc theo Search Query (Tuyến đường, biển số)
       const route = trip.route as any;
-      const fromName = route?.fromLocationId?.name || "";
-      const toName = route?.toLocationId?.name || "";
+      const fromName =
+        route?.fromLocationId?.name || route?.fromLocationId || "";
+      const toName = route?.toLocationId?.name || route?.toLocationId || "";
       const vehiclePlate = (trip.vehicleId as any)?.vehicleNumber || "";
 
-      const matchSearch = `${fromName} ${toName} ${vehiclePlate}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+      const searchStr = `${fromName} ${toName} ${vehiclePlate}`.toLowerCase();
+      const matchSearch =
+        !searchQuery || searchStr.includes(searchQuery.toLowerCase().trim());
 
-      // 3. Lọc theo trạng thái vận hành
       const matchStatus =
         filterStatus === "all" || trip.status === filterStatus;
 
-      return matchSearch && matchStatus;
-    });
-  }, [data?.rawTrips, searchQuery, filterStatus, viewMode]);
+      let matchDate = true;
+      if (viewMode === "actual" && dateFilter !== "all" && trip.departureTime) {
+        const tripDate = new Date(trip.departureTime);
+        const now = new Date();
 
-  // -- Event Handlers --
+        if (dateFilter === "today") {
+          matchDate = tripDate.toDateString() === now.toDateString();
+        } else if (dateFilter === "week") {
+          const startOfWeek = new Date(now);
+          startOfWeek.setDate(now.getDate() - now.getDay());
+          startOfWeek.setHours(0, 0, 0, 0);
+          matchDate = tripDate >= startOfWeek;
+        } else if (dateFilter === "month") {
+          matchDate =
+            tripDate.getMonth() === now.getMonth() &&
+            tripDate.getFullYear() === now.getFullYear();
+        }
+      }
+
+      return matchSearch && matchStatus && matchDate;
+    });
+  }, [data?.rawTrips, searchQuery, filterStatus, dateFilter, viewMode]);
+
   const handleCancel = (tripId: string, routeName: string) => {
     if (
       confirm(
@@ -102,7 +117,7 @@ export default function TripsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            Quản lý Vận hành Chuyến đi
+            Quản lý Chuyến đi
           </h1>
           <p className="text-slate-500 mt-1">
             Điều hành lịch trình, gán tài xế và cấu hình chuyến lặp lại
@@ -121,19 +136,18 @@ export default function TripsPage() {
             <RefreshCw
               size={16}
               className={cn("mr-2", isFetching && "animate-spin")}
-            />
+            />{" "}
             Làm mới
           </Button>
           <Button
             onClick={() => navigate("/company/trips/add")}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Plus size={16} className="mr-2" /> Tạo chuyến mới
           </Button>
         </div>
       </div>
 
-      {/* STATS OVERVIEW */}
       {data && <TripStats stats={data.stats} />}
 
       {/* TABS NAVIGATION */}
@@ -143,8 +157,8 @@ export default function TripsPage() {
           className={cn(
             "flex items-center gap-2 px-6 py-3 text-sm font-bold border-b-2 transition-all",
             viewMode === "actual"
-              ? "border-blue-600 text-blue-600 bg-blue-50/50 dark:bg-blue-900/10"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300",
+              ? "border-blue-600 text-blue-600 bg-blue-50/50"
+              : "border-transparent text-slate-500",
           )}
         >
           Chuyến đi thực tế
@@ -154,8 +168,8 @@ export default function TripsPage() {
           className={cn(
             "flex items-center gap-2 px-6 py-3 text-sm font-bold border-b-2 transition-all",
             viewMode === "template"
-              ? "border-blue-600 text-blue-600 bg-blue-50/50 dark:bg-blue-900/10"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300",
+              ? "border-blue-600 text-blue-600 bg-blue-50/50"
+              : "border-transparent text-slate-500",
           )}
         >
           Chuyến mẫu (Lặp lại)
@@ -170,29 +184,42 @@ export default function TripsPage() {
             size={18}
           />
           <Input
-            className="pl-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-            placeholder="Tìm theo tuyến đường (ví dụ: Đà Lạt), biển số xe..."
+            className="pl-10 bg-white dark:bg-slate-950 border-slate-200"
+            placeholder="Tìm theo tuyến đường, biển số..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
         {viewMode === "actual" && (
-          <select
-            className="obtp-input w-full md:w-56 cursor-pointer bg-white dark:bg-slate-950"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="scheduled">Đã lên lịch</option>
-            <option value="departed">Đang chạy</option>
-            <option value="arrived">Hoàn thành</option>
-            <option value="cancelled">Đã hủy</option>
-          </select>
+          <>
+            {/* 🔥 Dropdown Lọc Thời Gian */}
+            <select
+              className="obtp-input w-full md:w-48 bg-white cursor-pointer"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            >
+              <option value="all">Tất cả lịch sử</option>
+              <option value="today">Hôm nay</option>
+              <option value="week">Tuần này</option>
+              <option value="month">Tháng này</option>
+            </select>
+
+            <select
+              className="obtp-input w-full md:w-48 bg-white cursor-pointer"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="scheduled">Đã lên lịch</option>
+              <option value="departed">Đang chạy</option>
+              <option value="arrived">Hoàn thành</option>
+              <option value="cancelled">Đã hủy</option>
+            </select>
+          </>
         )}
       </div>
 
-      {/* DATA TABLE */}
       <TripTable
         trips={filteredTrips}
         viewMode={viewMode}
@@ -202,7 +229,6 @@ export default function TripsPage() {
         onToggleRecurrence={handleToggleRecurrence}
       />
 
-      {/* MODALS */}
       <DriverAssignModal
         isOpen={assignModalOpen}
         tripId={selectedTripId}

@@ -3,10 +3,17 @@ import { z } from "zod";
 
 const TripStopSchema = z.object({
   locationId: z.string().regex(BUSINESS_CONSTANTS.REGEX.MONGO_ID, {
-    message: "Location ID không hợp lệ",
+    message: "Địa điểm không hợp lệ",
   }),
-  expectedArrivalTime: z.string().datetime(),
-  expectedDepartureTime: z.string().datetime().optional(),
+  expectedArrivalTime: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Thời gian đến không hợp lệ",
+  }),
+  expectedDepartureTime: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: "Thời gian đi không hợp lệ",
+    })
+    .optional(),
 });
 
 export const CreateTripSchema = z

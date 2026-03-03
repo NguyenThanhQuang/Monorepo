@@ -71,8 +71,6 @@ export class TripsController {
     }
   }
 
-  // ===== SEARCH ROUTES (ĐẶT TRƯỚC :id) =====
-
   @Get('search')
   async searchTrips(
     @Query('fromLocationId') fromLocationId: string,
@@ -84,7 +82,7 @@ export class TripsController {
       throw new BadRequestException('Missing required search parameters');
     }
 
-    const include = includeDeparted !== 'false'; // default true
+    const include = includeDeparted !== 'false';
 
     console.log('[/trips/search] query =', {
       fromLocationId,
@@ -108,8 +106,6 @@ export class TripsController {
     return this.tripsService.searchByFrom(fromId);
   }
 
-  // ===== CREATE =====
-
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
@@ -119,21 +115,16 @@ export class TripsController {
     @Body() payload: sharedTypes.CreateTripPayload,
   ) {
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      if (payload.companyId !== user.companyId) {
-        throw new ForbiddenException();
-      }
+      payload.companyId = user.companyId;
     }
 
     const trip = await this.tripsService.create(payload);
-
     return {
       success: true,
       data: trip,
       message: 'Tạo chuyến đi thành công',
     };
   }
-
-  // ===== CANCEL =====
 
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -155,8 +146,6 @@ export class TripsController {
 
     return this.tripsService.cancel(id);
   }
-
-  // ===== GET BY ID (LUÔN ĐẶT CUỐI) =====
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
