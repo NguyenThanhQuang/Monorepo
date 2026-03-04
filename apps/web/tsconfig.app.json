@@ -7,22 +7,33 @@
     "module": "ESNext",
     "types": ["vite/client"],
     "skipLibCheck": true,
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@obtp/shared-types": ["../../packages/shared-types/src"],
+      "@obtp/validation": ["../../packages/validation/src"],
+      "@obtp/business-logic": ["../../packages/business-logic/src"],
+      "@obtp/api-client": ["../../packages/api-client/src"]
+    }
   },
-  "include": ["src", "../portal/src/api/api.ts", "../portal/src/features/trips/add-trip", "src/api/service/api/api.ts"]
+  "include": [
+    "src",
+    "../admin/src/features/auth/components/AdminLogin.tsx",
+    "../admin/src/features/auth/components/ForgotPasswordModal.tsx",
+    "../../export-portal-src.js"
+  ]
 }
