@@ -51,7 +51,7 @@ export class UploadController {
     const serverUrl = baseUrl.split('/api')[0];
 
     return {
-      url: `${serverUrl}/uploads/${file.filename}`,
+      url: `${serverUrl}/api/uploads/${file.filename}`,
     };
   }
 }

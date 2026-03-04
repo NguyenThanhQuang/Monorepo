@@ -69,7 +69,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     }),
 
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads'),
+      rootPath: join(__dirname, '..', '..', 'uploads'),
       serveRoot: '/api/uploads',
     }),
 

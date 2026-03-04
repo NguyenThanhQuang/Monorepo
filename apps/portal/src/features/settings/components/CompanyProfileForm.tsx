@@ -151,7 +151,7 @@ export function CompanyProfileForm({ company }: Props) {
               >
                 {currentLogo ? (
                   <img
-                    src={currentLogo}
+                    src={`${currentLogo}?t=${Date.now()}`}
                     alt="Company Logo"
                     className="w-full h-full object-contain p-2"
                     onError={(e) => {
@@ -288,7 +288,7 @@ export function CompanyProfileForm({ company }: Props) {
                 )}
               </div>
 
-              {/* Địa chỉ (Full width) */}
+              {/* Địa chỉ */}
               <div className="obtp-field md:col-span-2">
                 <label className="obtp-label">Địa chỉ văn phòng chính</label>
                 <div className="relative">
