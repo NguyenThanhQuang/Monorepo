@@ -41,7 +41,7 @@ export function StatsCards({ stats }: { stats: DashboardData["stats"] }) {
           -{formatCurrency(stats.commissionFee)}
         </div>
         <div className="text-xs text-slate-400 mt-2">
-          Thanh toán cho OBTP System
+          Thanh toán cho hệ thống
         </div>
       </div>
 

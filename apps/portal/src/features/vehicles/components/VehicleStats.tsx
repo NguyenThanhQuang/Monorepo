@@ -9,7 +9,9 @@ export function VehicleStats({ vehicles }: { vehicles: Vehicle[] }) {
   const maintenance = vehicles.filter(
     (v) => v.status === VehicleStatus.MAINTENANCE,
   ).length;
-  const totalSeats = vehicles.reduce((sum, v) => sum + (v.totalSeats || 0), 0);
+  const totalSeats = vehicles
+    .filter((v) => v.status === VehicleStatus.ACTIVE)
+    .reduce((sum, v) => sum + (v.totalSeats || 0), 0);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -46,7 +48,7 @@ export function VehicleStats({ vehicles }: { vehicles: Vehicle[] }) {
         </div>
         <div>
           <div className="text-2xl font-bold">{totalSeats}</div>
-          <div className="text-sm text-slate-500">Tổng số ghế</div>
+          <div className="text-sm text-slate-500">Tổng ghế khả dụng</div>
         </div>
       </div>
     </div>

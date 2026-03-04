@@ -1,6 +1,10 @@
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { api } from "@obtp/api-client";
-import type { LocationResponse, Vehicle } from "@obtp/shared-types";
+import {
+  VehicleStatus,
+  type LocationResponse,
+  type Vehicle,
+} from "@obtp/shared-types";
 import { useQuery } from "@tanstack/react-query";
 
 export const useTripDependencies = () => {
@@ -16,11 +20,12 @@ export const useTripDependencies = () => {
   });
 
   const vehiclesQuery = useQuery({
-    queryKey: ["vehicles", companyId],
+    queryKey: ["vehicles", companyId, "only-active"],
     queryFn: async () => {
       if (!companyId) return [];
       const data = await api.vehicles.findAll(companyId);
-      return data as Vehicle[];
+
+      return data.filter((v) => v.status === VehicleStatus.ACTIVE) as Vehicle[];
     },
     enabled: !!companyId,
   });

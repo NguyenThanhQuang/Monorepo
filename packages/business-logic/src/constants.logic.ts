@@ -36,3 +36,47 @@ export const AUTH_CONSTANTS = {
     MIN_NEW_PASSWORD_LENGTH: 8,
   },
 } as const;
+
+export const BUS_PRESETS = [
+  { label: "Xe Limousine 9 chỗ", type: "Limousine", f: 1, r: 4, c: 3, a: [2] },
+  {
+    label: "Xe ghế ngồi 16 chỗ (Ford Transit)",
+    type: "Ghế ngồi",
+    f: 1,
+    r: 5,
+    c: 4,
+    a: [2],
+  },
+  {
+    label: "Xe ghế ngồi 29 chỗ (Samco)",
+    type: "Ghế ngồi",
+    f: 1,
+    r: 7,
+    c: 5,
+    a: [3],
+  },
+  {
+    label: "Xe Giường nằm 34 phòng (VIP)",
+    type: "Giường nằm VIP",
+    f: 2,
+    r: 6,
+    c: 3,
+    a: [2],
+  },
+  {
+    label: "Xe Giường nằm 40 chỗ (Thaco)",
+    type: "Giường nằm",
+    f: 2,
+    r: 7,
+    c: 3,
+    a: [2],
+  },
+  {
+    label: "Xe Giường nằm 44 chỗ phổ thông",
+    type: "Giường nằm",
+    f: 2,
+    r: 8,
+    c: 3,
+    a: [2],
+  },
+];

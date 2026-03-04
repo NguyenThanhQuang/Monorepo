@@ -105,8 +105,15 @@ export class VehiclesController {
   ) {
     const vehicle = await this.vehiclesService.findOne(id);
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
-      const ownerId = vehicle.companyId.toString();
-      if (ownerId !== user.companyId) throw new ForbiddenException();
+      const vehicleCompanyId =
+        (vehicle.companyId as any)._id?.toString() ||
+        vehicle.companyId.toString();
+
+      if (vehicleCompanyId !== user.companyId) {
+        throw new ForbiddenException(
+          'Bạn không có quyền tác động lên xe của nhà xe khác',
+        );
+      }
     }
     return this.vehiclesService.remove(id);
   }

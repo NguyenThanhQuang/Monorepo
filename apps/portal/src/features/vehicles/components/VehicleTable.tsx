@@ -1,6 +1,6 @@
 import type { Vehicle } from "@obtp/shared-types";
 import { VehicleStatus } from "@obtp/shared-types";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, PlayCircle, Trash2, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,9 +16,15 @@ interface Props {
   vehicles: Vehicle[];
   onEdit: (vehicle: Vehicle) => void;
   onDelete: (id: string) => void;
+  onStatusChange: (id: string, status: VehicleStatus) => void;
 }
 
-export function VehicleTable({ vehicles, onEdit, onDelete }: Props) {
+export function VehicleTable({
+  vehicles,
+  onEdit,
+  onDelete,
+  onStatusChange,
+}: Props) {
   const getStatusBadge = (status: VehicleStatus) => {
     switch (status) {
       case VehicleStatus.ACTIVE:
@@ -41,7 +47,7 @@ export function VehicleTable({ vehicles, onEdit, onDelete }: Props) {
             <TableHead>Loại xe</TableHead>
             <TableHead>Số ghế</TableHead>
             <TableHead>Trạng thái</TableHead>
-            <TableHead className="text-right">Thao tác</TableHead>
+            <TableHead className="text-right">Thao tác nhanh</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -62,13 +68,42 @@ export function VehicleTable({ vehicles, onEdit, onDelete }: Props) {
                 <TableCell>{v.totalSeats}</TableCell>
                 <TableCell>{getStatusBadge(v.status)}</TableCell>
                 <TableCell className="text-right space-x-2">
-                  <Button variant="ghost" size="icon" onClick={() => onEdit(v)}>
+                  {v.status === VehicleStatus.ACTIVE && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        onStatusChange(v.id, VehicleStatus.MAINTENANCE)
+                      }
+                      title="Đưa vào bảo trì"
+                    >
+                      <Wrench size={16} className="text-amber-500" />
+                    </Button>
+                  )}
+                  {v.status !== VehicleStatus.ACTIVE && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onStatusChange(v.id, VehicleStatus.ACTIVE)}
+                      title="Kích hoạt hoạt động"
+                    >
+                      <PlayCircle size={16} className="text-green-500" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(v)}
+                    title="Sửa thông số"
+                  >
                     <Edit2 size={16} className="text-blue-600" />
                   </Button>
+
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => onDelete(v.id)}
+                    title="Ngừng hoạt động"
                   >
                     <Trash2 size={16} className="text-red-600" />
                   </Button>
