@@ -11,6 +11,8 @@ import {
   Filter,
   ArrowUpRight,
   History,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { formatCurrency, formatNumber } from "@obtp/business-logic";
 import { useRevenueStats } from "../hooks/useRevenueStats";
@@ -35,10 +37,14 @@ export function AdminRevenuePage() {
     end: today,
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const[isExporting, setIsExporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const {
-    data =[],
+    data = [],
     isLoading,
     error,
     refetch,
@@ -49,12 +55,11 @@ export function AdminRevenuePage() {
   });
 
   const handleAllTime = () => {
-    // Xoá trắng thời gian -> kích hoạt period="all" ở api-client
     setDateRange({ start: "", end: "" });
   };
 
   const filteredData = useMemo(() => {
-    let result =[...data];
+    let result = [...data];
     if (searchTerm.trim() !== "") {
       const term = searchTerm.toLowerCase();
       result = result.filter(
@@ -64,11 +69,24 @@ export function AdminRevenuePage() {
       );
     }
     return result;
-  },[data, searchTerm]);
+  }, [data, searchTerm]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(start, start + itemsPerPage);
+  }, [filteredData, currentPage]);
 
   const stats = useMemo(() => {
-    const totalRevenue = data.reduce((sum, item) => sum + (item.totalRevenue || 0), 0);
-    const totalBookings = data.reduce((sum, item) => sum + (item.totalBookings || 0), 0);
+    const totalRevenue = data.reduce(
+      (sum, item) => sum + (item.totalRevenue || 0),
+      0,
+    );
+    const totalBookings = data.reduce(
+      (sum, item) => sum + (item.totalBookings || 0),
+      0,
+    );
     return { totalRevenue, totalBookings };
   }, [data]);
 
@@ -127,7 +145,9 @@ export function AdminRevenuePage() {
             onClick={() => refetch()}
             className="p-2.5 text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-colors"
           >
-            <RefreshCw className={`w-5 h-5 ${isRefetching ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-5 h-5 ${isRefetching ? "animate-spin" : ""}`}
+            />
           </button>
           <button
             onClick={handleExport}
@@ -135,7 +155,7 @@ export function AdminRevenuePage() {
             className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-500/20 disabled:opacity-50 font-bold"
           >
             <FileText className="w-4 h-4" />
-            {isExporting ? (t("processing") || "Đang xử lý...") : "Excel"}
+            {isExporting ? t("processing") || "Đang xử lý..." : "Excel"}
           </button>
         </div>
       </div>
@@ -151,7 +171,9 @@ export function AdminRevenuePage() {
               <input
                 type="date"
                 value={dateRange.start || ""}
-                onChange={(e) => setDateRange((p) => ({ ...p, start: e.target.value }))}
+                onChange={(e) =>
+                  setDateRange((p) => ({ ...p, start: e.target.value }))
+                }
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white font-medium"
               />
             </div>
@@ -165,7 +187,9 @@ export function AdminRevenuePage() {
               <input
                 type="date"
                 value={dateRange.end || ""}
-                onChange={(e) => setDateRange((p) => ({ ...p, end: e.target.value }))}
+                onChange={(e) =>
+                  setDateRange((p) => ({ ...p, end: e.target.value }))
+                }
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-white font-medium"
               />
             </div>
@@ -197,7 +221,9 @@ export function AdminRevenuePage() {
               <DollarSign className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-400 uppercase">{t("totalRevenue")}</p>
+              <p className="text-sm font-bold text-gray-400 uppercase">
+                {t("totalRevenue")}
+              </p>
               <h2 className="text-2xl font-black dark:text-white">
                 {formatCurrency(stats.totalRevenue)}
               </h2>
@@ -212,7 +238,9 @@ export function AdminRevenuePage() {
               <Ticket className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-400 uppercase">{t("totalBookings")}</p>
+              <p className="text-sm font-bold text-gray-400 uppercase">
+                {t("totalBookings")}
+              </p>
               <h2 className="text-2xl font-black dark:text-white">
                 {formatNumber(stats.totalBookings)}
               </h2>
@@ -227,7 +255,9 @@ export function AdminRevenuePage() {
               <Building2 className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-400 uppercase">{t("activeCompanies") || "Nhà xe hoạt động"}</p>
+              <p className="text-sm font-bold text-gray-400 uppercase">
+                {t("activeCompanies") || "Nhà xe hoạt động"}
+              </p>
               <h2 className="text-2xl font-black dark:text-white">
                 {filteredData.length}
               </h2>
@@ -249,8 +279,8 @@ export function AdminRevenuePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredData.length > 0 ? (
-                filteredData.map((item) => (
+              {paginatedData.length > 0 ? (
+                paginatedData.map((item) => (
                   <tr
                     key={item.companyId}
                     className="group hover:bg-gray-50 dark:hover:bg-gray-700/60 transition-all cursor-default"
@@ -285,6 +315,33 @@ export function AdminRevenuePage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {filteredData.length > itemsPerPage && (
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Trang {currentPage} / {totalPages}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+              >
+                <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import {
   FinanceReportQuery,
   FinancialReportResponse,
   PaymentTransactionSummary,
+  CompanyRevenueStats, // Import type mới
 } from '@obtp/shared-types';
 import dayjs from 'dayjs';
 import { Types } from 'mongoose';
@@ -29,45 +30,47 @@ export class DashboardService {
     query: FinanceReportQuery,
   ): Promise<FinancialReportResponse> {
     
-    // Khởi tạo bộ lọc rỗng.
     const baseFilter: any = {};
 
     let startDate: Date | undefined;
     let endDate: Date | undefined;
 
-    // FIX 1: Xử lý Date an toàn. Chỉ thêm bộ lọc createdAt khi có dữ liệu thật.
     if (query.startDate && query.endDate) {
       startDate = dayjs(query.startDate).startOf('day').toDate();
       endDate = dayjs(query.endDate).endOf('day').toDate();
       baseFilter.createdAt = { $gte: startDate, $lte: endDate };
-    } else if (query.period ) {
+    } 
+    else if (query.period && (query.period as string) !== 'all') {
       startDate = calculateDateRange(query.period);
       endDate = new Date();
       baseFilter.createdAt = { $gte: startDate, $lte: endDate };
     }
-    // Nếu cả startDate, endDate rỗng và period = 'all' (hoặc undefined) -> Bỏ qua lọc ngày, lấy TẤT CẢ.
 
     if (query.companyId && Types.ObjectId.isValid(query.companyId)) {
       baseFilter.companyId = new Types.ObjectId(query.companyId);
     }
 
-    const [allTimeRevenue, facetData] = await Promise.all([
+    const[allTimeRevenue, facetData] = await Promise.all([
       this.dashboardRepository.getTotalRevenueAllTime(),
       this.dashboardRepository.getFinancialReportData(baseFilter),
     ]);
 
+    // ✅ FIX: Định nghĩa fallback object có đầy đủ thuộc tính
+    const defaultStat = { _id: 'UNKNOWN', amount: 0, count: 0 };
+
     const confirmedStats =
       facetData?.statsByStatus?.find(
-        (s: any) => s._id === 'CONFIRMED',
-      ) || {};
+        (s) => s._id === 'CONFIRMED',
+      ) || defaultStat;
+
     const cancelledStats =
       facetData?.statsByStatus?.find(
-        (s: any) => s._id === 'CANCELLED',
-      ) || {};
+        (s) => s._id === 'CANCELLED',
+      ) || defaultStat;
 
-    const periodRevenue = confirmedStats?.amount || 0;
-    const periodBookings = confirmedStats?.count || 0;
-    const periodRefunds = cancelledStats?.amount || 0;
+    const periodRevenue = confirmedStats.amount; // ✅ Hết lỗi TS
+    const periodBookings = confirmedStats.count; // ✅ Hết lỗi TS
+    const periodRefunds = cancelledStats.amount; // ✅ Hết lỗi TS
 
     const commissionRate = this.configService.get<number>(
       'COMMISSION_RATE',
@@ -75,14 +78,12 @@ export class DashboardService {
     );
 
     let filledChartData: any[] =[];
-    // FIX 2: Chỉ fill biểu đồ ngày nếu có lọc ngày tháng rõ ràng. Nếu lấy ALL time thì trả thẳng data
     if (startDate && endDate) {
        filledChartData = fillMissingChartDates(
         facetData?.revenueChart ||[],
         startDate,
         endDate,
       );
-      console.log('statsByStatus:', facetData?.statsByStatus);
     } else {
        filledChartData = facetData?.revenueChart ||[];
     }
@@ -129,6 +130,21 @@ export class DashboardService {
         return trans;
       });
 
+    // ✅ FIX: Map đúng kiểu dữ liệu CompanyRevenueStats[]
+    const formattedTopCompanies: CompanyRevenueStats[] = (facetData?.topCompanies || []).map(
+      (item) => ({
+        companyId: item.companyId,
+        companyName: item.name,
+        companyCode: item.companyCode,
+        totalRevenue: item.revenue,
+        totalBookings: item.bookings,
+        totalTrips: Math.round(item.bookings / 10) || 0, // Mock logic tạm
+        averageRating: 4.5, // Mock logic tạm
+        revenueGrowth: 0, 
+        monthlyData: [], 
+      }),
+    );
+
     return {
       overview: {
         totalRevenue: allTimeRevenue,
@@ -139,7 +155,7 @@ export class DashboardService {
         refunds: periodRefunds,
       },
       revenueChartData: filledChartData,
-      topCompanies: facetData?.topCompanies ||[],
+      topCompanies: formattedTopCompanies,
       recentTransactions: formattedTransactions,
     };
   }
