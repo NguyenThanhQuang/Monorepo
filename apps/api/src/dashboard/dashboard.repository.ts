@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   AdminDashboardStats,
@@ -20,6 +20,8 @@ import { UserDefinition, UserDocument } from 'src/users/schemas/user.schema';
 
 @Injectable()
 export class DashboardRepository {
+  private readonly logger = new Logger(DashboardRepository.name);
+
   constructor(
     @InjectModel(CompanyDefinition.name)
     private readonly companyModel: Model<CompanyDocument>,
@@ -31,242 +33,204 @@ export class DashboardRepository {
     private readonly tripModel: Model<TripDocument>,
   ) {}
 
+  /**
+   * Lấy số liệu nhanh cho Dashboard Admin (Header Cards)
+   */
   async getAdminQuickStats(): Promise<AdminDashboardStats> {
-    const[
-      totalCompanies,
-      totalUsers,
-      totalBookingsRes,
-      totalRevenueResult,
-      activeTrips,
-      newCompaniesToday,
-      todayBookingsRes,
-    ] = await Promise.all([
-      this.companyModel.countDocuments(),
-      this.userModel.countDocuments({ roles: UserRole.USER }),
-      
-      // FIX: Dùng $addFields tạo status ảo in HOA để vượt rào Mongoose
-      this.bookingModel.aggregate([
-        { $addFields: { normalizedStatus: { $toUpper: '$status' } } },
-        { $match: { normalizedStatus: 'CONFIRMED' } },
-        { $count: "count" }
-      ]),
-      
-      this.bookingModel.aggregate([
-        { $addFields: { normalizedStatus: { $toUpper: '$status' } } },
-        { $match: { normalizedStatus: 'CONFIRMED' } },
-        { $group: { _id: null, total: { $sum: '$totalAmount' } } },
-      ]),
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-      this.tripModel.countDocuments({
-        status: { $in: [TripStatus.SCHEDULED, TripStatus.DEPARTED] },
-      }),
-      this.companyModel.countDocuments({
-        createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) },
-        status: CompanyStatus.ACTIVE,
-      }),
-      
-      this.bookingModel.aggregate([
-        { $match: { createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } } },
-        { $addFields: { normalizedStatus: { $toUpper: '$status' } } },
-        { $match: { normalizedStatus: 'CONFIRMED' } },
-        { $count: "count" }
-      ]),
-    ]);
+    // Kéo toàn bộ booking confirmed về để tính toán chính xác tuyệt đối
+    const allConfirmed = await this.bookingModel
+      .find({
+        status: { $regex: /^confirmed$/i },
+      })
+      .lean()
+      .exec();
+
+    let totalRevenue = 0;
+    let todayBookings = 0;
+
+    allConfirmed.forEach((b) => {
+      totalRevenue += Number(b.totalAmount || 0);
+      if (b.createdAt && new Date(b.createdAt) >= today) {
+        todayBookings++;
+      }
+    });
+
+    const [totalCompanies, totalUsers, activeTrips, newCompaniesToday] =
+      await Promise.all([
+        this.companyModel.countDocuments(),
+        this.userModel.countDocuments({ roles: UserRole.USER }),
+        this.tripModel.countDocuments({
+          status: { $in: [TripStatus.SCHEDULED, TripStatus.DEPARTED] },
+        }),
+        this.companyModel.countDocuments({
+          createdAt: { $gte: today },
+          status: CompanyStatus.ACTIVE,
+        }),
+      ]);
 
     return {
       totalCompanies,
       totalUsers,
-      totalBookings: totalBookingsRes[0]?.count || 0,
-      totalRevenue: totalRevenueResult[0]?.total || 0,
+      totalBookings: allConfirmed.length,
+      totalRevenue,
       activeTrips,
       newCompaniesToday,
-      todayBookings: todayBookingsRes[0]?.count || 0,
+      todayBookings,
     };
   }
 
-async getTotalRevenueAllTime(): Promise<number> {
-  const res = await this.bookingModel.aggregate([
-    {
-      $match: {
-        status: { $in: ['confirmed', 'CONFIRMED'] }
-      }
-    },
-    {
-      $group: {
-        _id: null,
-        total: { $sum: '$totalAmount' }
-      }
-    }
-  ]);
-  
-  console.log('Total revenue result:', res); // Thêm log để debug
-  return res[0]?.total || 0;
-}
- async getFinancialReportData(matchFilter: any) {
-  const result = await this.bookingModel.aggregate([
-    // 1. Lọc theo Date và Company (từ UI) nếu có
-    { $match: matchFilter },
+  /**
+   * Tính tổng doanh thu mọi thời đại
+   */
+  async getTotalRevenueAllTime(): Promise<number> {
+    const res = await this.bookingModel
+      .find({
+        status: { $regex: /^confirmed$/i },
+      })
+      .lean()
+      .exec();
+    return res.reduce((sum, b) => sum + Number(b.totalAmount || 0), 0);
+  }
 
-    // 2. Chuẩn hóa status và companyId
-    { 
-      $addFields: { 
-        normalizedStatus: { $toUpper: '$status' },
-        normalizedCompanyId: { 
-          $cond: {
-            if: { $ne: [{ $type: "$companyId" }, "missing"] },
-            then: "$companyId",
-            else: {
-              $cond: {
-                if: { $ne: [{ $type: "$companyID" }, "missing"] },
-                then: "$companyID",
-                else: null
-              }
-            }
-          }
-        }
-      } 
-    },
+  /**
+   * Hàm cốt lõi: Tính toán báo cáo tài chính, biểu đồ và top nhà xe
+   */
+  async getFinancialReportData(matchFilter: any) {
+    // 1. Tạo từ điển Nhà xe để tra cứu Tên và Mã (Tránh dùng $lookup bị lỗi ID)
+    const allCompanies = await this.companyModel.find().lean().exec();
+    const companyMap = new Map<string, { name: string; code: string }>();
 
-    // 3. Lọc theo status (CONFIRMED hoặc CANCELLED)
-    { 
-      $match: { 
-        normalizedStatus: { $in: ["CONFIRMED", "CANCELLED"] }
-      } 
-    },
+    allCompanies.forEach((c: any) => {
+      const idStr = c._id.toString();
+      companyMap.set(idStr, { name: c.name, code: c.code });
+    });
 
-    // 4. Facet để gom dữ liệu
-    {
-      $facet: {
-        statsByStatus: [
-          {
-            $group: {
-              _id: '$normalizedStatus',
-              amount: { $sum: '$totalAmount' },
-              count: { $sum: 1 },
-            },
-          },
-        ],
-        revenueChart: [
-          { $match: { normalizedStatus: 'CONFIRMED' } },
-          {
-            $group: {
-              _id: {
-                $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
-              },
-              revenue: { $sum: '$totalAmount' },
-              bookings: { $sum: 1 },
-            },
-          },
-          { $sort: { _id: 1 } },
-          {
-            $project: {
-              _id: 0,
-              date: '$_id',
-              revenue: 1,
-              bookings: 1,
-            },
-          },
-        ],
-        topCompanies: [
-          { $match: { normalizedStatus: 'CONFIRMED' } },
-          {
-            $group: {
-              _id: '$normalizedCompanyId',
-              revenue: { $sum: '$totalAmount' },
-              bookings: { $sum: 1 },
-            },
-          },
-          { $sort: { revenue: -1 } },
-          { $limit: 10 },
-          {
-            $addFields: {
-              companyObjId: {
-                $cond: {
-                  if: { $eq: [{ $type: '$_id' }, 'string'] },
-                  then: { $toObjectId: '$_id' },
-                  else: '$_id',
-                },
-              },
-            },
-          },
-          {
-            $lookup: {
-              from: 'companies',
-              localField: 'companyObjId',
-              foreignField: '_id',
-              as: 'info',
-            },
-          },
-          { $unwind: { path: '$info', preserveNullAndEmptyArrays: true } },
-          {
-            $project: {
-              _id: 0,
-              companyId: { $toString: '$_id' },
-              companyCode: { $ifNull: ['$info.code', 'UNKNOWN'] },
-              name: { $ifNull: ['$info.name', 'Nhà xe chưa xác định'] },
-              revenue: 1,
-              bookings: 1,
-            },
-          },
-        ],
-      },
-    },
-  ]);
+    // 2. Tìm danh sách Bookings theo điều kiện lọc (Ngày tháng / Nhà xe)
+    const bookings = await this.bookingModel.find(matchFilter).lean().exec();
 
-  return result[0];
-}
-
-async findRecentTransactions(matchFilter: any, limit = 20): Promise<any[]> {
-  // Tạo điều kiện tìm kiếm linh hoạt cho cả companyId và companyID
-  const companyCondition = [];
-  
-  if (matchFilter.companyId) {
-    companyCondition.push(
-      { companyId: matchFilter.companyId },
-      { companyID: matchFilter.companyId }
+    this.logger.log(
+      `[FINANCE] Found ${bookings.length} bookings for filter: ${JSON.stringify(matchFilter)}`,
     );
-  }
-  
-  const statusCondition = {
-    $expr: { 
-      $in: [
-        { $toUpper: "$status" }, 
-        ["CONFIRMED", "CANCELLED"]
-      ] 
-    }
-  };
-  
-  let finalFilter: any = {};
-  
-  if (companyCondition.length > 0) {
-    finalFilter = {
-      $and: [
-        { $or: companyCondition },
-        statusCondition
-      ]
-    };
-  } else {
-    finalFilter = statusCondition;
-  }
-  
-  // Thêm điều kiện ngày tháng nếu có
-  if (matchFilter.createdAt) {
-    finalFilter = {
-      $and: [
-        { createdAt: matchFilter.createdAt },
-        finalFilter
-      ]
+
+    let confirmedAmount = 0;
+    let confirmedCount = 0;
+    let cancelledAmount = 0;
+    let cancelledCount = 0;
+
+    const chartMap = new Map<string, { revenue: number; bookings: number }>();
+    const topCmpMap = new Map<
+      string,
+      { name: string; companyCode: string; revenue: number; bookings: number }
+    >();
+
+    // 3. Duyệt qua dữ liệu để phân loại và tích lũy
+    bookings.forEach((b: any) => {
+      // Chuẩn hóa Status và Tiền
+      const status = String(b.status || '').toUpperCase();
+      const amount = Number(b.totalAmount || 0);
+
+      // Xử lý ID nhà xe linh hoạt
+      const rawCmpId = b.companyId || b.companyID;
+      const cmpIdStr = rawCmpId ? rawCmpId.toString() : 'unknown';
+
+      if (status === 'CONFIRMED') {
+        confirmedAmount += amount;
+        confirmedCount++;
+
+        // A. Xử lý dữ liệu Biểu đồ (Nhóm theo ngày)
+        const dateObj = b.createdAt ? new Date(b.createdAt) : null;
+        if (dateObj && !isNaN(dateObj.getTime())) {
+          const dateStr = dateObj.toISOString().split('T')[0];
+          const currentDay = chartMap.get(dateStr) || {
+            revenue: 0,
+            bookings: 0,
+          };
+          currentDay.revenue += amount;
+          currentDay.bookings += 1;
+          chartMap.set(dateStr, currentDay);
+        }
+
+        // B. Xử lý dữ liệu Top Nhà xe
+        const cmpInfo = companyMap.get(cmpIdStr) || {
+          name: 'Nhà xe #' + cmpIdStr.slice(-4),
+          code: 'N/A',
+        };
+        const currentCmpStats = topCmpMap.get(cmpIdStr) || {
+          name: cmpInfo.name,
+          companyCode: cmpInfo.code,
+          revenue: 0,
+          bookings: 0,
+        };
+        currentCmpStats.revenue += amount;
+        currentCmpStats.bookings += 1;
+        topCmpMap.set(cmpIdStr, currentCmpStats);
+      } else if (status === 'CANCELLED') {
+        cancelledAmount += amount;
+        cancelledCount++;
+      }
+    });
+
+    // 4. Chuyển đổi Map thành Array và sắp xếp
+    const revenueChart = Array.from(chartMap.entries())
+      .map(([date, val]) => ({
+        date,
+        revenue: val.revenue,
+        bookings: val.bookings,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const topCompanies = Array.from(topCmpMap.entries())
+      .map(([id, val]) => ({
+        companyId: id,
+        name: val.name,
+        companyCode: val.companyCode,
+        revenue: val.revenue,
+        bookings: val.bookings,
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+
+    return {
+      statsByStatus: [
+        { _id: 'CONFIRMED', amount: confirmedAmount, count: confirmedCount },
+        { _id: 'CANCELLED', amount: cancelledAmount, count: cancelledCount },
+      ],
+      revenueChart,
+      topCompanies,
     };
   }
 
-  return this.bookingModel
-    .find(finalFilter)
-    .select('createdAt status totalAmount ticketCode companyId companyID')
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .populate('companyId', 'name')
-    .populate('companyID', 'name') // Populate cả hai field
-    .lean()
-    .exec();
-}
+  /**
+   * Lấy lịch sử giao dịch gần đây và map tên nhà xe thủ công
+   */
+  async findRecentTransactions(matchFilter: any, limit = 20): Promise<any[]> {
+    // Lấy map công ty trước
+    const allCompanies = await this.companyModel.find().lean().exec();
+    const companyMap = new Map<string, string>();
+    allCompanies.forEach((c: any) =>
+      companyMap.set(c._id.toString(), c.name),
+    );
+
+    const docs = await this.bookingModel
+      .find(matchFilter)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean()
+      .exec();
+
+    return docs.map((d) => {
+      const rawCmpId = d.companyId || (d as any).companyID;
+      const cmpIdStr = rawCmpId ? rawCmpId.toString() : 'unknown';
+
+      return {
+        ...d,
+        companyId: {
+          name: companyMap.get(cmpIdStr) || 'Nhà xe không xác định',
+        },
+      };
+    });
+  }
 }

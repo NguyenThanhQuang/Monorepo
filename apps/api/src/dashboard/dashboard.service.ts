@@ -3,13 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import {
   calculateDateRange,
   fillMissingChartDates,
-  FINANCE_CONSTANTS,
+  FINANCE_CONFIG,
 } from '@obtp/business-logic';
 import {
   FinanceReportQuery,
   FinancialReportResponse,
   PaymentTransactionSummary,
-  CompanyRevenueStats, // Import type mới
+  TopCompanyStat,
 } from '@obtp/shared-types';
 import dayjs from 'dayjs';
 import { Types } from 'mongoose';
@@ -29,134 +29,131 @@ export class DashboardService {
   async getFinancialReport(
     query: FinanceReportQuery,
   ): Promise<FinancialReportResponse> {
-    
     const baseFilter: any = {};
-
     let startDate: Date | undefined;
     let endDate: Date | undefined;
 
+    // 1. Xử lý khoảng thời gian lọc
     if (query.startDate && query.endDate) {
       startDate = dayjs(query.startDate).startOf('day').toDate();
       endDate = dayjs(query.endDate).endOf('day').toDate();
       baseFilter.createdAt = { $gte: startDate, $lte: endDate };
-    } 
-    else if (query.period && (query.period as string) !== 'all') {
+    } else if (query.period && String(query.period) !== 'all') {
       startDate = calculateDateRange(query.period);
       endDate = new Date();
       baseFilter.createdAt = { $gte: startDate, $lte: endDate };
     }
 
+    // 2. Lọc theo nhà xe cụ thể nếu có
     if (query.companyId && Types.ObjectId.isValid(query.companyId)) {
       baseFilter.companyId = new Types.ObjectId(query.companyId);
     }
 
-    const[allTimeRevenue, facetData] = await Promise.all([
+    // 3. Lấy dữ liệu tổng hợp từ Repository
+    const [allTimeRevenue, data] = await Promise.all([
       this.dashboardRepository.getTotalRevenueAllTime(),
       this.dashboardRepository.getFinancialReportData(baseFilter),
     ]);
 
-    // ✅ FIX: Định nghĩa fallback object có đầy đủ thuộc tính
-    const defaultStat = { _id: 'UNKNOWN', amount: 0, count: 0 };
-
-    const confirmedStats =
-      facetData?.statsByStatus?.find(
-        (s) => s._id === 'CONFIRMED',
-      ) || defaultStat;
-
-    const cancelledStats =
-      facetData?.statsByStatus?.find(
-        (s) => s._id === 'CANCELLED',
-      ) || defaultStat;
-
-    const periodRevenue = confirmedStats.amount; // ✅ Hết lỗi TS
-    const periodBookings = confirmedStats.count; // ✅ Hết lỗi TS
-    const periodRefunds = cancelledStats.amount; // ✅ Hết lỗi TS
+    // 4. Trích xuất các chỉ số tài chính
+    const confirmed = data.statsByStatus.find((s) => s._id === 'CONFIRMED') || {
+      amount: 0,
+      count: 0,
+    };
+    const cancelled = data.statsByStatus.find((s) => s._id === 'CANCELLED') || {
+      amount: 0,
+      count: 0,
+    };
 
     const commissionRate = this.configService.get<number>(
       'COMMISSION_RATE',
-      FINANCE_CONSTANTS.PLATFORM_COMMISSION_RATE,
+      FINANCE_CONFIG.PLATFORM_COMMISSION_RATE,
     );
 
-    let filledChartData: any[] =[];
+    // 5. Chuẩn hóa dữ liệu Biểu đồ
+    let finalChartData = data.revenueChart;
     if (startDate && endDate) {
-       filledChartData = fillMissingChartDates(
-        facetData?.revenueChart ||[],
+      finalChartData = fillMissingChartDates(
+        data.revenueChart,
         startDate,
         endDate,
       );
-    } else {
-       filledChartData = facetData?.revenueChart ||[];
     }
 
-    const recentDocs = await this.dashboardRepository.findRecentTransactions(
-      baseFilter,
-      20,
-    );
-
-    const formattedTransactions: PaymentTransactionSummary[] =
-      recentDocs.flatMap((doc: any) => {
-        const trans: PaymentTransactionSummary[] =[];
-        const companyName = doc.companyId?.name || 'Unknown';
-        const base = {
-          id: doc._id.toString(),
-          date: doc.createdAt.toISOString(),
-          companyName,
-          description: `Booking #${doc.ticketCode}`,
-        };
-
-        const normalizedStatus = String(doc.status).toUpperCase();
-
-        if (normalizedStatus === 'CONFIRMED') {
-          trans.push({
-            ...base,
-            type: 'booking',
-            amount: doc.totalAmount,
-          });
-          trans.push({
-            id: `${doc._id}-comm`,
-            date: base.date,
-            companyName: 'Platform',
-            type: 'commission',
-            description: `Commission Fee`,
-            amount: -(doc.totalAmount * commissionRate),
-          });
-        } else if (normalizedStatus === 'CANCELLED') {
-          trans.push({
-            ...base,
-            type: 'refund',
-            amount: -doc.totalAmount,
-          });
-        }
-        return trans;
-      });
-
-    // ✅ FIX: Map đúng kiểu dữ liệu CompanyRevenueStats[]
-    const formattedTopCompanies: CompanyRevenueStats[] = (facetData?.topCompanies || []).map(
+    // 6. Định dạng Top Nhà xe
+    const formattedTopCompanies: TopCompanyStat[] = data.topCompanies.map(
       (item) => ({
-        companyId: item.companyId,
-        companyName: item.name,
-        companyCode: item.companyCode,
-        totalRevenue: item.revenue,
-        totalBookings: item.bookings,
-        totalTrips: Math.round(item.bookings / 10) || 0, // Mock logic tạm
-        averageRating: 4.5, // Mock logic tạm
-        revenueGrowth: 0, 
-        monthlyData: [], 
+        name: item.name,
+        revenue: item.revenue,
+        bookings: item.bookings,
       }),
     );
 
+    // 7. Lấy và định dạng danh sách giao dịch gần đây (SỬA LỖI TYPING TẠI ĐÂY)
+    const recentDocs =
+      await this.dashboardRepository.findRecentTransactions(baseFilter);
+
+    const formattedTransactions: PaymentTransactionSummary[] =
+      recentDocs.flatMap((doc: any): PaymentTransactionSummary[] => {
+        const companyName = doc.companyId?.name || 'Unknown';
+        const dateStr = doc.createdAt
+          ? new Date(doc.createdAt).toISOString()
+          : new Date().toISOString();
+
+        const statusStr = String(doc.status || '').toUpperCase();
+        const results: PaymentTransactionSummary[] = [];
+
+        if (statusStr === 'CONFIRMED') {
+          // Giao dịch booking khách trả
+          results.push({
+            id: doc._id.toString(),
+            date: dateStr,
+            companyName,
+            description: `Vé #${doc.ticketCode || 'N/A'}`,
+            type: 'booking', // TypeScript sẽ hiểu nhờ kết quả trả về của hàm được định nghĩa rõ ràng
+            amount: Number(doc.totalAmount),
+          });
+
+          // Giao dịch trừ phí hoa hồng
+          results.push({
+            id: doc._id.toString() + '-comm',
+            date: dateStr,
+            companyName: 'Platform',
+            description: 'Phí dịch vụ hệ thống',
+            type: 'commission',
+            amount: -(Number(doc.totalAmount) * commissionRate),
+          });
+        } else if (statusStr === 'CANCELLED') {
+          // Giao dịch hoàn tiền
+          results.push({
+            id: doc._id.toString(),
+            date: dateStr,
+            companyName,
+            description: `Hoàn vé #${doc.ticketCode || 'N/A'}`,
+            type: 'refund',
+            amount: -Number(doc.totalAmount),
+          });
+        }
+
+        return results;
+      });
+
+    // 8. Trả về kết quả cuối cùng
     return {
       overview: {
         totalRevenue: allTimeRevenue,
-        periodRevenue,
-        totalBookings: periodBookings,
-        averageOrderValue: periodBookings ? periodRevenue / periodBookings : 0,
-        commission: periodRevenue * commissionRate,
-        refunds: periodRefunds,
+        periodRevenue: confirmed.amount,
+        totalBookings: confirmed.count,
+        averageOrderValue: confirmed.count
+          ? confirmed.amount / confirmed.count
+          : 0,
+        commission: confirmed.amount * commissionRate,
+        refunds: cancelled.amount,
       },
-      revenueChartData: filledChartData,
+      revenueChartData: finalChartData,
       topCompanies: formattedTopCompanies,
       recentTransactions: formattedTransactions,
     };
   }
+  
 }

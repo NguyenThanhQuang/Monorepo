@@ -8,7 +8,6 @@ import { UserDefinition } from '../../users/schemas/user.schema';
 export type BookingDocument = HydratedDocument<BookingDefinition>;
 
 @Schema({
-  collection: 'bookings',
 })
 export class PassengerInfo {
   @Prop({ type: String, required: true, trim: true })
@@ -25,7 +24,10 @@ export class PassengerInfo {
 }
 export const PassengerInfoSchema = SchemaFactory.createForClass(PassengerInfo);
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true,
+    collection: 'bookings',
+
+ })
 export class BookingDefinition {
   @Prop({
     type: Types.ObjectId,

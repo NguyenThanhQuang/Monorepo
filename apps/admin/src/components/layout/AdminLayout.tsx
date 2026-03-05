@@ -67,11 +67,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       name: t("reviewManagement"),
       icon: <MessageCircle className="w-5 h-5" />,
     },
-    {
-      path: "/admin/finance",
-      name: t("finance"),
-      icon: <DollarSign className="w-5 h-5" />,
-    },
+
     {
       path: "/admin/settings",
       name: t("settings"),

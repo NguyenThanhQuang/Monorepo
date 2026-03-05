@@ -1,0 +1,47 @@
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  meta: PaginationMeta;
+}
+
+export interface ApiErrorResponse {
+  statusCode: number;
+  timestamp: string;
+  path: string;
+  message: string | object | ValidationErrorDetail[];
+}
+
+export interface ValidationErrorDetail {
+  field: string;
+  message: string;
+  code?: string;
+}
+
+export interface ErrorResponseObject {
+  statusCode: number;
+  message: string | string[];
+  error: string;
+  errors?: ValidationErrorDetail[];
+}
+
+export interface TokenValidationResult {
+  isValid: boolean;
+  message?: string;
+  email?: string;
+  userName?: string;
+  companyName?: string;
+}

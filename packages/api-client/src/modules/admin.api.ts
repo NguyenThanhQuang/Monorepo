@@ -92,13 +92,13 @@ export const adminApi = {
     return reportData.revenueChartData ||[];
   },
 
-  exportRevenueReport: async (params?: RevenueFilterParams): Promise<Blob> => {
-    return http.get<Blob>("/dashboard/finance-report", {
-      params: transformRevenueParams(params),
-      responseType: "blob",
+exportRevenueReport: async (params: RevenueFilterParams): Promise<Blob> => {
+    // Ép kiểu responseType là 'blob' để Axios không parse JSON
+    return http.get("/dashboard/finance-report/export", {
+      params,
+      responseType: "blob", 
       headers: {
-        Accept:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
     });
   },
