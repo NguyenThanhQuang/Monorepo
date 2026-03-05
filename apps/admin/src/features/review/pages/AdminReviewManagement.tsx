@@ -2,8 +2,8 @@ import { Search, RefreshCw, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ConfirmActionModal } from "@/components/common/ConfirmActionModal";
 import { useReviewManagement } from "../hooks/useReviewManagement";
-import { ReviewFilterBar } from "../components/ReviewFilterBar";
 import { ReviewCard } from "../components/ReviewCard";
+import { ReviewFilters } from "../components/ReviewFilterBar";
 
 export function AdminReviewManagement() {
   const { t } = useLanguage();
@@ -76,7 +76,7 @@ export function AdminReviewManagement() {
       </div>
 
       {/* FILTER BAR */}
-      <ReviewFilterBar
+      <ReviewFilters
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         filterRating={filterRating}
