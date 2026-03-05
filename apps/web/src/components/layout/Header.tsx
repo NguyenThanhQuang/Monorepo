@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Bus,
   User,
@@ -12,28 +12,10 @@ import {
   Ticket,
   UserCircle,
   Phone,
-  Shield,
-  Building2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeProvider";
-
-type SafeUser = {
-  name: string;
-  email: string;
-  roles: string[];
-};
-
-function getSafeUser(): SafeUser | null {
-  const raw = localStorage.getItem("user");
-  if (!raw || raw === "undefined") return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
 
 interface HeaderProps {
   isLoggedIn?: boolean;
@@ -48,46 +30,15 @@ export function Header({
   onLogout,
   onHotlineClick,
 }: HeaderProps) {
+  const navigate = useNavigate();
+
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const [showUserMenu, setShowUserMenu] = useState(false);
-
-  const user = isLoggedIn ? getSafeUser() : null;
+  const rawUser = localStorage.getItem("user");
+  const user = rawUser && rawUser !== "undefined" ? JSON.parse(rawUser) : null;
 
   const isUser = user?.roles?.includes("user");
-  const isCompanyAdmin = user?.roles?.includes("company_admin");
-  const isAdmin =
-    user?.roles?.includes("admin") || user?.roles?.includes("system-admin");
-
-  const toggleLanguage = () => {
-    setLanguage(language === "vi" ? "en" : "vi");
-  };
-
-  const handleCompanyAccess = () => {
-    toast.error("Bạn không có quyền truy cập vào trang quản lý nhà xe", {
-      duration: 3000,
-      position: "top-center",
-      icon: "🚫",
-      style: {
-        background: "#FEE2E2",
-        color: "#991B1B",
-        border: "1px solid #FCA5A5",
-      },
-    });
-  };
-
-  const handleAdminAccess = () => {
-    toast.error("Bạn không có quyền truy cập vào trang quản trị hệ thống", {
-      duration: 3000,
-      position: "top-center",
-      icon: "🚫",
-      style: {
-        background: "#FEE2E2",
-        color: "#991B1B",
-        border: "1px solid #FCA5A5",
-      },
-    });
-  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -97,27 +48,32 @@ export function Header({
       duration: 2000,
       position: "top-center",
       icon: "👋",
-      style: { background: "#10B981", color: "#FFFFFF" },
     });
+    navigate("/");
   };
 
   return (
     <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-sm sticky top-0 z-50 border-b">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          {/* LOGO */}
-          <Link to="/" className="flex items-center space-x-3">
+          {/* LOGO  */}
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center space-x-3"
+          >
             <Bus className="w-8 h-8 text-blue-600" />
-            <span className="text-xl font-bold bg-linear-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
               Online Bus Ticket Platform
             </span>
-          </Link>
+          </button>
 
-          {/* NAV - CHUYỂN THÀNH LINK */}
+          {/* NAV */}
           <nav className="hidden lg:flex items-center space-x-8">
-            <Link to="/">{t("home")}</Link>
-            <Link to="/ticket-lookup">{t("ticketLookup")}</Link>
-            <Link to="/contact">{t("contact")}</Link>
+            <button onClick={() => navigate("/")}>{t("home")}</button>
+            <button onClick={() => navigate("/ticket-lookup")}>
+              {t("ticketLookup")}
+            </button>
+            <button onClick={() => navigate("/contact")}>{t("contact")}</button>
           </nav>
 
           {/* RIGHT */}
@@ -131,7 +87,7 @@ export function Header({
             </button>
 
             <button
-              onClick={toggleLanguage}
+              onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
               className="hidden md:flex items-center space-x-2"
             >
               <Globe className="w-4 h-4" />
@@ -149,8 +105,8 @@ export function Header({
             {isLoggedIn && user ? (
               <div className="relative">
                 <button
-                  onClick={() => setShowUserMenu((p) => !p)}
-                  className="flex items-center space-x-2 bg-linear-to-r from-blue-600 to-teal-500 text-white px-4 py-2 rounded-xl"
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-teal-500 text-white px-4 py-2 rounded-xl"
                 >
                   <User className="w-4 h-4" />
                   <span>{user.name}</span>
@@ -159,71 +115,35 @@ export function Header({
 
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border overflow-hidden">
-                    {/* USER INFO */}
-                    <div className="p-4 border-b bg-linear-to-r from-blue-600/10 to-teal-500/10">
+                    <div className="p-4 border-b bg-gradient-to-r from-blue-600/10 to-teal-500/10">
                       <div className="font-semibold">{user.name}</div>
                       <div className="text-sm text-gray-500">{user.email}</div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {isUser && "👤 Khách hàng"}
-                        {isCompanyAdmin && "🏢 Quản lý nhà xe"}
-                        {isAdmin && "⚙️ Quản trị viên"}
-                      </div>
                     </div>
 
                     <div className="py-2">
                       {isUser && (
-                        <Link
-                          to="/my-trips"
-                          onClick={() => setShowUserMenu(false)}
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            navigate("/my-trips");
+                          }}
                           className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
                         >
                           <Ticket className="w-5 h-5 text-blue-600" />
                           <span>{t("myTrips")}</span>
-                        </Link>
+                        </button>
                       )}
 
-                      <Link
-                        to="/profile"
-                        onClick={() => setShowUserMenu(false)}
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          navigate("/profile");
+                        }}
                         className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
                       >
                         <UserCircle className="w-5 h-5 text-blue-600" />
                         <span>{t("profile")}</span>
-                      </Link>
-
-                      {isCompanyAdmin && (
-                        <>
-                          <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
-                          <button
-                            onClick={() => {
-                              setShowUserMenu(false);
-                              handleCompanyAccess();
-                            }}
-                            disabled
-                            className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors text-gray-400 cursor-not-allowed"
-                          >
-                            <Building2 className="w-5 h-5" />
-                            <span>Quản lý nhà xe (không khả dụng)</span>
-                          </button>
-                        </>
-                      )}
-
-                      {isAdmin && (
-                        <>
-                          <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
-                          <button
-                            onClick={() => {
-                              setShowUserMenu(false);
-                              handleAdminAccess();
-                            }}
-                            disabled
-                            className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors text-gray-400 cursor-not-allowed"
-                          >
-                            <Shield className="w-5 h-5" />
-                            <span>System Admin (không khả dụng)</span>
-                          </button>
-                        </>
-                      )}
+                      </button>
 
                       <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
 
@@ -241,7 +161,7 @@ export function Header({
             ) : (
               <button
                 onClick={onLoginClick}
-                className="bg-linear-to-r from-blue-600 to-teal-500 text-white px-6 py-2 rounded-xl"
+                className="bg-gradient-to-r from-blue-600 to-teal-500 text-white px-6 py-2 rounded-xl"
               >
                 {t("login")}
               </button>
