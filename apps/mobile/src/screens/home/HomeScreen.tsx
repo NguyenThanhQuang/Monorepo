@@ -113,7 +113,8 @@ export default function HomeScreen() {
   };
 
   const handleTripSelect = (trip: any) => {
-    navigation.navigate("TripDetails" as never, { tripId: trip._id } as never);
+    // ✅ TripDetailsScreen expects { trip }, not { tripId }
+    navigation.navigate("TripDetails" as never, { trip } as never);
   };
 
   const fetchTodayTrips = async () => {

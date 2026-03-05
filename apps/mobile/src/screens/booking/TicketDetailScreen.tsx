@@ -56,6 +56,17 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
   const paymentStatus = String(booking?.paymentStatus || "").toLowerCase();
   const isPaid = paymentStatus === "paid" || String(booking?.status || "").toLowerCase().includes("confirm");
 
+  // ✅ QR payload: dùng JSON để tài xế scan chắc chắn (driver scanner sẽ tự lấy ticketCode)
+  const qrValue = useMemo(() => {
+    if (!ticketCode) return "";
+    const tripId = (trip && (trip._id || trip.id)) ? String(trip._id || trip.id) : undefined;
+    return JSON.stringify({
+      ticketCode: String(ticketCode),
+      bookingId,
+      tripId,
+    });
+  }, [ticketCode, bookingId, trip]);
+
   const dtText = useMemo(() => {
     const dep = trip?.departureTime;
     if (!dep) return "-";
@@ -137,7 +148,7 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
           ) : ticketCode ? (
             <View style={{ alignItems: "center", marginTop: SPACING.md }}>
               <View style={styles.qrBox}>
-                <QRCode value={String(ticketCode)} size={200} />
+                <QRCode value={qrValue} size={200} />
               </View>
               <Text style={styles.ticketCodeText}>{ticketCode}</Text>
               <Text style={styles.qrHint}>Đưa QR/mã vé này cho tài xế để quét</Text>

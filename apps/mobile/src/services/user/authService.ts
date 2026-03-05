@@ -40,6 +40,10 @@ export interface UserProfile {
 }
 
 class AuthService {
+  private unwrap(resData: any) {
+    return resData?.data ?? resData;
+  }
+
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response = await apiService.post<AuthResponse>(
       API_ENDPOINTS.AUTH.LOGIN,
@@ -48,7 +52,7 @@ class AuthService {
         password: credentials.password,
       },
     );
-    return response.data;
+    return this.unwrap(response.data) as AuthResponse;
   }
 
   async register(data: RegisterData): Promise<AuthResponse> {
@@ -57,7 +61,7 @@ class AuthService {
         API_ENDPOINTS.AUTH.REGISTER,
         data,
       );
-      return response.data;
+      return this.unwrap(response.data) as AuthResponse;
     } catch (error) {
       console.error("Register error:", error);
       throw error;
@@ -72,7 +76,7 @@ class AuthService {
           refreshToken,
         },
       );
-      return response.data;
+      return this.unwrap(response.data) as { accessToken: string };
     } catch (error) {
       console.error("Refresh token error:", error);
       throw error;
@@ -93,7 +97,7 @@ class AuthService {
       const response = await apiService.get<UserProfile>(
         API_ENDPOINTS.USER.PROFILE,
       );
-      return response.data;
+      return this.unwrap(response.data) as UserProfile;
     } catch (error) {
       console.error("Get profile error:", error);
       throw error;
@@ -102,11 +106,11 @@ class AuthService {
 
   async updateProfile(profileData: Partial<UserProfile>): Promise<UserProfile> {
     try {
-      const response = await apiService.put<UserProfile>(
+      const response = await apiService.patch<UserProfile>(
         API_ENDPOINTS.USER.UPDATE_PROFILE,
         profileData,
       );
-      return response.data;
+      return this.unwrap(response.data) as UserProfile;
     } catch (error) {
       console.error("Update profile error:", error);
       throw error;
@@ -151,7 +155,10 @@ class AuthService {
 
   async verifyEmail(token: string): Promise<void> {
     try {
-      await apiService.post(API_ENDPOINTS.AUTH.VERIFY_EMAIL, { token });
+      // Backend: GET /auth/verify-email-api?token=...
+      await apiService.get(API_ENDPOINTS.AUTH.VERIFY_EMAIL, {
+        params: { token },
+      });
     } catch (error) {
       console.error("Verify email error:", error);
       throw error;

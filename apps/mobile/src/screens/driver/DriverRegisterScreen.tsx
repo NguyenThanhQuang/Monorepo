@@ -12,7 +12,7 @@ import { driverService } from "@/services/user/driverService";
 import apiService from "@/services/common/apiService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppDispatch } from "@/store/index-store";
-import { setUser } from "@/store/authSlice";
+import { logout, setUser } from "@/store/authSlice";
 import { COLORS, SPACING, TYPOGRAPHY, LAYOUT, ICONS, withOpacity } from "@/theme";
 
 type Props = any;
@@ -73,12 +73,24 @@ export default function DriverRegisterScreen({ navigation }: Props) {
         await AsyncStorage.setItem("user", JSON.stringify(u));
       } catch {}
 
-      Alert.alert("Thành công", "Tài khoản đã được kích hoạt quyền Tài xế.", [
-        {
-          text: "OK",
-          onPress: () => (navigation as any).navigate("DriverHome"),
-        },
-      ]);
+      Alert.alert(
+        "Thành công",
+        "Đã đăng ký tài xế. Lưu ý: Backend kiểm tra role từ token đăng nhập. Để quét/xác nhận vé hoạt động, bạn nên đăng xuất và đăng nhập lại để token cập nhật role driver.",
+        [
+          {
+            text: "Để sau",
+            style: "cancel",
+            onPress: () => (navigation as any).navigate("DriverHome"),
+          },
+          {
+            text: "Đăng xuất",
+            style: "destructive",
+            onPress: () => {
+              dispatch(logout() as any);
+            },
+          },
+        ],
+      );
     } catch (e: any) {
       const msg = e?.response?.data?.message || e?.message || "Đăng ký thất bại.";
       setVariant("error");
@@ -141,7 +153,7 @@ export default function DriverRegisterScreen({ navigation }: Props) {
 
         <AppCard style={styles.noteCard}>
           <Text style={styles.noteTitle}>Lưu ý</Text>
-          <Text style={styles.noteText}>• Sau khi đăng ký, tab “Tài xế” sẽ xuất hiện để quét mã vé.</Text>
+          <Text style={styles.noteText}>• Sau khi đăng ký, bạn nên đăng xuất và đăng nhập lại để token cập nhật role tài xế.</Text>
           <Text style={styles.noteText}>• Vé hợp lệ cần ở trạng thái đã thanh toán và chưa check-in.</Text>
         </AppCard>
       </ScrollView>

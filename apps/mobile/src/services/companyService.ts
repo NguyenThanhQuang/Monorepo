@@ -28,7 +28,8 @@ const handleApiError = (error: any, defaultMessage: string): Error => {
 export const registerCompany = async (data: CompanyRegistrationRequest): Promise<CompanyRegistrationResponse> => {
   try {
     const response = await apiService.post<CompanyRegistrationResponse>('/companies/register', data);
-    return response.data as CompanyRegistrationResponse;
+    // Backend thường wrap: { statusCode, message, data }
+    return (response.data as any)?.data ?? (response.data as any);
   } catch (error: any) {
     console.error('Error registering company:', error);
     throw new Error('Không thể đăng ký nhà xe');
@@ -38,7 +39,8 @@ export const registerCompany = async (data: CompanyRegistrationRequest): Promise
 export const getCompanies = async (): Promise<{ companies: Company[] }> => {
   try {
     const response = await apiService.get<Company[]>('/companies');
-    return { companies: response.data as Company[] };
+    const payload = (response.data as any)?.data ?? response.data;
+    return { companies: payload as Company[] };
   } catch (error: any) {
     console.error('Error fetching companies:', error);
     // Return empty array instead of throwing error for better UX
@@ -49,7 +51,7 @@ export const getCompanies = async (): Promise<{ companies: Company[] }> => {
 export const getCompanyById = async (id: string): Promise<Company> => {
   try {
     const response = await apiService.get<Company>(`/companies/${id}`);
-    return response.data as Company;
+    return ((response.data as any)?.data ?? response.data) as Company;
   } catch (error: any) {
     console.error('Error fetching company:', error);
     throw new Error('Không thể tải thông tin nhà xe');
@@ -59,7 +61,7 @@ export const getCompanyById = async (id: string): Promise<Company> => {
 export const updateCompany = async (id: string, data: Partial<Company>): Promise<Company> => {
   try {
     const response = await apiService.patch<Company>(`/companies/${id}`, data);
-    return response.data as Company;
+    return ((response.data as any)?.data ?? response.data) as Company;
   } catch (error: any) {
     console.error('Error updating company:', error);
     throw new Error('Không thể cập nhật thông tin nhà xe');
@@ -69,7 +71,7 @@ export const updateCompany = async (id: string, data: Partial<Company>): Promise
 export const getCompanyStatus = async (id: string): Promise<{ status: string }> => {
   try {
     const response = await apiService.get(`/companies/${id}/status`);
-    return response.data as { status: string };
+    return ((response.data as any)?.data ?? response.data) as { status: string };
   } catch (error: any) {
     console.error('Error fetching company status:', error);
     throw new Error('Không thể tải trạng thái nhà xe');
@@ -79,7 +81,7 @@ export const getCompanyStatus = async (id: string): Promise<{ status: string }> 
 export const createCompany = async (data: Partial<Company>): Promise<Company> => {
   try {
     const response = await apiService.post<Company>('/companies', data);
-    return response.data as Company;
+    return ((response.data as any)?.data ?? response.data) as Company;
   } catch (error: any) {
     console.error('Error creating company:', error);
     throw new Error('Không thể tạo nhà xe');
@@ -89,7 +91,7 @@ export const createCompany = async (data: Partial<Company>): Promise<Company> =>
 export const getCompanyVehicles = async (companyId: string): Promise<{ vehicles: any[] }> => {
   try {
     const response = await apiService.get(`/companies/${companyId}/vehicles`);
-    return response.data as { vehicles: any[] };
+    return ((response.data as any)?.data ?? response.data) as { vehicles: any[] };
   } catch (error: any) {
     console.error('Error fetching company vehicles:', error);
     throw new Error('Không thể tải danh sách xe của nhà xe');

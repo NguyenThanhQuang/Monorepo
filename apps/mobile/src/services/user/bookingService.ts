@@ -3,6 +3,7 @@ import apiService from "../common/apiService";
 import { Booking, CreateBookingPayload } from "../../types/booking";
 import { SearchTripsResponse } from "../../types/trip";
 import { searchLocations } from "./locationService";
+import type { Trip as TripModel } from "../../types/trip";
 
 type RequestOptions = {
   signal?: AbortSignal;
@@ -74,6 +75,80 @@ const unwrap = (resData: any) => {
   // backend hay trả { statusCode, message, data }
   // nhưng một số endpoint có thể trả thẳng object/array
   return resData?.data ?? resData;
+};
+
+const asIsoString = (v: any): string => {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  if (v instanceof Date) return v.toISOString();
+  return String(v);
+};
+
+const countAvailableSeats = (seats: any[]): number => {
+  if (!Array.isArray(seats)) return 0;
+  // backend dùng SeatStatus: available / booked / held ...
+  return seats.filter((s) => (s?.status || "").toString().toLowerCase() === "available").length;
+};
+
+/**
+ * ✅ Normalize trip shape từ backend (TripDocument đã populate) -> Trip UI type
+ * Backend fields hay gặp:
+ * - departureTime, expectedArrivalTime
+ * - availableSeatsCount
+ * - companyId (object) / vehicleId (object)
+ * - route.fromLocationId (object) / route.toLocationId (object)
+ */
+const normalizeTrip = (t: any): TripModel => {
+  const route = t?.route ?? {};
+  const fromLoc = route?.fromLocationId;
+  const toLoc = route?.toLocationId;
+
+  const dep = asIsoString(t?.departureTime);
+  const arr = asIsoString(t?.arrivalTime || t?.expectedArrivalTime);
+
+  const seats = Array.isArray(t?.seats) ? t.seats : [];
+  const availableSeats =
+    typeof t?.availableSeats === "number"
+      ? t.availableSeats
+      : typeof t?.availableSeatsCount === "number"
+        ? t.availableSeatsCount
+        : countAvailableSeats(seats);
+
+  const companyName = t?.company?.name || t?.companyId?.name || "Nhà xe";
+
+  const rawId = t?._id ?? t?.id ?? t?.tripId;
+  let _id = "";
+  if (rawId) {
+    let s = "";
+    if (typeof rawId === "string") s = rawId;
+    else if ((rawId as any)?.$oid) s = String((rawId as any).$oid);
+    else if ((rawId as any)?.oid) s = String((rawId as any).oid);
+    else if (typeof (rawId as any)?.toString === "function")
+      s = String((rawId as any).toString());
+    else s = String(rawId);
+
+    s = String(s || "").trim();
+    const m = s.match(/[a-fA-F0-9]{24}/);
+    _id = (m ? m[0] : s) || "";
+  }
+
+  return {
+    _id,
+    id: _id,
+    from: String(t?.from || fromLoc?.name || ""),
+    to: String(t?.to || toLoc?.name || ""),
+    departureTime: dep,
+    arrivalTime: arr,
+    expectedArrivalTime: asIsoString(t?.expectedArrivalTime || arr),
+    price: Number(t?.price ?? 0),
+    availableSeats,
+    company: { name: companyName },
+    seats,
+    route: route,
+    companyId: t?.companyId,
+    vehicleId: t?.vehicleId,
+    status: t?.status,
+  } as any;
 };
 
 class BookingService {
@@ -167,13 +242,15 @@ class BookingService {
       const payload = unwrap(response.data) ?? {};
 
       // ✅ FIX: hỗ trợ nhiều kiểu trả về khác nhau
-      const trips = Array.isArray(payload?.data)
+      const tripsRaw = Array.isArray(payload?.data)
         ? payload.data
         : Array.isArray(payload?.trips)
           ? payload.trips
           : Array.isArray(payload)
             ? payload
             : [];
+
+      const trips = (tripsRaw || []).map(normalizeTrip);
 
       const total =
         typeof payload?.count === "number"
@@ -215,7 +292,7 @@ class BookingService {
       API_ENDPOINTS.BOOKINGS.CREATE,
       payload,
     );
-    return (response as any).data;
+    return unwrap(response.data) as any;
   }
 
   async getUserBookings(): Promise<any[]> {

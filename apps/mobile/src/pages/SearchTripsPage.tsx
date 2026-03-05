@@ -49,10 +49,13 @@ const SearchTripsPage: React.FC = () => {
 
   // Initialize default date
   useEffect(() => {
+    // ✅ Dev (Expo Go): seed data thường nằm ở hôm qua/hôm kia → set mặc định = hôm qua để dễ test
+    // ✅ Prod: dùng ngày hiện tại
     const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
+    const base = __DEV__ ? new Date(today.getTime() - 24 * 60 * 60 * 1000) : today;
+    const yyyy = base.getFullYear();
+    const mm = String(base.getMonth() + 1).padStart(2, "0");
+    const dd = String(base.getDate()).padStart(2, "0");
     setFormData((prev) => ({ ...prev, departureDate: `${yyyy}-${mm}-${dd}` }));
   }, []);
 

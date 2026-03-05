@@ -23,6 +23,10 @@ export interface NotificationSettings {
 }
 
 class NotificationService {
+  private unwrap(resData: any) {
+    return resData?.data ?? resData;
+  }
+
   async getNotifications(limit: number = 20, page: number = 1): Promise<{
     notifications: Notification[];
     total: number;
@@ -33,7 +37,7 @@ class NotificationService {
       const response = await apiService.get('/notifications', {
         params: { limit, page }
       });
-      return response.data as {
+      return this.unwrap(response.data) as {
         notifications: Notification[];
         total: number;
         page: number;
@@ -80,7 +84,7 @@ class NotificationService {
   async getNotificationSettings(): Promise<NotificationSettings> {
     try {
       const response = await apiService.get('/notifications/settings');
-      return response.data as NotificationSettings;
+      return this.unwrap(response.data) as NotificationSettings;
     } catch (error) {
       console.error('Get notification settings error:', error);
       // Return default settings
@@ -98,7 +102,7 @@ class NotificationService {
   async updateNotificationSettings(settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
     try {
       const response = await apiService.put('/notifications/settings', settings);
-      return response.data as NotificationSettings;
+      return this.unwrap(response.data) as NotificationSettings;
     } catch (error) {
       console.error('Update notification settings error:', error);
       throw error;
@@ -108,7 +112,8 @@ class NotificationService {
   async getUnreadCount(): Promise<number> {
     try {
       const response = await apiService.get('/notifications/unread-count');
-      return (response.data as { count: number }).count;
+      const payload = this.unwrap(response.data) as any;
+      return Number(payload?.count ?? 0);
     } catch (error) {
       console.error('Get unread count error:', error);
       return 0;
