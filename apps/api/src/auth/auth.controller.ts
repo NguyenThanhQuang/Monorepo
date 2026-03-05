@@ -94,7 +94,7 @@ export class AuthController {
       this.configService.get<string>('EXPO_HOST') ?? '192.168.1.21';
     const expoPort = this.configService.get<string>('EXPO_PORT') ?? '8081';
     const webBase =
-      this.configService.get<string>('WEB_URL') ?? 'http://localhost:5176';
+      this.configService.get<string>('WEB_URL') ?? 'http://localhost:5173';
 
     const webUrl = `${webBase}/verify-email?token=${encodeURIComponent(token)}`;
     const expoUrl = `exp://${expoHost}:${expoPort}/--/verify-email?token=${encodeURIComponent(token)}`;
@@ -232,7 +232,7 @@ export class AuthController {
       this.configService.get<string>('EXPO_HOST') ?? '192.168.1.21';
     const expoPort = this.configService.get<string>('EXPO_PORT') ?? '8081';
     const webBase =
-      this.configService.get<string>('WEB_URL') ?? 'http://localhost:5176';
+      this.configService.get<string>('WEB_URL') ?? 'http://localhost:5173';
 
     const webUrl = `${webBase}/reset-password?token=${encodeURIComponent(token)}`;
 

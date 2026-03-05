@@ -131,6 +131,11 @@ export class BookingDefinition {
     index: true,
   })
   driverReviewId?: Types.ObjectId;
+   @Prop()
+  createdAt?: Date;
+
+  @Prop()
+  updatedAt?: Date;
 }
 
 

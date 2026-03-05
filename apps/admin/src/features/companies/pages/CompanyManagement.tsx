@@ -37,11 +37,9 @@ export function CompanyManagement() {
     isMutating,
   } = useCompanies();
 
-  // States bộ lọc
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  // States UI
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showSuspendModal, setShowSuspendModal] = useState(false);
@@ -64,10 +62,12 @@ export function CompanyManagement() {
 
   const handleToggleStatus = async (newStatus: CompanyStatus) => {
     if (!selectedCompany) return;
+
     await updateCompany({
       id: selectedCompany.id,
       data: { status: newStatus },
     });
+
     setShowSuspendModal(false);
     setShowActivateModal(false);
     setSelectedCompany(null);
@@ -102,11 +102,15 @@ export function CompanyManagement() {
 
   const filteredCompanies = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
+
     return companies.filter((c) => {
       const name = (c.name ?? "").toLowerCase();
       const code = (c.code ?? "").toLowerCase();
+
       const matchesSearch = !q || name.includes(q) || code.includes(q);
-      const matchesStatus = filterStatus === "all" || c.status === filterStatus;
+      const matchesStatus =
+        filterStatus === "all" || c.status === filterStatus;
+
       return matchesSearch && matchesStatus;
     });
   }, [companies, filterStatus, searchQuery]);
@@ -149,7 +153,7 @@ export function CompanyManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
@@ -157,33 +161,37 @@ export function CompanyManagement() {
           </h1>
           <p className="text-gray-500">{t("companyManagementDesc")}</p>
         </div>
+
         <button
           onClick={() => {
             setSelectedCompany(null);
             setIsDialogOpen(true);
           }}
-          className="flex items-center space-x-2 px-4 py-2 bg-linear-to-r from-purple-600 to-pink-500 text-white rounded-xl"
+          className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-500 text-[#8b2b6e] rounded-xl hover:opacity-90 transition"
         >
-          <Plus className="w-4 h-4" />
-          <span>{t("addCompany")}</span>
+          <Plus className="w-4 h-4 text-[#8b2b6e]" />
+          <span className="text-[#8b2b6e]">{t("addCompany")}</span>
         </button>
       </div>
 
-      {/* Stats Cards (Giữ nguyên giao diện của bạn) */}
+      {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
           <p className="text-sm text-gray-500">Tổng nhà xe</p>
           <p className="text-2xl font-bold dark:text-white">{stats.total}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
           <p className="text-sm text-gray-500">Đang hoạt động</p>
           <p className="text-2xl font-bold text-green-600">{stats.active}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
           <p className="text-sm text-gray-500">Chờ duyệt</p>
           <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
           <p className="text-sm text-gray-500">Tổng doanh thu</p>
           <p className="text-2xl font-bold text-purple-600">
             {formatCurrency(stats.totalRevenue, true)}
@@ -191,10 +199,9 @@ export function CompanyManagement() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {/* Bộ lọc */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex gap-4">
+      {/* TABLE */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border overflow-hidden">
+        <div className="p-4 border-b flex gap-4">
           <input
             type="text"
             placeholder="Tìm theo tên, mã..."
@@ -202,6 +209,7 @@ export function CompanyManagement() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-700 border rounded-xl"
           />
+
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -211,6 +219,7 @@ export function CompanyManagement() {
             <option value={CompanyStatus.ACTIVE}>Hoạt động</option>
             <option value={CompanyStatus.SUSPENDED}>Tạm ngưng</option>
           </select>
+
           <button
             onClick={() => refetch()}
             className="p-2 border rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -223,7 +232,7 @@ export function CompanyManagement() {
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700/50 text-left text-xs font-medium text-gray-500 uppercase">
+            <thead className="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500">
               <tr>
                 <th className="px-6 py-4">Nhà xe</th>
                 <th className="px-6 py-4">Doanh thu</th>
@@ -232,39 +241,41 @@ export function CompanyManagement() {
                 <th className="px-6 py-4">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+
+            <tbody className="divide-y">
               {filteredCompanies.map((company) => {
                 const statusInfo =
                   statusConfig[company.status] ||
                   statusConfig[CompanyStatus.INACTIVE];
+
                 const StatusIcon = statusInfo.icon;
+
                 return (
-                  <tr
-                    key={company.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                  >
+                  <tr key={company.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900 dark:text-white">
-                        {company.name}
-                      </div>
+                      <div className="font-medium">{company.name}</div>
                       <div className="text-xs text-gray-500">
                         {company.code}
                       </div>
                     </td>
+
                     <td className="px-6 py-4 font-medium text-green-600">
                       {formatCurrency(company.totalRevenue || 0)}
                     </td>
+
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {formatDate(company.createdAt)}
                     </td>
+
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bgColor} ${statusInfo.textColor}`}
                       >
-                        <StatusIcon className="w-3 h-3 mr-1" />{" "}
+                        <StatusIcon className="w-3 h-3 mr-1" />
                         {statusInfo.label}
                       </span>
                     </td>
+
                     <td className="px-6 py-4 flex gap-2">
                       <button
                         onClick={() => {
@@ -275,6 +286,7 @@ export function CompanyManagement() {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
+
                       <button
                         onClick={() => {
                           setSelectedCompany(company);
@@ -284,7 +296,8 @@ export function CompanyManagement() {
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      {company.status === CompanyStatus.ACTIVE ? (
+
+                      {company.status === CompanyStatus.ACTIVE && (
                         <button
                           onClick={() => {
                             setSelectedCompany(company);
@@ -294,7 +307,9 @@ export function CompanyManagement() {
                         >
                           <Ban className="w-4 h-4" />
                         </button>
-                      ) : company.status === CompanyStatus.SUSPENDED ? (
+                      )}
+
+                      {company.status === CompanyStatus.SUSPENDED && (
                         <button
                           onClick={() => {
                             setSelectedCompany(company);
@@ -304,7 +319,7 @@ export function CompanyManagement() {
                         >
                           <CheckCircle className="w-4 h-4" />
                         </button>
-                      ) : null}
+                      )}
                     </td>
                   </tr>
                 );
@@ -314,7 +329,7 @@ export function CompanyManagement() {
         </div>
       </div>
 
-      {/* Modals */}
+      {/* MODALS */}
       <AddCompanyDialog
         isOpen={isDialogOpen}
         onClose={() => {

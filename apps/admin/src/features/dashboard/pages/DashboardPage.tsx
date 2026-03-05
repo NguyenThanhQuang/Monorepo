@@ -2,9 +2,11 @@ import { RefreshCw, DollarSign, Ticket, Users, Building2, TrendingUp } from "luc
 import { useDashboardStats } from "../hooks/useDashboardStats";
 import { formatCurrency, formatNumber } from "@obtp/business-logic";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function AdminDashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const {
     data: stats,
     isLoading,
@@ -17,7 +19,7 @@ export function AdminDashboard() {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-gray-500">Đang tải dữ liệu...</p>
+        <p className="text-gray-500">{t("loading")}</p>
       </div>
     );
   }
@@ -26,13 +28,13 @@ export function AdminDashboard() {
     return (
       <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl text-center max-w-md mx-auto">
         <p className="text-red-600 dark:text-red-400 mb-4">
-          Không thể tải dữ liệu dashboard
+          {t("errorFetchingDashboard")}
         </p>
         <button
           onClick={() => refetch()}
           className="px-4 py-2 bg-purple-600 text-white rounded-xl"
         >
-          Thử lại
+          {t("retry")}
         </button>
       </div>
     );
@@ -44,10 +46,10 @@ export function AdminDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Tổng quan hệ thống
+            {t("dashboardTitle")}
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Chào mừng trở lại, {user?.name || "Admin"}!
+            {t("welcomeBack")}, {user?.name || t("admin")}!
           </p>
         </div>
         <button
@@ -71,13 +73,13 @@ export function AdminDashboard() {
             </div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-            Tổng doanh thu
+            {t("totalRevenue")}
           </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatCurrency(stats.totalRevenue, true)}
           </p>
           <p className="text-xs text-gray-400 mt-2 uppercase tracking-wider">
-            Toàn thời gian
+            {t("allTime")}
           </p>
         </div>
 
@@ -89,13 +91,13 @@ export function AdminDashboard() {
             </div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-            Tổng số vé
+            {t("totalBookings")}
           </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatNumber(stats.totalBookings)}
           </p>
           <p className="text-xs text-gray-400 mt-2 uppercase tracking-wider">
-            Hôm nay: {formatNumber(stats.todayBookings)}
+            {t("today")}: {formatNumber(stats.todayBookings)}
           </p>
         </div>
 
@@ -107,13 +109,13 @@ export function AdminDashboard() {
             </div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-            Người dùng
+            {t("userManagement")}
           </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatNumber(stats.totalUsers)}
           </p>
           <p className="text-xs text-gray-400 mt-2 uppercase tracking-wider">
-            Khách hàng hệ thống
+            {t("systemCustomers")}
           </p>
         </div>
 
@@ -125,13 +127,13 @@ export function AdminDashboard() {
             </div>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-            Nhà xe
+            {t("company")}
           </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatNumber(stats.totalCompanies)}
           </p>
           <p className="text-xs text-gray-400 mt-2 uppercase tracking-wider">
-            Mới hôm nay: {formatNumber(stats.newCompaniesToday)}
+            {t("newToday")}: {formatNumber(stats.newCompaniesToday)}
           </p>
         </div>
       </div>
@@ -144,7 +146,7 @@ export function AdminDashboard() {
           </div>
           <div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Chuyến đi đang hoạt động
+              {t("activeTrips")}
             </p>
             <p className="text-3xl font-bold text-gray-900 dark:text-white">
               {formatNumber(stats.activeTrips)}

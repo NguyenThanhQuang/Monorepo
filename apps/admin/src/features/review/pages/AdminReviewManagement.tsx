@@ -1,236 +1,139 @@
-import { useState, useMemo } from "react";
-import {
-  Search,
-  Star,
-  Trash2,
-  Eye,
-  EyeOff,
-  RefreshCw,
-  AlertCircle,
-} from "lucide-react";
-import { formatDate } from "@obtp/business-logic";
-import { useReviews } from "../hooks/useReviews";
+import { Search, RefreshCw, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ConfirmActionModal } from "@/components/common/ConfirmActionModal";
+import { useReviewManagement } from "../hooks/useReviewManagement";
+import { ReviewFilterBar } from "../components/ReviewFilterBar";
+import { ReviewCard } from "../components/ReviewCard";
 
 export function AdminReviewManagement() {
   const { t } = useLanguage();
-
   const {
-    data: reviews = [],
+    filteredReviews,
     isLoading,
     error,
     refetch,
     isRefetching,
-    toggleVisibility,
-    deleteReview,
     isMutating,
-  } = useReviews();
+    searchQuery,
+    setSearchQuery,
+    filterRating,
+    setFilterRating,
+    filterStatus,
+    setFilterStatus,
+    deleteModal,
+    setDeleteModal,
+    toggleModal,
+    setToggleModal,
+    handleDeleteConfirm,
+    handleToggleConfirm,
+  } = useReviewManagement();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterRating, setFilterRating] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  const filteredReviews = useMemo(() => {
-    return reviews.filter((r) => {
-      const q = searchQuery.toLowerCase();
-      const matchSearch =
-        (r.displayName || "").toLowerCase().includes(q) ||
-        (r.comment || "").toLowerCase().includes(q);
-      const matchRating =
-        filterRating === "all" || r.rating === parseInt(filterRating);
-      const matchStatus =
-        filterStatus === "all" ||
-        (filterStatus === "published" && r.isVisible) ||
-        (filterStatus === "hidden" && !r.isVisible);
-      return matchSearch && matchRating && matchStatus;
-    });
-  }, [reviews, searchQuery, filterRating, filterStatus]);
-
-  const handleDelete = async () => {
-    if (selectedReviewId) {
-      await deleteReview(selectedReviewId);
-      setShowDeleteModal(false);
-      setSelectedReviewId(null);
-    }
-  };
-
-  const renderStars = (rating: number) => (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`w-4 h-4 ${star <= rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-        />
-      ))}
-    </div>
-  );
-
-  if (isLoading)
+  if (isLoading) {
     return (
-      <div className="flex justify-center p-12">
+      <div className="flex justify-center items-center h-96">
         <div className="w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
-      <div className="p-6 bg-red-50 text-red-600 rounded-2xl text-center">
-        <AlertCircle className="mx-auto mb-2" />
-        Lỗi tải dữ liệu.{" "}
-        <button onClick={() => refetch()} className="underline">
-          Thử lại
+      <div className="p-8 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-2xl text-center border border-red-100 dark:border-red-900/30 mt-8">
+        <AlertCircle className="mx-auto mb-3 w-10 h-10 opacity-80" />
+        <h3 className="text-lg font-bold mb-1">
+          {t("errorFetchingReviews") || "Không thể tải dữ liệu"}
+        </h3>
+        <p className="text-sm opacity-80 mb-4">Vui lòng kiểm tra lại kết nối.</p>
+        <button
+          onClick={() => refetch()}
+          className="px-5 py-2 bg-white dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm font-semibold hover:bg-red-50 transition-colors shadow-sm"
+        >
+          {t("retry") || "Thử lại"}
         </button>
       </div>
     );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Quản lý đánh giá
+            {t("reviewManagement") || "Quản lý đánh giá"}
           </h1>
-          <p className="text-gray-500">
-            Giám sát và kiểm duyệt feedback từ khách hàng
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+            {t("reviewManagementDesc") || "Kiểm duyệt phản hồi từ khách hàng"}
           </p>
         </div>
         <button
           onClick={() => refetch()}
           disabled={isRefetching}
-          className="p-2 border rounded-xl hover:bg-gray-100"
+          className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 transition-all shadow-sm text-gray-600 dark:text-gray-300"
         >
-          <RefreshCw
-            className={`w-5 h-5 ${isRefetching ? "animate-spin" : ""}`}
-          />
+          <RefreshCw className={`w-5 h-5 ${isRefetching ? "animate-spin" : ""}`} />
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-        <div className="flex flex-wrap items-end gap-4">
-          {/* Search */}
-          <div className="flex-1 min-w-[260px] relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Tìm nội dung, tên khách..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-gray-300 dark:border-gray-600 
-        bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
-        focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-            />
-          </div>
+      {/* FILTER BAR */}
+      <ReviewFilterBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        filterRating={filterRating}
+        setFilterRating={setFilterRating}
+        filterStatus={filterStatus}
+        setFilterStatus={setFilterStatus}
+      />
 
-          {/* Rating Filter */}
-          <div className="min-w-[200px]">
-            <select
-              value={filterRating}
-              onChange={(e) => setFilterRating(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl border border-gray-300 dark:border-gray-600
-        bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
-        focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-            >
-              <option value="all">Mọi đánh giá</option>
-              <option value="5">5 Sao</option>
-              <option value="4">4 Sao</option>
-              <option value="3">3 Sao</option>
-              <option value="1">1-2 Sao</option>
-            </select>
-          </div>
-
-          {/* Status Filter */}
-          <div className="min-w-[200px]">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl border border-gray-300 dark:border-gray-600
-        bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
-        focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-            >
-              <option value="all">Mọi trạng thái</option>
-              <option value="published">Đang hiện</option>
-              <option value="hidden">Bị ẩn</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* List */}
-      <div className="bg-white dark:bg-gray-800 border rounded-2xl divide-y">
+      {/* LIST REVIEWS */}
+      <div className="flex flex-col gap-4">
         {filteredReviews.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Không có dữ liệu</div>
+          <div className="p-16 text-center bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700">
+            <div className="w-16 h-16 bg-gray-50 dark:bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+            </div>
+            <p className="text-gray-500 font-medium text-lg">Không tìm thấy đánh giá nào</p>
+          </div>
         ) : (
           filteredReviews.map((review) => (
-            <div
-              key={review._id}
-              className="p-6 flex justify-between items-start hover:bg-gray-50 dark:hover:bg-gray-700/50"
-            >
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center font-bold text-purple-600">
-                  {review.displayName?.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-bold dark:text-white">
-                      {review.displayName}
-                    </h4>
-                    <span className="text-sm text-gray-400">
-                      {formatDate(review.createdAt)}
-                    </span>
-                  </div>
-                  <div className="mt-1">{renderStars(review.rating)}</div>
-                  <p className="mt-2 text-gray-700 dark:text-gray-300">
-                    {review.comment || "Không có nội dung nhận xét."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() =>
-                    toggleVisibility({
-                      id: review._id,
-                      isVisible: !review.isVisible,
-                    })
-                  }
-                  disabled={isMutating}
-                  className={`p-2 rounded-xl border ${review.isVisible ? "text-yellow-600 hover:bg-yellow-50" : "text-green-600 hover:bg-green-50"}`}
-                  title={review.isVisible ? "Ẩn review" : "Hiện review"}
-                >
-                  {review.isVisible ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedReviewId(review._id);
-                    setShowDeleteModal(true);
-                  }}
-                  disabled={isMutating}
-                  className="p-2 rounded-xl border text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            <ReviewCard
+              key={review.id || (review as any)._id}
+              review={review}
+              isMutating={isMutating}
+              onToggle={(id, status) => setToggleModal({ isOpen: true, id, currentStatus: status })}
+              onDelete={(id) => setDeleteModal({ isOpen: true, id })}
+            />
           ))
         )}
       </div>
 
+      {/* MODALS */}
       <ConfirmActionModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDelete}
-        title="Xóa đánh giá"
-        message="Bạn có chắc chắn muốn xóa vĩnh viễn đánh giá này không?"
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, id: null })}
+        onConfirm={handleDeleteConfirm}
+        title={t("deleteReviewTitle") || "Xóa đánh giá"}
+        message={t("confirmDeleteReview") || "Bạn có chắc muốn xóa vĩnh viễn đánh giá này?"}
         type="danger"
         loading={isMutating}
+        confirmText={t("delete") || "Xóa"}
+        cancelText={t("cancel") || "Hủy"}
+      />
+
+      <ConfirmActionModal
+        isOpen={toggleModal?.isOpen || false}
+        onClose={() => setToggleModal(null)}
+        onConfirm={handleToggleConfirm}
+        title={toggleModal?.currentStatus ? "Ẩn đánh giá" : "Hiện đánh giá"}
+        message={
+          toggleModal?.currentStatus
+            ? "Đánh giá này sẽ bị ẩn khỏi trang chủ. Bạn có chắc không?"
+            : "Đánh giá này sẽ được hiển thị công khai trở lại. Bạn có chắc không?"
+        }
+        type={toggleModal?.currentStatus ? "warning" : "success"}
+        loading={isMutating}
+        confirmText={toggleModal?.currentStatus ? "Ẩn đi" : "Hiển thị"}
+        cancelText={t("cancel") || "Hủy"}
       />
     </div>
   );
