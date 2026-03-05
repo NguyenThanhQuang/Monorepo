@@ -17,7 +17,7 @@ export function HeroSearch() {
   });
 
   return (
-    <section className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-teal-500 dark:from-blue-900 dark:via-blue-800 dark:to-teal-800 py-24 transition-colors duration-300 overflow-hidden">
+    <section className="relative bg-linear-to-br from-blue-600 via-blue-500 to-teal-500 dark:from-blue-900 dark:via-blue-800 dark:to-teal-800 py-24 transition-colors duration-300 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4">
         <div className="text-center mb-12">
           <h1 className="text-5xl text-white mb-4">{t("heroTitle")}</h1>
@@ -78,7 +78,7 @@ export function HeroSearch() {
                         }}
                         className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 last:border-0 flex items-center gap-3"
                       >
-                        <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                        <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
                         <span className="flex-1 text-base">
                           {loc.name}, {loc.province}
                         </span>
@@ -148,7 +148,7 @@ export function HeroSearch() {
                         }}
                         className="w-full px-4 py-3 text-left hover:bg-teal-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 last:border-0 flex items-center gap-3"
                       >
-                        <MapPin className="w-4 h-4 text-teal-500 flex-shrink-0" />
+                        <MapPin className="w-4 h-4 text-teal-500 shrink-0" />
                         <span className="flex-1 text-base">
                           {loc.name}, {loc.province}
                         </span>
@@ -172,7 +172,7 @@ export function HeroSearch() {
             {/* SEARCH BUTTON */}
             <button
               onClick={logic.handleSearch}
-              className="w-full mt-6 h-[60px] bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white text-lg font-semibold rounded-xl flex items-center justify-center gap-3 transition-all"
+              className="w-full mt-6 h-[60px] bg-linear-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white text-lg font-semibold rounded-xl flex items-center justify-center gap-3 transition-all"
             >
               <Search className="w-5 h-5" />
               <span>{t("search")}</span>
