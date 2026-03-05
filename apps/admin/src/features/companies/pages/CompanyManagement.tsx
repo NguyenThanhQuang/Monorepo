@@ -204,12 +204,7 @@ export function CompanyManagement() {
           <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
-          <p className="text-sm text-gray-500">Tổng doanh thu</p>
-          <p className="text-2xl font-bold text-purple-600">
-            {formatCurrency(stats.totalRevenue, true)}
-          </p>
-        </div>
+      
       </div>
 
       {/* TABLE */}
