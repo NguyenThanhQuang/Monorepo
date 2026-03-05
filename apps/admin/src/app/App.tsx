@@ -18,6 +18,8 @@ import { CompanyManagement } from "../features/companies/pages/CompanyManagement
 import { UserManagement } from "../features/users/pages/UserManagement";
 import { AdminReviewManagement } from "../features/review/pages/AdminReviewManagement";
 import ActivateAccountPage from "../features/ActivateAccountPage";
+// Import trang Reset Password mới
+import ResetPasswordPage from "../features/auth/pages/ResetPasswordPage"; 
 import { UserRole } from "@obtp/shared-types";
 
 const queryClient = new QueryClient({
@@ -47,6 +49,7 @@ function AppContent() {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route
           path="/"
           element={

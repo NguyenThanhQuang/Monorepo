@@ -21,6 +21,7 @@
     "@obtp/shared-types": "workspace:*",
     "@obtp/validation": "workspace:*",
     "@reduxjs/toolkit": "^2.11.2",
+    "@tanstack/react-query": "^5.90.21",
     "axios": "^1.13.2",
     "dayjs": "^1.11.19",
     "lucide-react": "^0.563.0",

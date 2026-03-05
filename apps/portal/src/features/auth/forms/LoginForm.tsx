@@ -56,7 +56,6 @@ export function LoginForm() {
   };
 
   return (
-    /* Sử dụng style inline gap từ source gốc */
     <form
       onSubmit={handleSubmit(onSubmit)}
       style={{ display: "grid", gap: 14 }}

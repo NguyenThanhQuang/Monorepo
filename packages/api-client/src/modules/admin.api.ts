@@ -10,7 +10,6 @@ import type {
 import { http } from "../core/http-client";
 
 export const adminApi = {
-  // 1. Dashboard Stats (Giữ nguyên logic handle data wrap của bạn)
   getDashboardStats: async (): Promise<AdminDashboardStats> => {
     const response = await http.get<AdminDashboardStats | any>(
       "/dashboard/stats",
@@ -18,7 +17,6 @@ export const adminApi = {
     return response?.data || response;
   },
 
-  // 2. Revenue Stats (Mapping data BE -> FE)
   getRevenueStats: async (
     params?: RevenueFilterParams,
   ): Promise<CompanyRevenueStats[]> => {
@@ -29,7 +27,7 @@ export const adminApi = {
     );
     const reportData: FinancialReportResponse = response?.data || response;
 
-    if (!reportData?.topCompanies) return [];
+    if (!reportData?.topCompanies) return[];
 
     return reportData.topCompanies.map((company, index) => ({
       companyId: `company-${index}`,
@@ -40,7 +38,7 @@ export const adminApi = {
       totalTrips: Math.round(company.bookings / 10),
       averageRating: 4.5,
       revenueGrowth: 0,
-      monthlyData: reportData.revenueChartData.map((item) => ({
+      monthlyData: (reportData.revenueChartData ||[]).map((item) => ({
         month: item.date,
         revenue: item.revenue,
         bookings: item.bookings,
@@ -48,7 +46,6 @@ export const adminApi = {
     }));
   },
 
-  // 3. Chi tiết doanh thu 1 nhà xe (Giữ lại hàm bạn lo bị mất)
   getCompanyRevenueDetail: async (
     companyId: string,
     params?: RevenueFilterParams,
@@ -72,7 +69,7 @@ export const adminApi = {
       totalTrips: Math.round(companyData.bookings / 10),
       averageRating: 4.5,
       revenueGrowth: 0,
-      monthlyData: reportData.revenueChartData.map((item) => ({
+      monthlyData: (reportData.revenueChartData ||[]).map((item) => ({
         month: item.date,
         revenue: item.revenue,
         bookings: item.bookings,
@@ -80,7 +77,6 @@ export const adminApi = {
     };
   },
 
-  // 4. Biểu đồ doanh thu tháng
   getMonthlyRevenueChart: async (
     year?: number,
   ): Promise<RevenueChartData[]> => {
@@ -93,10 +89,9 @@ export const adminApi = {
       { params },
     );
     const reportData: FinancialReportResponse = response?.data || response;
-    return reportData.revenueChartData || [];
+    return reportData.revenueChartData ||[];
   },
 
-  // 5. Xuất Excel
   exportRevenueReport: async (params?: RevenueFilterParams): Promise<Blob> => {
     return http.get<Blob>("/dashboard/finance-report", {
       params: transformRevenueParams(params),
@@ -108,28 +103,32 @@ export const adminApi = {
     });
   },
 
-  getRecentActivities: async (): Promise<RecentActivity[]> => [],
+  getRecentActivities: async (): Promise<RecentActivity[]> =>[],
 };
 
-/**
- * Helper nội bộ để convert params thống kê
- */
 function transformRevenueParams(
   params?: RevenueFilterParams,
 ): FinanceReportQuery {
   const financeParams: FinanceReportQuery = {};
-  if (params?.month && params?.year) {
-    financeParams.startDate = new Date(params.year, params.month - 1, 1)
-      .toISOString()
-      .split("T")[0];
-    financeParams.endDate = new Date(params.year, params.month, 0)
-      .toISOString()
-      .split("T")[0];
+  
+  // FIX: Nếu không có cả fromDate và toDate, gửi period = 'all'
+  if (!params?.fromDate && !params?.toDate && !params?.month && !params?.year) {
+    financeParams.period = "all" as any; 
+  } else {
+    if (params?.month && params?.year) {
+      financeParams.startDate = new Date(params.year, params.month - 1, 1)
+        .toISOString()
+        .split("T")[0];
+      financeParams.endDate = new Date(params.year, params.month, 0)
+        .toISOString()
+        .split("T")[0];
+    }
+    if (params?.fromDate && params?.toDate) {
+      financeParams.startDate = params.fromDate;
+      financeParams.endDate = params.toDate;
+    }
   }
-  if (params?.fromDate && params?.toDate) {
-    financeParams.startDate = params.fromDate;
-    financeParams.endDate = params.toDate;
-  }
+  
   if (params?.companyId) financeParams.companyId = params.companyId;
   return financeParams;
 }

@@ -62,9 +62,6 @@ export class MailService {
     });
   }
 
-  /**
-   * Helper nội bộ để gửi mail sau khi đã có Subject/HTML
-   */
   private async sendMail(
     to: string,
     subject: string,
@@ -80,7 +77,6 @@ export class MailService {
       this.logger.log(`Email sent to ${to} | ID: ${info.messageId}`);
     } catch (error) {
       this.logger.error(`Failed to send email to ${to}`, error);
-      // Không throw error để tránh crash luồng chính của user (VD: Đăng ký thành công nhưng gửi mail lỗi)
     }
   }
 
@@ -106,10 +102,7 @@ export class MailService {
   async sendPasswordResetEmail(
     payload: SendForgotPasswordPayload,
   ): Promise<void> {
-    // ✅ Base URL của API (PHẢI là domain public, không phải localhost)
     const apiBaseUrl = this.configService.getOrThrow<string>('API_BASE_URL');
-
-    // ✅ Link universal redirect (đã tạo ở AuthController)
     const resetUrl = `${apiBaseUrl}/auth/reset-password-redirect?token=${payload.token}`;
 
     const context: EmailContext = {
@@ -119,14 +112,9 @@ export class MailService {
     };
 
     const { subject, html } = generatePasswordResetEmail(payload.name, context);
-
     await this.sendMail(payload.email, subject, html);
   }
 
-  /**
-   * Input payload đã được flatten ở lớp gọi (Service)
-   * Không truyền Booking Document vào đây.
-   */
   async sendBookingConfirmationEmail(
     payload: BookingConfirmationEmailPayload,
   ): Promise<void> {
@@ -140,13 +128,13 @@ export class MailService {
   async sendCompanyAdminActivationEmail(
     payload: SendCompanyAdminActivationPayload,
   ): Promise<void> {
+    // FIX: Sử dụng CLIENT_URL thay vì FRONTEND_URL để tránh bị undefined
     const clientUrl = this.configService.get(
       'CLIENT_URL',
-      'http://localhost:3000',
+      'http://localhost:5173',
     );
-const activationUrl = `${this.configService.get(
-  'FRONTEND_URL',
-)}/activate-account?token=${payload.token}`;
+    const activationUrl = `${clientUrl}/activate-account?token=${payload.token}`;
+    
     const context: EmailContext = {
       appName: this.mailFromName,
       verifyTokenUrl: activationUrl,
@@ -164,7 +152,7 @@ const activationUrl = `${this.configService.get(
   ): Promise<void> {
     const clientUrl = this.configService.get(
       'CLIENT_URL',
-      'http://localhost:3000',
+      'http://localhost:5173',
     );
 
     const context: EmailContext = {
