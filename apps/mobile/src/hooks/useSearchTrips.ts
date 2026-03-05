@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { generateMockTrips } from "../data";
+import { bookingService } from "../services";
 import {
   SearchFormData,
   Trip,
@@ -18,20 +19,44 @@ export const useSearchTrips = (): UseSearchTripsReturn => {
 
       console.log("Searching trips with params:", params);
 
-      const results = generateMockTrips(
-        params.from,
-        params.to,
-        params.departureDate
-      );
-      setTrips(results || []);
+      // ✅ Ưu tiên gọi API thật (nếu user đã chọn locationId thì gọi thẳng theo id)
+      const passengers = Number(params.passengers || 1);
+      const input: any = { date: params.departureDate, passengers };
 
-      if (!results || results.length === 0) {
+      if (params.fromLocationId && params.toLocationId) {
+        input.fromLocationId = params.fromLocationId;
+        input.toLocationId = params.toLocationId;
+      } else {
+        // fallback: dùng text để BookingService resolve locationId
+        input.from = params.from;
+        input.to = params.to;
+      }
+
+      const res = await bookingService.searchTrips(input);
+
+      const apiTrips = Array.isArray((res as any)?.trips)
+        ? (res as any).trips
+        : [];
+
+      setTrips(apiTrips);
+
+      if (apiTrips.length === 0) {
         setError("Không tìm thấy chuyến đi phù hợp");
       }
     } catch (err) {
       console.error("Error searching trips:", err);
-      setError("Có lỗi xảy ra khi tìm kiếm chuyến đi");
-      setTrips([]);
+      // Fallback mock để app không bị "trắng" khi backend đang tắt
+      const fallback = generateMockTrips(
+        params.from,
+        params.to,
+        params.departureDate,
+      );
+      setTrips(fallback || []);
+      setError(
+        fallback?.length
+          ? "Backend không phản hồi, đang hiển thị dữ liệu mẫu."
+          : "Có lỗi xảy ra khi tìm kiếm chuyến đi",
+      );
     } finally {
       setLoading(false);
     }

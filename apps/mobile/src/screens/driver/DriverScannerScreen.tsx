@@ -114,6 +114,17 @@ export default function DriverScannerScreen({ navigation }: any) {
       }
     } catch (err: any) {
       console.error("Validate error", err);
+
+      // ✅ 403 thường do token chưa có role driver/company_admin
+      if (err?.response?.status === 403) {
+        Alert.alert(
+          "Không có quyền",
+          "Bạn cần đăng nhập bằng tài khoản Tài xế/Nhà xe để quét. Nếu vừa đăng ký tài xế, hãy đăng xuất và đăng nhập lại để token cập nhật role.",
+        );
+        setScanned(false);
+        return;
+      }
+
       const errData = err?.response?.data;
       const message =
         errData?.message ||
@@ -163,8 +174,13 @@ export default function DriverScannerScreen({ navigation }: any) {
     try {
       setLoading(true);
 
+      const identifier =
+        (ticket as any)?.extras?.ticketCode ||
+        (ticket as any)?.ticketCode ||
+        ticket.id;
+
       const res = await apiService.post<{ ok?: boolean; message?: string }>("/drivers/confirm-ticket", {
-        ticketId: ticket.id, // backend nhận code hoặc id đều được (repo bạn đã hỗ trợ code/id)
+        ticketId: identifier, // backend nhận code hoặc id đều được
       });
 
       const data: any = (res as any)?.data?.data ?? res.data;
@@ -177,6 +193,15 @@ export default function DriverScannerScreen({ navigation }: any) {
       }
     } catch (err: any) {
       console.error("Confirm error", err);
+
+      if (err?.response?.status === 403) {
+        Alert.alert(
+          "Không có quyền",
+          "Bạn cần đăng nhập bằng tài khoản Tài xế/Nhà xe để xác nhận vé. Nếu vừa đăng ký tài xế, hãy đăng xuất và đăng nhập lại để token cập nhật role.",
+        );
+        return;
+      }
+
       const errData = err?.response?.data;
       const message =
         errData?.message ||

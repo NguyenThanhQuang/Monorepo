@@ -33,7 +33,8 @@ import {
 type TripDetailsRouteProp = RouteProp<
   {
     TripDetails: {
-      trip: Trip;
+      trip?: Trip;
+      tripId?: string;
     };
   },
   "TripDetails"
@@ -86,14 +87,17 @@ const { width } = Dimensions.get("window");
 export default function TripDetailsScreen() {
   const navigation = useNavigation();
   const route = useRoute<TripDetailsRouteProp>();
-  const trip = route.params?.trip;
+  const trip = (route.params as any)?.trip;
+  const tripIdParam = String((route.params as any)?.tripId ?? "").trim();
 
   const lastInvalidIdRef = useRef<string | null>(null);
 
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [seats, setSeats] = useState<Seat[]>([]);
-  const [tripData, setTripData] = useState<any>(unwrapTrip(trip) ?? trip ?? null);
+  const [tripData, setTripData] = useState<any>(
+    unwrapTrip(trip) ?? trip ?? (tripIdParam ? { _id: tripIdParam, tripId: tripIdParam } : null),
+  );
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const formatDate = (dateString: string) => {
@@ -152,8 +156,15 @@ export default function TripDetailsScreen() {
   };
 
   const fetchDetails = async () => {
-    const rawId = getTripId(trip);
-    if (!rawId) return;
+    const rawId = getTripId(trip) || tripIdParam;
+    if (!rawId) {
+      setLoadError("Thiếu mã chuyến xe (tripId). Vui lòng quay lại và chọn lại chuyến.");
+      const base = unwrapTrip(trip) ?? trip ?? null;
+      setTripData(base);
+      const totalSeats = base?.vehicleId?.totalSeats || 45;
+      setSeats(generateSeats(totalSeats, Number(base?.price || 0), "fallback-seat"));
+      return;
+    }
 
     // nếu không phải ObjectId thì fallback UI
     if (!isObjectId(rawId)) {
@@ -180,13 +191,17 @@ export default function TripDetailsScreen() {
       // giữ price không bị mất
       const normalized = {
         ...fullTrip,
+        // ✅ đảm bảo luôn có id/_id/tripId để BookingCheckout gọi API
+        tripId: String(fullTrip?.tripId ?? fullTrip?._id ?? fullTrip?.id ?? rawId).trim(),
+        _id: String(fullTrip?._id ?? fullTrip?.id ?? rawId).trim(),
+        id: String(fullTrip?.id ?? fullTrip?._id ?? rawId).trim(),
         price: Number(fullTrip?.price ?? unwrapTrip(trip)?.price ?? trip?.price ?? 0) || 0,
       };
 
       setTripData(normalized);
 
       if (normalized?.seats && Array.isArray(normalized.seats) && normalized.seats.length > 0) {
-        setSeats(normalized.seats as unknown as Seat[]);
+        setSeats(mapBackendSeatsToUI(normalized.seats, Number(normalized?.price || 0)));
       } else {
         const totalSeats = normalized?.vehicleId?.totalSeats || 45;
         setSeats(generateSeats(totalSeats, Number(normalized?.price || 0), "seat"));
@@ -272,9 +287,19 @@ export default function TripDetailsScreen() {
       return;
     }
 
-    // ✅ QUAN TRỌNG: luôn truyền trip đã unwrap (để Checkout có id/_id)
+    const resolvedId =
+      getTripId(tripData) || getTripId(trip) || String(tripIdParam || "").trim();
+
+    // ✅ QUAN TRỌNG: luôn truyền trip có id/_id/tripId đầy đủ (để Checkout gọi /bookings/hold)
+    const tripForCheckout = {
+      ...(unwrapTrip(tripData) ?? tripData),
+      tripId: resolvedId,
+      _id: resolvedId,
+      id: resolvedId,
+    };
+
     (navigation as any).navigate("BookingCheckout", {
-      trip: unwrapTrip(tripData) ?? tripData,
+      trip: tripForCheckout,
       selectedSeats,
       totalAmount,
     });

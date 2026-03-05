@@ -57,7 +57,8 @@ export const API_ENDPOINTS = {
     REGISTER: "/auth/register",
     REFRESH: "/auth/refresh",
     LOGOUT: "/auth/logout",
-    VERIFY_EMAIL: "/auth/verify-email",
+    // Backend cung cấp JSON endpoint: GET /auth/verify-email-api?token=...
+    VERIFY_EMAIL: "/auth/verify-email-api",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
   },

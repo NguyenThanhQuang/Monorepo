@@ -199,16 +199,41 @@ export default function PaymentCheckoutScreen({ navigation, route }: Props) {
       setPolling(true);
       setError(null);
 
-      // ✅ DEV confirm giả: bấm nút là backend confirm luôn -> sinh ticketCode
+      // 1) ✅ Sync thật từ PayOS (dù DEV/PROD). Nếu backend cấu hình PayOS, call này sẽ:
+      //    - PAID  -> confirmBooking -> sinh ticketCode
+      //    - CANCELLED/EXPIRED -> hủy giữ chỗ
       try {
-        if (__DEV__) {
-          await paymentService.devConfirmPayment(bookingId);
-        } else {
-          // PROD: sync thật (nếu bạn có endpoint /payments/sync)
-          await paymentService.syncPayment(bookingId);
+        const r: any = await paymentService.syncPayment(bookingId);
+        const st = String(r?.status || "").toUpperCase();
+        if (st === "CANCELLED" || st === "EXPIRED") {
+          Alert.alert(
+            "Đơn đã hủy/hết hạn",
+            "Giữ chỗ đã bị hủy hoặc hết hạn. Vui lòng đặt lại.",
+            [{ text: "OK", onPress: () => (navigation as any).goBack() }],
+          );
+          return;
         }
       } catch {
         // ignore -> vẫn poll booking
+      }
+
+      // 2) ✅ DEV confirm (tuỳ chọn): dùng khi bạn chưa cấu hình PayOS.
+      //    Lưu ý: backend phải bật PAYMENT_DEV_MODE=true.
+      if (__DEV__) {
+        try {
+          await paymentService.devConfirmPayment(bookingId);
+        } catch (e: any) {
+          const msg =
+            e?.response?.data?.message ||
+            e?.friendlyMessage ||
+            e?.message ||
+            "";
+          if (String(msg).toLowerCase().includes("dev confirm")) {
+            setError(
+              "Backend đang tắt DEV confirm. Nếu muốn test không cần PayOS, hãy bật PAYMENT_DEV_MODE=true ở backend. Nếu bạn đã thanh toán thật, hãy đợi webhook cập nhật rồi bấm 'Tôi đã thanh toán' lại.",
+            );
+          }
+        }
       }
 
       // Poll nhanh: tối đa ~12 lần (khoảng 30s)
@@ -260,17 +285,7 @@ export default function PaymentCheckoutScreen({ navigation, route }: Props) {
     autoRanRef.current = true;
 
     const t = setTimeout(() => {
-      (async () => {
-        try {
-          if (__DEV__) {
-            await paymentService.devConfirmPayment(bookingId);
-          }
-        } catch (e) {
-          // ignore
-        } finally {
-          checkPaidAndGoTicket();
-        }
-      })();
+      checkPaidAndGoTicket();
     }, 600);
 
     return () => clearTimeout(t);

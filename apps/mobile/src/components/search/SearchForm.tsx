@@ -6,7 +6,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { SearchFormProps, Location } from "../../types/index-types";
 import LocationPicker from "./LocationPicker";
-import { mockLocations } from "../../data";
+import { searchLocations } from "../../services/user/locationService";
 
 // ✅ theme
 import { COLORS, SPACING, LAYOUT, TYPOGRAPHY, COMMON_SHADOWS, withOpacity } from "@/theme";
@@ -26,6 +26,10 @@ const SearchForm: React.FC<SearchFormProps> = ({ formData, onFormChange, onSubmi
 
   const [fromSuggestions, setFromSuggestions] = useState<Location[]>([]);
   const [toSuggestions, setToSuggestions] = useState<Location[]>([]);
+
+  // simple debounce (avoid spamming /locations/search)
+  const [fromTimer, setFromTimer] = useState<NodeJS.Timeout | null>(null);
+  const [toTimer, setToTimer] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // init local query from formData
@@ -50,15 +54,22 @@ const SearchForm: React.FC<SearchFormProps> = ({ formData, onFormChange, onSubmi
 
   const handleFromQueryChange = async (query: string) => {
     setFromQuery(query);
+    // keep formData in sync even if user doesn't pick suggestion
+    handleInputChange("from", query);
+    // if user edits text after selecting, clear exact id
+    if (selectedFrom) {
+      setSelectedFrom(null);
+      handleInputChange("fromLocationId", "");
+    }
     if (query.length >= 2) {
       try {
-        const results = mockLocations.filter(
-          (loc) =>
-            loc.name.toLowerCase().includes(query.toLowerCase()) ||
-            loc.province.toLowerCase().includes(query.toLowerCase())
-        );
-        setFromSuggestions(results);
-        setShowFromSuggestions(true);
+        if (fromTimer) clearTimeout(fromTimer);
+        const t = setTimeout(async () => {
+          const results = await searchLocations(query);
+          setFromSuggestions(Array.isArray(results) ? (results as any) : []);
+          setShowFromSuggestions(true);
+        }, 250);
+        setFromTimer(t);
       } catch {
         setFromSuggestions([]);
       }
@@ -70,15 +81,20 @@ const SearchForm: React.FC<SearchFormProps> = ({ formData, onFormChange, onSubmi
 
   const handleToQueryChange = async (query: string) => {
     setToQuery(query);
+    handleInputChange("to", query);
+    if (selectedTo) {
+      setSelectedTo(null);
+      handleInputChange("toLocationId", "");
+    }
     if (query.length >= 2) {
       try {
-        const results = mockLocations.filter(
-          (loc) =>
-            loc.name.toLowerCase().includes(query.toLowerCase()) ||
-            loc.province.toLowerCase().includes(query.toLowerCase())
-        );
-        setToSuggestions(results);
-        setShowToSuggestions(true);
+        if (toTimer) clearTimeout(toTimer);
+        const t = setTimeout(async () => {
+          const results = await searchLocations(query);
+          setToSuggestions(Array.isArray(results) ? (results as any) : []);
+          setShowToSuggestions(true);
+        }, 250);
+        setToTimer(t);
       } catch {
         setToSuggestions([]);
       }
@@ -90,7 +106,9 @@ const SearchForm: React.FC<SearchFormProps> = ({ formData, onFormChange, onSubmi
 
   const handleFromLocationSelect = (location: Location) => {
     setSelectedFrom(location);
+    // store label + id (mobile will call backend by exact locationId)
     handleInputChange("from", location.name);
+    handleInputChange("fromLocationId", location._id);
     setFromQuery(location.name);
     setShowFromSuggestions(false);
   };
@@ -98,15 +116,22 @@ const SearchForm: React.FC<SearchFormProps> = ({ formData, onFormChange, onSubmi
   const handleToLocationSelect = (location: Location) => {
     setSelectedTo(location);
     handleInputChange("to", location.name);
+    handleInputChange("toLocationId", location._id);
     setToQuery(location.name);
     setShowToSuggestions(false);
   };
 
   const validateForm = () => {
-    if (!selectedFrom) return Alert.alert("Lỗi", "Vui lòng chọn điểm đi"), false;
-    if (!selectedTo) return Alert.alert("Lỗi", "Vui lòng chọn điểm đến"), false;
+    // ✅ Nếu user không chọn suggestion (ví dụ dùng Recent Search), vẫn cho submit bằng text
+    if (!selectedFrom && !formData.from)
+      return Alert.alert("Lỗi", "Vui lòng chọn điểm đi"), false;
+    if (!selectedTo && !formData.to)
+      return Alert.alert("Lỗi", "Vui lòng chọn điểm đến"), false;
 
-    if ((selectedFrom?.province || selectedFrom?.name) === (selectedTo?.province || selectedTo?.name)) {
+    const fromKey = (selectedFrom?.province || selectedFrom?.name || formData.from || "").trim();
+    const toKey = (selectedTo?.province || selectedTo?.name || formData.to || "").trim();
+
+    if (fromKey && toKey && fromKey === toKey) {
       return Alert.alert("Lỗi", "Điểm đi và điểm đến không được giống nhau"), false;
     }
 
@@ -221,7 +246,8 @@ const SearchForm: React.FC<SearchFormProps> = ({ formData, onFormChange, onSubmi
           mode="date"
           display={Platform.OS === "ios" ? "inline" : "default"}
           onChange={handleDateChange}
-          minimumDate={new Date()}
+          // ✅ Prod: chặn ngày quá khứ. Dev (Expo Go): cho chọn để test seed data.
+          minimumDate={__DEV__ ? undefined : new Date()}
         />
       )}
     </View>

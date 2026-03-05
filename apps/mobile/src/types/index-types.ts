@@ -71,6 +71,10 @@ export interface Vehicle {
 export interface SearchFormData {
   from: string;
   to: string;
+  /** Selected backend Location _id for exact search */
+  fromLocationId?: string;
+  /** Selected backend Location _id for exact search */
+  toLocationId?: string;
   departureDate: string;
   passengers: string;
 }

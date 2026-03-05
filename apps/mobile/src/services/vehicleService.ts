@@ -3,11 +3,16 @@ import { Vehicle, VehiclePayload, VehicleResponse } from '../types/vehicle';
 
 
 export const vehicleService = {
+  // Backend thường wrap: { statusCode, message, data }
+  unwrap(resData: any) {
+    return resData?.data ?? resData;
+  },
+
   // Lấy danh sách xe
   async getVehicles(page: number = 1, limit: number = 10): Promise<VehicleResponse> {
     try {
       const response = await apiService.get(`/vehicles?page=${page}&limit=${limit}`);
-      return response.data as VehicleResponse;
+      return this.unwrap(response.data) as VehicleResponse;
     } catch (error: any) {
       console.error('API Error:', error);
       throw new Error('Không thể tải danh sách xe');
@@ -18,7 +23,7 @@ export const vehicleService = {
   async getVehicleById(vehicleId: string): Promise<Vehicle> {
     try {
       const response = await apiService.get(`/vehicles/${vehicleId}`);
-      return response.data as Vehicle;
+      return this.unwrap(response.data) as Vehicle;
     } catch (error: any) {
       console.error('API Error:', error);
       throw new Error('Không thể tải thông tin xe');
@@ -29,7 +34,7 @@ export const vehicleService = {
   async getVehiclesByCompany(companyId: string, page: number = 1, limit: number = 10): Promise<VehicleResponse> {
     try {
       const response = await apiService.get(`/vehicles?companyId=${companyId}&page=${page}&limit=${limit}`);
-      return response.data as VehicleResponse;
+      return this.unwrap(response.data) as VehicleResponse;
     } catch (error: any) {
       console.error('API Error:', error);
       throw new Error('Không thể tải danh sách xe của nhà xe');
@@ -40,7 +45,7 @@ export const vehicleService = {
   async createVehicle(vehicleData: VehiclePayload): Promise<Vehicle> {
     try {
       const response = await apiService.post('/vehicles', vehicleData);
-      return response.data as Vehicle;
+      return this.unwrap(response.data) as Vehicle;
     } catch (error: any) {
       console.error('API Error:', error);
       throw new Error('Không thể tạo xe mới');
@@ -51,7 +56,7 @@ export const vehicleService = {
   async updateVehicle(vehicleId: string, vehicleData: Partial<VehiclePayload>): Promise<Vehicle> {
     try {
       const response = await apiService.patch(`/vehicles/${vehicleId}`, vehicleData);
-      return response.data as Vehicle;
+      return this.unwrap(response.data) as Vehicle;
     } catch (error: any) {
       console.error('API Error:', error);
       throw new Error('Không thể cập nhật xe');
@@ -72,7 +77,7 @@ export const vehicleService = {
   async updateVehicleStatus(vehicleId: string, status: 'active' | 'inactive'): Promise<Vehicle> {
     try {
       const response = await apiService.patch(`/vehicles/${vehicleId}`, { status });
-      return response.data as Vehicle;
+      return this.unwrap(response.data) as Vehicle;
     } catch (error: any) {
       console.error('API Error:', error);
       throw new Error('Không thể cập nhật trạng thái xe');
@@ -83,7 +88,7 @@ export const vehicleService = {
   async getVehiclesByType(type: string, page: number = 1, limit: number = 10): Promise<VehicleResponse> {
     try {
       const response = await apiService.get(`/vehicles?type=${type}&page=${page}&limit=${limit}`);
-      return response.data as VehicleResponse;
+      return this.unwrap(response.data) as VehicleResponse;
     } catch (error: any) {
       console.error('API Error:', error);
       throw new Error('Không thể tải danh sách xe theo loại');
@@ -94,7 +99,7 @@ export const vehicleService = {
   async searchVehicles(query: string, page: number = 1, limit: number = 10): Promise<VehicleResponse> {
     try {
       const response = await apiService.get(`/vehicles/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
-      return response.data as VehicleResponse;
+      return this.unwrap(response.data) as VehicleResponse;
     } catch (error: any) {
       console.error('API Error:', error);
       throw new Error('Không thể tìm kiếm xe');
@@ -110,7 +115,7 @@ export const vehicleService = {
   }> {
     try {
       const response = await apiService.get('/vehicles/stats');
-      return response.data as {
+      return this.unwrap(response.data) as {
         totalVehicles: number;
         activeVehicles: number;
         inactiveVehicles: number;

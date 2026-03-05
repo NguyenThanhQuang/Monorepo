@@ -488,7 +488,19 @@ export default function SearchTripsScreen({
   };
 
 const mapTrip = (trip: any): Trip => {
-  const tripId = String(trip?.id ?? trip?._id ?? "").trim();
+  const rawTripId = trip?.tripId ?? trip?.id ?? trip?._id ?? "";
+  const tripId = (() => {
+    let s = "";
+    if (typeof rawTripId === "string") s = rawTripId;
+    else if ((rawTripId as any)?.$oid) s = String((rawTripId as any).$oid);
+    else if ((rawTripId as any)?.oid) s = String((rawTripId as any).oid);
+    else if (typeof (rawTripId as any)?.toString === "function") s = String((rawTripId as any).toString());
+    else s = String(rawTripId);
+
+    s = String(s || "").trim();
+    const m = s.match(/[a-fA-F0-9]{24}/);
+    return (m ? m[0] : s) || "";
+  })();
   const uiId = tripId || String(`${trip?.departureTime ?? "trip"}-${Math.random()}`);
 
   return {
@@ -516,7 +528,7 @@ const mapTrip = (trip: any): Trip => {
     availableSeats:
       Number(trip?.availableSeats ?? trip?.availableSeatsCount ?? 0) ||
       (Array.isArray(trip?.seats)
-        ? trip.seats.filter((s: any) => s?.status === "available").length
+        ? trip.seats.filter((s: any) => String(s?.status || '').toLowerCase() === 'available').length
         : 0),
 
     company: trip?.company || trip?.companyId || { name: "Unknown Company" },
@@ -693,7 +705,7 @@ const mapTrip = (trip: any): Trip => {
   const handleQuickBook = (trip: Trip) => {
     const t = enrichTrip(trip);
     const availableSeats =
-      trip.seats?.filter((s: any) => s.status === "available") || [];
+      trip.seats?.filter((s: any) => String(s?.status || '').toLowerCase() === 'available') || [];
     const defaultSeats =
       availableSeats.length > 0 ? [availableSeats[0].seatNumber] : ["A1"];
     const totalAmount = defaultSeats.length * (t.price || 0);

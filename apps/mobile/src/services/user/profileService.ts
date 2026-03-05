@@ -22,10 +22,14 @@ export interface ChangePasswordData {
 }
 
 class ProfileService {
+  private unwrap(resData: any) {
+    return resData?.data ?? resData;
+  }
+
   async getProfile(): Promise<UserProfile> {
     try {
       const response = await apiService.get<UserProfile>(API_ENDPOINTS.USER.PROFILE);
-      return response.data;
+      return this.unwrap(response.data) as UserProfile;
     } catch (error) {
       console.error("Get profile error:", error);
       throw error;
@@ -36,7 +40,7 @@ class ProfileService {
     try {
       // FE uses PATCH /users/me
       const response = await apiService.patch<UserProfile>(API_ENDPOINTS.USER.UPDATE_PROFILE, profileData);
-      return response.data;
+      return this.unwrap(response.data) as UserProfile;
     } catch (error) {
       console.error("Update profile error:", error);
       throw error;
@@ -69,7 +73,7 @@ class ProfileService {
           },
         }
       );
-      return response.data;
+      return this.unwrap(response.data) as any;
     } catch (error) {
       console.error("Upload avatar error:", error);
       throw error;

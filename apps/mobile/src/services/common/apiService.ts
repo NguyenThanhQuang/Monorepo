@@ -33,20 +33,27 @@ class ApiService {
 
   /* ================= BASE URL ================= */
   private getBaseURL(): string {
+    // Priority order:
+    // 1) Expo config extra (app.json)
+    // 2) EXPO_PUBLIC_* env (EAS/Expo)
+    // 3) Reasonable local defaults (dev)
     const extraApi = (Constants.expoConfig as any)?.extra?.API_BASE_URL;
+    const envApi = (process as any)?.env?.EXPO_PUBLIC_API_BASE_URL;
 
-    if (extraApi && typeof extraApi === "string") {
-      return extraApi;
-    }
+    if (extraApi && typeof extraApi === "string") return extraApi;
+    if (envApi && typeof envApi === "string") return envApi;
 
     if (__DEV__) {
       if (Platform.OS === "android") {
-        return "http://10.0.2.2:3000/api";
+        // Android emulator -> host machine
+        return "http://10.0.2.2:3001/api/v1";
       }
-      return "http://localhost:3000/api";
+      // iOS simulator / local dev
+      return "http://localhost:3001/api/v1";
     }
 
-    return "https://your-production-api.com/api";
+    // Production default (override via env/config)
+    return "https://your-production-api.com/api/v1";
   }
 
   /* ================= HELPERS ================= */
