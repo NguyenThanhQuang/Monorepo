@@ -93,7 +93,7 @@ export class VehiclesService {
       );
       if (isDuplicated)
         throw new ConflictException(
-          `Biển số ${payload.vehicleNumber} đã tồn tại.`,
+          `Biển số ${payload.vehicleNumber} đã tồn tại trong hệ thống.`,
         );
     }
 
@@ -113,9 +113,11 @@ export class VehiclesService {
     const currentRows = existingVehicle.seatRows;
     const currentCols = existingVehicle.seatColumns;
     const currentFloors = existingVehicle.floors;
-    const currentAisles = JSON.stringify(existingVehicle.aislePositions.sort());
+    const currentAisles = JSON.stringify(
+      [...existingVehicle.aislePositions].sort(),
+    );
     const currentFullRows = JSON.stringify(
-      (existingVehicle.fullRows || []).sort(),
+      [...(existingVehicle.fullRows || [])].sort(),
     );
 
     const newRows = payload.seatRows ?? currentRows;
@@ -123,11 +125,16 @@ export class VehiclesService {
     const newFloors = payload.floors ?? currentFloors;
 
     const newAislesRaw =
-      payload.aislePositions ?? existingVehicle.aislePositions;
-    const newAislesStr = JSON.stringify(newAislesRaw.sort());
+      payload.aislePositions !== undefined
+        ? payload.aislePositions
+        : existingVehicle.aislePositions;
+    const newAislesStr = JSON.stringify([...newAislesRaw].sort());
 
-    const newFullRowsRaw = payload.fullRows ?? (existingVehicle.fullRows || []);
-    const newFullRowsStr = JSON.stringify(newFullRowsRaw.sort());
+    const newFullRowsRaw =
+      payload.fullRows !== undefined
+        ? payload.fullRows
+        : existingVehicle.fullRows || [];
+    const newFullRowsStr = JSON.stringify([...newFullRowsRaw].sort());
 
     const isStructureChanged =
       newRows !== currentRows ||
@@ -140,10 +147,9 @@ export class VehiclesService {
 
     if (isStructureChanged) {
       const hasTrips = await this.tripsService.checkVehicleHasActiveTrips(id);
-
       if (hasTrips) {
         throw new ConflictException(
-          `Không thể sửa cấu trúc xe khi đang có chuyến đi hoạt động.`,
+          `Không thể sửa cấu trúc ghế khi xe đang có chuyến đi hoạt động.`,
         );
       }
 
@@ -169,7 +175,9 @@ export class VehiclesService {
     };
 
     Object.keys(updateData).forEach(
-      (key) => updateData[key] === undefined && delete updateData[key],
+      (key) =>
+        (updateData as any)[key] === undefined &&
+        delete (updateData as any)[key],
     );
 
     return this.vehiclesRepository.update(id, updateData);

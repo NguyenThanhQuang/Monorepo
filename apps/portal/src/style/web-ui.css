@@ -402,3 +402,9 @@ html:not(.dark) .obtp-error{ color: #991b1b; }
 .obtp-modal-subtitle{ font-size: 13px; opacity: .9; margin: 6px 0 0; }
 
 .obtp-modal-body{ padding: 16px; }
+
+.obtp-input {
+  line-height: normal; 
+  vertical-align: middle;
+  text-align: left !important;
+}

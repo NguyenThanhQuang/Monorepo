@@ -243,7 +243,7 @@ export function VehicleFormModal({
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 items-start">
                 <div className="obtp-field">
                   <label className="obtp-label">Biển số xe *</label>
                   <Input
@@ -322,8 +322,17 @@ export function VehicleFormModal({
                     );
 
                     useEffect(() => {
-                      if (field.value) {
-                        setText(field.value.join(", "));
+                      const currentParsed = text
+                        .split(",")
+                        .map((v) => parseInt(v.trim()))
+                        .filter((v) => !isNaN(v));
+
+                      const isSame =
+                        JSON.stringify(currentParsed) ===
+                        JSON.stringify(field.value || []);
+
+                      if (!isSame) {
+                        setText(field.value?.join(", ") || "");
                       }
                     }, [field.value]);
 
@@ -332,8 +341,10 @@ export function VehicleFormModal({
                         placeholder="Ví dụ: 2, 4"
                         value={text}
                         onChange={(e) => {
-                          setText(e.target.value);
-                          const vals = e.target.value
+                          const val = e.target.value;
+                          setText(val);
+
+                          const vals = val
                             .split(",")
                             .map((v) => parseInt(v.trim()))
                             .filter((v) => !isNaN(v));
@@ -362,10 +373,18 @@ export function VehicleFormModal({
                       field.value?.join(", ") || "",
                     );
 
-                    // ĐƠN GIẢN HÓA LẠI ĐOẠN NÀY
                     useEffect(() => {
-                      if (field.value) {
-                        setText(field.value.join(", "));
+                      const currentParsed = text
+                        .split(",")
+                        .map((v) => parseInt(v.trim()))
+                        .filter((v) => !isNaN(v));
+
+                      const isSame =
+                        JSON.stringify(currentParsed) ===
+                        JSON.stringify(field.value || []);
+
+                      if (!isSame) {
+                        setText(field.value?.join(", ") || "");
                       }
                     }, [field.value]);
 
@@ -374,8 +393,10 @@ export function VehicleFormModal({
                         placeholder="Ví dụ: 4, 5"
                         value={text}
                         onChange={(e) => {
-                          setText(e.target.value);
-                          const vals = e.target.value
+                          const val = e.target.value;
+                          setText(val);
+
+                          const vals = val
                             .split(",")
                             .map((v) => parseInt(v.trim()))
                             .filter((v) => !isNaN(v));
