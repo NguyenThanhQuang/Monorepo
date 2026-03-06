@@ -73,6 +73,7 @@ export default function VehiclesPage() {
         vehicleToEdit={modals.form.data || null}
         onSubmit={actions.submitForm}
         isLoading={state.isMutating}
+        existingVehicles={state.vehicles}
       />
 
       {/* CONFIRM STATUS CHANGE */}

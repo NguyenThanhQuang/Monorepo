@@ -190,6 +190,8 @@ export interface Vehicle {
 
   createdAt: Date;
   updatedAt: Date;
+
+  hasActiveTrips?: boolean;
 }
 
 import { SeatStatus, TripStatus, TripStopStatus } from "./enums";
