@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Building2, Calendar, DollarSign, PieChart, Info } from "lucide-react";
+import { X, Building2, DollarSign, PieChart, Info, CheckCircle, Calendar, TrendingUp, Receipt, Ticket } from "lucide-react";
 import { formatCurrency, formatNumber, calculatePlatformCommission, calculateCompanyNetRevenue } from "@obtp/business-logic";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { CompanyRevenueStats } from "@obtp/shared-types";
@@ -12,98 +12,135 @@ interface Props {
 
 export const CompanyRevenueDetailModal: React.FC<Props> = ({ isOpen, onClose, data }) => {
   const { t } = useLanguage();
+  
   if (!isOpen || !data) return null;
 
   const commission = calculatePlatformCommission(data.totalRevenue);
   const netRevenue = calculateCompanyNetRevenue(data.totalRevenue);
+  const averagePerBooking = data.totalBookings > 0 ? data.totalRevenue / data.totalBookings : 0;
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      
-      <div className="relative w-full max-w-2xl transform overflow-hidden rounded-3xl bg-white dark:bg-gray-900 shadow-2xl transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-3xl bg-white dark:bg-gray-900 rounded-2xl lg:rounded-3xl shadow-2xl my-8">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-2xl text-purple-600">
-              <Building2 size={24} />
+        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 p-4 lg:p-6 flex items-center justify-between rounded-t-2xl lg:rounded-t-3xl z-10">
+          <div className="flex items-center gap-3 lg:gap-4 min-w-0">
+            <div className="p-2 lg:p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl shrink-0">
+              <Building2 className="w-5 h-5 lg:w-6 lg:h-6 text-purple-600 dark:text-purple-400" />
             </div>
-            <div>
-              <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
+            <div className="min-w-0">
+              <h2 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white truncate">
                 {data.companyName}
-              </h3>
-              <p className="text-xs font-mono text-gray-400">ID: {data.companyId}</p>
+              </h2>
+              <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">
+                {t("companyCode")}: {data.companyCode}
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
-            <X size={20} className="text-gray-400" />
+          <button
+            onClick={onClose}
+            className="p-1.5 lg:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors shrink-0"
+          >
+            <X className="w-4 h-4 lg:w-5 lg:h-5 text-gray-500" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Financial Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-2 flex items-center gap-2">
-                <DollarSign size={14} /> Tổng doanh thu (Gross)
-              </p>
-              <h4 className="text-2xl font-black text-gray-900 dark:text-white">
+        {/* Content */}
+        <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 max-h-[calc(90vh-120px)] overflow-y-auto">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl lg:rounded-2xl p-4 lg:p-5">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-2">
+                <Receipt className="w-3 h-3 lg:w-4 lg:h-4" />
+                <span className="text-[10px] lg:text-xs font-medium uppercase tracking-wider">{t("totalRevenue")}</span>
+              </div>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900 dark:text-white break-words">
                 {formatCurrency(data.totalRevenue)}
-              </h4>
-            </div>
-
-            <div className="p-5 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-              <p className="text-xs font-bold text-blue-500 uppercase mb-2 flex items-center gap-2">
-                <PieChart size={14} /> Hoa hồng hệ thống (10%)
               </p>
-              <h4 className="text-2xl font-black text-blue-600 dark:text-blue-400">
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl lg:rounded-2xl p-4 lg:p-5">
+              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-2">
+                <PieChart className="w-3 h-3 lg:w-4 lg:h-4" />
+                <span className="text-[10px] lg:text-xs font-medium uppercase tracking-wider">{t("commission")} (10%)</span>
+              </div>
+              <p className="text-lg lg:text-2xl font-bold text-blue-600 dark:text-blue-400 break-words">
                 {formatCurrency(commission)}
-              </h4>
+              </p>
+            </div>
+
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl lg:rounded-2xl p-4 lg:p-5">
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-2">
+                <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4" />
+                <span className="text-[10px] lg:text-xs font-medium uppercase tracking-wider">{t("netRevenue")}</span>
+              </div>
+              <p className="text-lg lg:text-2xl font-bold text-green-600 dark:text-green-400 break-words">
+                {formatCurrency(netRevenue)}
+              </p>
             </div>
           </div>
 
-          {/* Breakdown List */}
-          <div className="space-y-4">
-            <h5 className="text-sm font-black text-gray-400 uppercase tracking-widest">Chi tiết thanh toán</h5>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600">
-                    <DollarSign size={18} />
-                  </div>
-                  <span className="font-bold text-gray-700 dark:text-gray-300">Nhà xe thực nhận</span>
-                </div>
-                <span className="text-lg font-black text-gray-900 dark:text-white">{formatCurrency(netRevenue)}</span>
+          {/* Additional Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl lg:rounded-2xl p-4 lg:p-5">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-2">
+                <Ticket className="w-3 h-3 lg:w-4 lg:h-4" />
+                <span className="text-[10px] lg:text-xs font-medium uppercase tracking-wider">{t("totalBookings")}</span>
               </div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2">
+                <p className="text-lg lg:text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatNumber(data.totalBookings)}
+                </p>
+                <p className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
+                  ~{formatCurrency(Math.round(averagePerBooking))}/{t("ticket").toLowerCase()}
+                </p>
+              </div>
+            </div>
 
-              <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600">
-                    <Calendar size={18} />
-                  </div>
-                  <span className="font-bold text-gray-700 dark:text-gray-300">Tổng số lượng vé</span>
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl lg:rounded-2xl p-4 lg:p-5">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-2">
+                <TrendingUp className="w-3 h-3 lg:w-4 lg:h-4" />
+                <span className="text-[10px] lg:text-xs font-medium uppercase tracking-wider">{t("performance")}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="flex-1 w-full h-1.5 lg:h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-purple-600 rounded-full"
+                    style={{ width: `${Math.min((data.totalBookings / 100) * 100, 100)}%` }}
+                  />
                 </div>
-                <span className="text-lg font-black text-gray-900 dark:text-white">{formatNumber(data.totalBookings)} vé</span>
+                <span className="text-xs lg:text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  {data.totalBookings} {t("bookings")}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Notice */}
-          <div className="flex gap-3 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-100 dark:border-orange-900/30">
-            <Info className="text-orange-500 shrink-0" size={20} />
-            <p className="text-xs text-orange-700 dark:text-orange-300 leading-relaxed">
-              Dữ liệu doanh thu được tính dựa trên các đơn hàng có trạng thái <b>Đã thanh toán (PAID)</b>. 
-              Phí hệ thống 10% được tự động khấu trừ vào mỗi giao dịch thành công qua cổng thanh toán.
-            </p>
+          {/* Info Note */}
+          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl lg:rounded-2xl p-4 lg:p-5 border border-amber-100 dark:border-amber-900/30">
+            <div className="flex gap-3">
+              <Info className="w-4 h-4 lg:w-5 lg:h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-xs lg:text-sm text-amber-800 dark:text-amber-200">
+                <p className="font-medium mb-1">{t("paymentInfo")}</p>
+                <p>{t("paymentInfoDesc")}</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="p-6 bg-gray-50 dark:bg-gray-800/50 flex justify-end">
-          <button onClick={onClose} className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold transition-transform active:scale-95">
-            Đóng cửa sổ
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 pt-2">
+            <button
+              onClick={onClose}
+              className="w-full sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm lg:text-base"
+            >
+              {t("close")}
+            </button>
+            <button
+              className="w-full sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors text-sm lg:text-base"
+            >
+              {t("viewTransactionDetails")}
+            </button>
+          </div>
         </div>
       </div>
     </div>
