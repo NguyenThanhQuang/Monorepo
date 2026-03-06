@@ -10,6 +10,11 @@ import {
   Star,
   SlidersHorizontal,
   ArrowRight,
+  PhoneCall,
+  BusFront,
+  CalendarX,
+  Search,
+  X,
 } from "lucide-react";
 import type { Trip } from "@obtp/shared-types";
 import { tripsApi } from "@obtp/api-client";
@@ -121,17 +126,77 @@ export function SearchResults({
 
   if (!trips.length) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center p-8">
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {t("noMatchingRoutes")}
-          </p>
-          <button
-            onClick={onBack}
-            className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-          >
-            Quay lại
-          </button>
+      <div className="min-h-[80vh] flex flex-col items-center justify-center p-4 transition-colors duration-300">
+        {/* Một vòng tròn sáng nhẹ phía sau làm nền */}
+        <div className="absolute w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
+
+        <div className="max-w-md w-full text-center space-y-8 animate-in fade-in zoom-in duration-500">
+          {/* Hình minh họa - Một chiếc xe buýt với dấu X mờ */}
+          <div className="relative inline-flex items-center justify-center">
+            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+              <BusFront className="w-12 h-12 text-gray-400" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center border-4 border-white dark:border-gray-900">
+              <X className="w-4 h-4 text-red-600 dark:text-red-400" />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {t("noTripsFound") || "Rất tiếc, chưa tìm thấy chuyến xe nào"}
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 leading-relaxed px-6">
+              Hiện tại chưa có chuyến xe nào từ{" "}
+              <span className="font-semibold text-gray-800 dark:text-gray-200">
+                "{fromProvince}"
+              </span>{" "}
+              đi{" "}
+              <span className="font-semibold text-gray-800 dark:text-gray-200">
+                "{toProvince}"
+              </span>{" "}
+              vào ngày{" "}
+              {date
+                ? new Date(date).toLocaleDateString("vi-VN")
+                : "bạn đã chọn"}
+              .
+            </p>
+          </div>
+
+          {/* Gợi ý hành động */}
+          <div className="bg-white dark:bg-gray-800/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Bạn có thể thử:
+            </p>
+            <ul className="text-sm text-gray-500 dark:text-gray-400 text-left space-y-3 mx-auto max-w-xs">
+              <li className="flex items-center gap-2">
+                <CalendarX className="w-4 h-4 text-blue-500" /> Chọn một ngày
+                khác xa hơn.
+              </li>
+              <li className="flex items-center gap-2">
+                <Search className="w-4 h-4 text-teal-500" /> Kiểm tra lại địa
+                điểm xuất phát/đích.
+              </li>
+            </ul>
+          </div>
+
+          {/* Nhóm nút bấm */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={onBack}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-linear-to-r from-blue-600 to-teal-500 text-white rounded-2xl font-semibold shadow-lg hover:shadow-blue-500/25 transition-all active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t("changeSearch") || "Thay đổi tìm kiếm"}
+            </button>
+
+            <button
+              onClick={() => (window.location.href = "tel:19006067")}
+              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-2xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+            >
+              <PhoneCall className="w-4 h-4" />
+              {t("support") || "Hỗ trợ"}
+            </button>
+          </div>
         </div>
       </div>
     );

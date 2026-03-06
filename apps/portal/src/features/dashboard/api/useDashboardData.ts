@@ -1,5 +1,8 @@
 import { api } from "@obtp/api-client";
-import { calculateCommission, calculateNetProfit } from "@obtp/business-logic";
+import {
+  calculateCompanyNetRevenue,
+  calculatePlatformCommission,
+} from "@obtp/business-logic";
 import { BookingStatus, type Booking } from "@obtp/shared-types";
 import { useQuery } from "@tanstack/react-query";
 
@@ -81,7 +84,9 @@ export const useDashboardData = () => {
 
           if (monthlyDataMap[key]) {
             monthlyDataMap[key].revenue += b.totalAmount;
-            monthlyDataMap[key].netRevenue += calculateNetProfit(b.totalAmount);
+            monthlyDataMap[key].netRevenue += calculateCompanyNetRevenue(
+              b.totalAmount,
+            );
           }
         } else if (b.status === BookingStatus.CANCELLED) {
           cancelledBookings++;
@@ -101,8 +106,8 @@ export const useDashboardData = () => {
             ? 100
             : 0;
 
-      const commissionFee = calculateCommission(totalRevenue);
-      const netProfit = calculateNetProfit(totalRevenue);
+      const commissionFee = calculatePlatformCommission(totalRevenue);
+      const netProfit = calculateCompanyNetRevenue(totalRevenue);
 
       const recentBookings = [...bookings]
         .sort(
