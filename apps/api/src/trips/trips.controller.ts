@@ -256,6 +256,7 @@ export class TripsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
   @UsePipes(new ZodValidationPipe(UpdateTripSchema))
   async update(

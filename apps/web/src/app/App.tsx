@@ -10,7 +10,10 @@ import { UserProfilePage } from "@/features/users/pages/UserProfilePage";
 import { AboutPage } from "@/pages/AboutPage";
 import { ContactPage } from "@/pages/ContactPage";
 import { FAQPage } from "@/pages/FAQPage";
+import { FeedbackPage } from "@/pages/FeedbackPage";
+import { GuidePage } from "@/pages/GuidePage";
 import { PrivacyPage } from "@/pages/PrivacyPage";
+import { RefundPage } from "@/pages/RefundPage";
 import { TermsPage } from "@/pages/TermsPage";
 import { useState, useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
@@ -62,6 +65,9 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/guide" element={<GuidePage />} />
+          <Route path="/refund" element={<RefundPage />} />
+          <Route path="/feedback" element={<FeedbackPage />} />
         </Routes>
       </main>
 

@@ -53,6 +53,15 @@ const formatDateTimeForInput = (isoString?: string | Date) => {
     .slice(0, 16);
 };
 
+const extractId = (data: any): string => {
+  if (!data) return "";
+  if (typeof data === "string") return data;
+  if (typeof data === "object") {
+    return data._id || data.id || "";
+  }
+  return "";
+};
+
 export function TripFormWizard() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -115,6 +124,42 @@ export function TripFormWizard() {
           })),
         },
       });
+    }
+  }, [isEditMode, tripData, reset, companyId]);
+  useEffect(() => {
+    if (isEditMode && tripData) {
+      console.log("Trip Data Loaded for Edit:", tripData);
+
+      const formData: CreateTripPayload = {
+        companyId: companyId || "",
+
+        vehicleId: extractId(tripData.vehicleId),
+
+        price: tripData.price,
+        isRecurrenceTemplate: tripData.isRecurrenceTemplate || false,
+
+        departureTime: formatDateTimeForInput(tripData.departureTime),
+        expectedArrivalTime: formatDateTimeForInput(
+          tripData.expectedArrivalTime,
+        ),
+
+        route: {
+          fromLocationId: extractId(tripData.route?.fromLocationId),
+          toLocationId: extractId(tripData.route?.toLocationId),
+
+          stops: (tripData.route?.stops || []).map((stop: any) => ({
+            locationId: extractId(stop.locationId),
+            expectedArrivalTime: formatDateTimeForInput(
+              stop.expectedArrivalTime,
+            ),
+            expectedDepartureTime: formatDateTimeForInput(
+              stop.expectedDepartureTime,
+            ),
+          })),
+        },
+      };
+
+      reset(formData);
     }
   }, [isEditMode, tripData, reset, companyId]);
 
