@@ -181,7 +181,7 @@ export function Footer() {
           </p>
           <p className="text-sm mt-2">
             Giấy phép kinh doanh số: 0123456789 do Sở KH&ĐT TP. HCM cấp ngày
-            01/01/2024
+            07/03/2026
           </p>
         </div>
       </div>

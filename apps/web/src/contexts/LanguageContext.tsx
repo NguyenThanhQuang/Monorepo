@@ -673,7 +673,7 @@ const translations: Record<Language, Record<string, string>> = {
     backToHome: "Về trang chủ",
 
     // FAQ Questions & Answers
-    faq1Q: "Làm thế nào để đặt vé xe trên VeXe.com?",
+    faq1Q: "Làm thế nào để đặt vé xe trên OBTP?",
     faq1A:
       "Rất đơn giản! Bạn chỉ cần: (1) Chọn điểm đi, điểm đến và ngày đi trên trang chủ. (2) Xem danh sách các chuyến xe và chọn chuyến phù hợp. (3) Chọn ghế ngồi yêu thích. (4) Điền thông tin hành khách và thanh toán. (5) Nhận vé điện tử qua email và SMS.",
     faq2Q: "Tôi có thể đặt vé trước bao lâu?",
@@ -684,10 +684,10 @@ const translations: Record<Language, Record<string, string>> = {
       'Bạn có thể hủy/đổi vé trong mục "Chuyến xe của tôi". Lưu ý: Phí hủy/đổi vé tùy thuộc vào chính sách của từng nhà xe và thời gian hủy/đổi. Nếu hủy trước 24h, phí thường là 10-20% giá vé. Nếu hủy trong vòng 24h, phí có thể lên đến 50%.',
     faq4Q: "Có những phương thức thanh toán nào?",
     faq4A:
-      "VeXe.com hỗ trợ đa dạng phương thức thanh toán: (1) Thẻ tín dụng/ghi nợ (Visa, Mastercard, JCB). (2) Ví điện tử (MoMo, ZaloPay, VNPay). (3) Chuyển khoản ngân hàng. (4) Thanh toán tại cửa hàng tiện lợi. Tất cả đều được mã hóa và bảo mật 100%.",
+      "OBTP hỗ trợ đa dạng phương thức thanh toán: (1) Thẻ tín dụng/ghi nợ (Visa, Mastercard, JCB). (2) Ví điện tử (MoMo, ZaloPay, VNPay). (3) Chuyển khoản ngân hàng. (4) Thanh toán tại cửa hàng tiện lợi. Tất cả đều được mã hóa và bảo mật 100%.",
     faq5Q: "Thanh toán có an toàn không?",
     faq5A:
-      "Hoàn toàn an toàn! VeXe.com sử dụng công nghệ mã hóa SSL 256-bit, chuẩn bảo mật quốc tế PCI DSS. Thông tin thẻ của bạn sẽ không bao giờ được lưu trữ trên hệ thống của chúng tôi.",
+      "Hoàn toàn an toàn! OBTP sử dụng công nghệ mã hóa SSL 256-bit, chuẩn bảo mật quốc tế PCI DSS. Thông tin thẻ của bạn sẽ không bao giờ được lưu trữ trên hệ thống của chúng tôi.",
     faq6Q: "Tôi có nhận được hóa đơn VAT không?",
     faq6A:
       "Có, bạn có thể yêu cầu xuất hóa đơn VAT khi đặt vé hoặc liên hệ với bộ phận CSKH trong vòng 7 ngày kể từ ngày đi. Vui lòng cung cấp thông tin công ty đầy đủ.",
@@ -702,13 +702,13 @@ const translations: Record<Language, Record<string, string>> = {
       "Xe sẽ khởi hành đúng giờ đã định. Nếu bạn đến muộn, xe có thể đã rời bến và bạn sẽ không được hoàn tiền. Chúng tôi khuyên bạn nên đến bến xe trước 15-30 phút.",
     faq10Q: "Làm sao để liên hệ với bộ phận CSKH?",
     faq10A:
-      "Bạn có thể liên hệ với chúng tôi qua: (1) Hotline: 1900 6067 (24/7). (2) Email: support@vexe.com. (3) Live chat trên website. (4) Fanpage Facebook: VeXe.com. (5) Zalo OA: VeXe Official. Chúng tôi sẵn sàng hỗ trợ bạn mọi lúc!",
+      "Bạn có thể liên hệ với chúng tôi qua: (1) Hotline: 1900 6067 (24/7). (2) Email: support@OBTP. (3) Live chat trên website. (4) Fanpage Facebook: OBTP. (5) Zalo OA: VeXe Official. Chúng tôi sẵn sàng hỗ trợ bạn mọi lúc!",
     faq11Q: "Tôi quên mất mã đặt vé, làm sao để tìm lại?",
     faq11A:
       'Đừng lo! Bạn có thể: (1) Kiểm tra email đã dùng để đặt vé. (2) Vào mục "Tra cứu vé" trên website và nhập số điện thoại. (3) Liên hệ hotline 1900 6067 để được hỗ trợ tra cứu.',
-    faq12Q: "VeXe.com có ứng dụng di động không?",
+    faq12Q: "OBTP có ứng dụng di động không?",
     faq12A:
-      "Có! Bạn có thể tải ứng dụng VeXe.com trên App Store (iOS) và Google Play (Android). Ứng dụng có giao diện thân thiện, dễ sử dụng và nhận nhiều ưu đãi độc quyền.",
+      "Có! Bạn có thể tải ứng dụng OBTP trên App Store (iOS) và Google Play (Android). Ứng dụng có giao diện thân thiện, dễ sử dụng và nhận nhiều ưu đãi độc quyền.",
 
     // Auth Pages
     driverPortalTitle: "Cổng Tài Xế",
@@ -773,7 +773,7 @@ const translations: Record<Language, Record<string, string>> = {
     termsAndConditions: "Điều khoản dịch vụ",
     and: "và",
     privacyPolicyLink: "Chính sách bảo mật",
-    ofVeXe: "của VeXe.com",
+    ofVeXe: "của OBTP",
     registerButton: "Đăng ký ngay",
     processing: "Đang xử lý...",
     registrationNote: "Lưu ý:",
@@ -1031,13 +1031,13 @@ const translations: Record<Language, Record<string, string>> = {
       "Cam kết khởi hành và đến nơi đúng giờ, tôn trọng thời gian của bạn",
     ourStory: "Câu Chuyện Của Chúng Tôi",
     ourStoryDesc:
-      "VeXe.com được thành lập với sứ mệnh mang đến trải nghiệm đặt vé xe khách tốt nhất cho người Việt",
+      "OBTP được thành lập với sứ mệnh mang đến trải nghiệm đặt vé xe khách tốt nhất cho người Việt",
     ourMission: "Sứ Mệnh",
     ourMissionDesc:
       "Kết nối hàng triệu hành khách với các nhà xe uy tín, tạo nên một hệ sinh thái giao thông an toàn, tiện lợi và minh bạch",
     ourJourney: "Hành Trình Phát Triển",
     founded: "Thành lập",
-    foundedDesc: "VeXe.com chính thức ra mắt tại TP. Hồ Chí Minh",
+    foundedDesc: "OBTP chính thức ra mắt tại TP. Hồ Chí Minh",
     expansion: "Mở rộng",
     expansionDesc: "Phủ sóng toàn quốc với hơn 200 đối tác nhà xe",
     mobileApp: "Ứng dụng di động",
@@ -1049,7 +1049,7 @@ const translations: Record<Language, Record<string, string>> = {
     ourTeam: "Đội Ngũ Của Chúng Tôi",
     ourTeamDesc: "Những con người đam mê, tận tâm và không ngừng sáng tạo",
     joinUs: "Tham gia cùng chúng tôi",
-    joinUsDesc: "Hãy là một phần trong hành trình phát triển của VeXe.com",
+    joinUsDesc: "Hãy là một phần trong hành trình phát triển của OBTP",
 
     // Payment Page
     paymentTitle: "Thanh Toán",
@@ -1861,7 +1861,7 @@ const translations: Record<Language, Record<string, string>> = {
     backToHome: "Back to Home",
 
     // FAQ Questions & Answers
-    faq1Q: "How to book bus tickets on VeXe.com?",
+    faq1Q: "How to book bus tickets on OBTP?",
     faq1A:
       "It's simple! Just: (1) Select departure, destination and date on homepage. (2) View list of trips and choose suitable one. (3) Select your favorite seat. (4) Fill in passenger information and payment. (5) Receive e-ticket via email and SMS.",
     faq2Q: "How far in advance can I book tickets?",
@@ -1872,10 +1872,10 @@ const translations: Record<Language, Record<string, string>> = {
       'You can cancel/change tickets in "My Trips" section. Note: Cancellation/change fees depend on each bus company\'s policy and timing. If canceled before 24h, the fee is usually 10-20% of ticket price. If canceled within 24h, the fee can be up to 50%.',
     faq4Q: "What payment methods are available?",
     faq4A:
-      "VeXe.com supports various payment methods: (1) Credit/Debit cards (Visa, Mastercard, JCB). (2) E-wallets (MoMo, ZaloPay, VNPay). (3) Bank transfer. (4) Payment at convenience stores. All are encrypted and 100% secure.",
+      "OBTP supports various payment methods: (1) Credit/Debit cards (Visa, Mastercard, JCB). (2) E-wallets (MoMo, ZaloPay, VNPay). (3) Bank transfer. (4) Payment at convenience stores. All are encrypted and 100% secure.",
     faq5Q: "Is payment secure?",
     faq5A:
-      "Absolutely safe! VeXe.com uses SSL 256-bit encryption technology, international PCI DSS security standard. Your card information will never be stored on our system.",
+      "Absolutely safe! OBTP uses SSL 256-bit encryption technology, international PCI DSS security standard. Your card information will never be stored on our system.",
     faq6Q: "Can I get a VAT invoice?",
     faq6A:
       "Yes, you can request a VAT invoice when booking or contact customer service within 7 days from departure date. Please provide complete company information.",
@@ -1890,13 +1890,13 @@ const translations: Record<Language, Record<string, string>> = {
       "The bus will depart on time. If you arrive late, the bus may have left the station and you will not be refunded. We recommend arriving at the bus station 15-30 minutes early.",
     faq10Q: "How to contact customer service?",
     faq10A:
-      "You can contact us via: (1) Hotline: 1900 6067 (24/7). (2) Email: support@vexe.com. (3) Live chat on website. (4) Facebook Fanpage: VeXe.com. (5) Zalo OA: VeXe Official. We are always ready to help you!",
+      "You can contact us via: (1) Hotline: 1900 6067 (24/7). (2) Email: support@busticket.com (3) Live chat on website. (4) Facebook Fanpage: OBTP. (5) Zalo OA: VeXe Official. We are always ready to help you!",
     faq11Q: "I forgot my booking code, how to find it?",
     faq11A:
       'Don\'t worry! You can: (1) Check the email used for booking. (2) Go to "Ticket Lookup" on website and enter phone number. (3) Contact hotline 1900 6067 for support.',
-    faq12Q: "Does VeXe.com have a mobile app?",
+    faq12Q: "Does OBTP have a mobile app?",
     faq12A:
-      "Yes! You can download VeXe.com app on App Store (iOS) and Google Play (Android). The app has a friendly interface, easy to use and receives many exclusive offers.",
+      "Yes! You can download OBTP app on App Store (iOS) and Google Play (Android). The app has a friendly interface, easy to use and receives many exclusive offers.",
 
     // Auth Pages
     driverPortalTitle: "Driver Portal",
@@ -1960,7 +1960,7 @@ const translations: Record<Language, Record<string, string>> = {
     termsAndConditions: "Terms of Service",
     and: "and",
     privacyPolicyLink: "Privacy Policy",
-    ofVeXe: "of VeXe.com",
+    ofVeXe: "of OBTP",
     registerButton: "Register Now",
     processing: "Processing...",
     registrationNote: "Note:",
@@ -2218,13 +2218,13 @@ const translations: Record<Language, Record<string, string>> = {
       "Commitment to depart and arrive on time, respecting your time",
     ourStory: "Our Story",
     ourStoryDesc:
-      "VeXe.com was founded with the mission to bring the best bus ticket booking experience to Vietnamese people",
+      "OBTP was founded with the mission to bring the best bus ticket booking experience to Vietnamese people",
     ourMission: "Our Mission",
     ourMissionDesc:
       "Connecting millions of passengers with reputable bus companies, creating a safe, convenient and transparent transportation ecosystem",
     ourJourney: "Our Journey",
     founded: "Founded",
-    foundedDesc: "VeXe.com officially launched in Ho Chi Minh City",
+    foundedDesc: "OBTP officially launched in Ho Chi Minh City",
     expansion: "Expansion",
     expansionDesc: "Nationwide coverage with over 200 bus company partners",
     mobileApp: "Mobile App",
@@ -2236,7 +2236,7 @@ const translations: Record<Language, Record<string, string>> = {
     ourTeam: "Our Team",
     ourTeamDesc: "Passionate, dedicated people who are constantly innovating",
     joinUs: "Join Us",
-    joinUsDesc: "Be a part of VeXe.com's development journey",
+    joinUsDesc: "Be a part of OBTP's development journey",
 
     // Payment Page
     paymentTitle: "Payment",

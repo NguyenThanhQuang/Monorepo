@@ -118,7 +118,10 @@ export function TripFormWizard() {
     }
   }, [isEditMode, tripData, reset, companyId]);
 
-  const handleNext = async () => {
+  const handleNext = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const fieldsToValidate = STEPS[activeStep].fields;
     if (fieldsToValidate.length === 0) {
       if (activeStep < STEPS.length - 1) setActiveStep((prev) => prev + 1);
@@ -162,6 +165,20 @@ export function TripFormWizard() {
       });
     }
   };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+      e.preventDefault();
+    }
+  };
+
+  if (isDepLoading || (isEditMode && isTripLoading)) {
+    return (
+      <div className="p-12 text-center text-slate-500">
+        Đang tải dữ liệu cấu hình hệ thống...
+      </div>
+    );
+  }
 
   if (isDepLoading || (isEditMode && isTripLoading)) {
     return (
@@ -216,6 +233,7 @@ export function TripFormWizard() {
       <FormProvider {...methods}>
         <form
           onSubmit={handleSubmit(onSubmitForm)}
+          onKeyDown={handleKeyDown}
           className="obtp-card obtp-card-strong p-6 md:p-8 animate-in fade-in zoom-in-95 duration-200"
         >
           <div className="min-h-[320px]">

@@ -7,6 +7,11 @@ import { HomePage } from "@/features/search/pages/HomePage";
 import { SearchResultsPage } from "@/features/search/pages/SearchResultsPage";
 import { TripDetailPage } from "@/features/trips/pages/TripDetailPage";
 import { UserProfilePage } from "@/features/users/pages/UserProfilePage";
+import { AboutPage } from "@/pages/AboutPage";
+import { ContactPage } from "@/pages/ContactPage";
+import { FAQPage } from "@/pages/FAQPage";
+import { PrivacyPage } from "@/pages/PrivacyPage";
+import { TermsPage } from "@/pages/TermsPage";
 import { useState, useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 
@@ -52,11 +57,11 @@ export default function App() {
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/profile" element={<UserProfilePage />} />
           <Route path="/my-trips" element={<MyTripsPage />} />
-          <Route path="/faq" element={<div>FAQ Page Placeholder</div>} />
-          <Route
-            path="/contact"
-            element={<div>Contact Page Placeholder</div>}
-          />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
         </Routes>
       </main>
 

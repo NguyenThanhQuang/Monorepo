@@ -1,4 +1,5 @@
 import { BUSINESS_CONSTANTS } from "@obtp/business-logic";
+import { TripStatus } from "@obtp/shared-types";
 import { z } from "zod";
 
 const TripStopSchema = z.object({
@@ -56,6 +57,24 @@ export const CreateTripSchema = z
       path: ["expectedArrivalTime"],
     },
   );
+
+export const UpdateTripSchema = z.object({
+  price: z.coerce.number().min(0).optional(),
+  status: z.nativeEnum(TripStatus).optional(),
+  departureTime: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: "Thời gian khởi hành không hợp lệ",
+    })
+    .optional(),
+  expectedArrivalTime: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: "Thời gian đến không hợp lệ",
+    })
+    .optional(),
+  isRecurrenceActive: z.boolean().optional(),
+});
 
 export const SearchTripQuerySchema = z.object({
   from: z.string().min(1),

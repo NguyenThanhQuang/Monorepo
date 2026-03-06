@@ -16,6 +16,7 @@ import {
   AssignDriverSchema,
   CreateTripSchema,
   SearchTripQuerySchema,
+  UpdateTripSchema,
 } from '@obtp/validation';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -52,10 +53,12 @@ export class TripsController {
     @Query('date') date?: string,
   ) {
     const driverUserId = (user as any)?.userId ?? (user as any)?.id;
-    const trips = await this.tripsService.findTripsForDriver(driverUserId, date);
+    const trips = await this.tripsService.findTripsForDriver(
+      driverUserId,
+      date,
+    );
     return { success: true, data: trips, count: trips.length };
   }
-
 
   @Get('management/all')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -250,5 +253,29 @@ export class TripsController {
     }
 
     return this.tripsService.toggleRecurrence(id, isActive);
+  }
+
+  @Patch(':id')
+  @Roles(sharedTypes.UserRole.ADMIN, sharedTypes.UserRole.COMPANY_ADMIN)
+  @UsePipes(new ZodValidationPipe(UpdateTripSchema))
+  async update(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Param('id') id: string,
+    @Body() payload: sharedTypes.UpdateTripPayload,
+  ) {
+    const trip = await this.tripsService.findOne(id);
+
+    if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
+      const tripCompanyId =
+        (trip.companyId as any)._id?.toString() || trip.companyId.toString();
+
+      if (tripCompanyId !== user.companyId) {
+        throw new ForbiddenException(
+          'Không có quyền sửa chuyến đi của công ty khác.',
+        );
+      }
+    }
+
+    return this.tripsService.update(id, payload);
   }
 }
