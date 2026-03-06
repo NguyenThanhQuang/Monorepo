@@ -1,11 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { X, AlertTriangle, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-/**
- * [STRICT TYPING]
- * Define modal types clearly.
- */
 type ModalType = "danger" | "warning" | "success" | "info";
 
 interface ConfirmActionModalProps {
@@ -18,6 +14,7 @@ interface ConfirmActionModalProps {
   cancelText?: string;
   type?: ModalType;
   loading?: boolean;
+  countdownSeconds?: number; // Bổ sung prop đếm ngược
 }
 
 export const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
@@ -30,14 +27,32 @@ export const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
   cancelText,
   type = "danger",
   loading = false,
+  countdownSeconds = 0,
 }) => {
   const { t } = useLanguage();
+  const [timer, setTimer] = useState(0);
+
+  // Xử lý đếm ngược khi modal mở
+  useEffect(() => {
+    if (isOpen && countdownSeconds > 0) {
+      setTimer(countdownSeconds);
+      const interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setTimer(0);
+    }
+  }, [isOpen, countdownSeconds]);
 
   if (!isOpen) return null;
 
-  /**
-   * UI configuration based on modal type
-   */
   const config = {
     danger: {
       Icon: AlertCircle,
@@ -69,15 +84,12 @@ export const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-      {/* Overlay Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={loading ? undefined : onClose}
       />
 
-      {/* Modal Content */}
       <div className="relative w-full max-w-md transform overflow-hidden rounded-3xl bg-white p-6 text-left align-middle shadow-2xl transition-all dark:bg-gray-800">
-        {/* Close button */}
         <button
           onClick={onClose}
           disabled={loading}
@@ -87,14 +99,12 @@ export const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
         </button>
 
         <div className="flex flex-col items-center text-center">
-          {/* Status Icon */}
           <div
             className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${bgIcon}`}
           >
             <Icon className={`h-8 w-8 ${iconClass}`} />
           </div>
 
-          {/* Title & Description */}
           <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
             {title}
           </h3>
@@ -102,7 +112,6 @@ export const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
             {message}
           </p>
 
-          {/* Action Buttons */}
           <div className="flex w-full flex-col gap-3 sm:flex-row">
             <button
               type="button"
@@ -114,15 +123,17 @@ export const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
             </button>
             <button
               type="button"
-              disabled={loading}
+              disabled={loading || timer > 0}
               onClick={async () => {
                 await onConfirm();
               }}
-              className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 ${btnClass}`}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 ${btnClass} ${timer > 0 ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {loading && <Loader2 size={16} className="animate-spin" />}
               <span>
-                {loading ? t("processing") : confirmText || t("confirm")}
+                {timer > 0 
+                  ? `${confirmText || t("confirm")} (${timer}s)` 
+                  : (loading ? t("processing") : confirmText || t("confirm"))}
               </span>
             </button>
           </div>
