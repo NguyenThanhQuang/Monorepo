@@ -191,6 +191,7 @@ export function TripFormWizard() {
             price: data.price,
             departureTime: data.departureTime,
             expectedArrivalTime: data.expectedArrivalTime,
+            isRecurrenceTemplate: data.isRecurrenceTemplate,
             isRecurrenceActive: data.isRecurrenceTemplate,
           },
         },

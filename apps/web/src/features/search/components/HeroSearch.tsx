@@ -33,7 +33,7 @@ export function HeroSearch() {
                   {t("departure")}
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
                   <input
                     ref={logic.fromInputRef}
                     value={logic.fromText}
@@ -50,7 +50,7 @@ export function HeroSearch() {
                     onBlur={() =>
                       setTimeout(() => logic.setShowFromSuggestions(false), 150)
                     }
-                    className="w-full h-[52px] pl-10 pr-10 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+                    className="w-full pl-12 pr-10 py-3.5 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
                   />
                   {logic.fromText && (
                     <button
@@ -104,7 +104,7 @@ export function HeroSearch() {
                   {t("destination")}
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
                   <input
                     ref={logic.toInputRef}
                     value={logic.toText}
@@ -121,7 +121,7 @@ export function HeroSearch() {
                     onBlur={() =>
                       setTimeout(() => logic.setShowToSuggestions(false), 150)
                     }
-                    className="w-full h-[52px] pl-10 pr-10 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-900 dark:text-white"
+                    className="w-full pl-12 pr-10 py-3.5 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-900 dark:text-white transition-all"
                   />
                   {logic.toText && (
                     <button

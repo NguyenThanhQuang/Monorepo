@@ -74,6 +74,7 @@ export const UpdateTripSchema = z.object({
     })
     .optional(),
   isRecurrenceActive: z.boolean().optional(),
+  isRecurrenceTemplate: z.boolean().optional(),
 });
 
 export const SearchTripQuerySchema = z.object({

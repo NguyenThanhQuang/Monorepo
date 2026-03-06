@@ -224,8 +224,15 @@ export class TripsController {
   ) {
     if (user.roles.includes(sharedTypes.UserRole.COMPANY_ADMIN)) {
       const trip = await this.tripsService.findOne(tripId);
-      if (trip.companyId.toString() !== user.companyId)
-        throw new ForbiddenException();
+
+      const tripCompanyId =
+        (trip.companyId as any)?._id?.toString() || trip.companyId?.toString();
+
+      if (tripCompanyId !== user.companyId) {
+        throw new ForbiddenException(
+          'Bạn không có quyền phân công cho chuyến đi của nhà xe khác.',
+        );
+      }
     }
 
     await this.tripsService.assignDriver(tripId, payload.driverId);

@@ -292,7 +292,7 @@ export interface CreateTripPayload {
   expectedArrivalTime: string; // ISO
   price: number;
 
-  isRecurrenceTemplate?: boolean; // Nếu true -> Dùng làm mẫu để sinh daily trip
+  isRecurrenceTemplate?: boolean;
 }
 
 export interface UpdateTripPayload {
@@ -301,6 +301,7 @@ export interface UpdateTripPayload {
   departureTime?: string;
   expectedArrivalTime?: string;
   isRecurrenceActive?: boolean;
+  isRecurrenceTemplate?: boolean;
 }
 
 // Payload query tìm chuyến đi

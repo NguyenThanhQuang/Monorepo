@@ -10,8 +10,8 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { initializeTripSeats } from '@obtp/business-logic';
 import {
-  CreateTripPayload,
   AuthUserResponse,
+  CreateTripPayload,
   GeoPoint,
   SeatStatus,
   TripStatus,
@@ -85,7 +85,10 @@ export class TripsService {
     return this.tripsRepository.findManagementTrips(filter);
   }
   // ✅ Driver: chuyến trong ngày được phân công cho tài xế (userId)
-  async findTripsForDriver(driverUserId: string, date?: string): Promise<any[]> {
+  async findTripsForDriver(
+    driverUserId: string,
+    date?: string,
+  ): Promise<any[]> {
     if (!driverUserId || !Types.ObjectId.isValid(String(driverUserId))) {
       return [];
     }
@@ -107,7 +110,6 @@ export class TripsService {
 
     return this.tripsRepository.findManagementTrips(filter);
   }
-
 
   async create(payload: CreateTripPayload): Promise<TripDocument> {
     const { companyId, vehicleId, route, departureTime, expectedArrivalTime } =
@@ -331,8 +333,12 @@ export class TripsService {
       updateData.departureTime = new Date(payload.departureTime);
     if (payload.expectedArrivalTime)
       updateData.expectedArrivalTime = new Date(payload.expectedArrivalTime);
+
     if (payload.isRecurrenceActive !== undefined)
       updateData.isRecurrenceActive = payload.isRecurrenceActive;
+
+    if (payload.isRecurrenceTemplate !== undefined)
+      updateData.isRecurrenceTemplate = payload.isRecurrenceTemplate;
 
     return this.tripsRepository.update(id, updateData);
   }
@@ -503,29 +509,30 @@ export class TripsService {
 
     const from = this.toGeoPointFromLocationDoc(trip?.route?.fromLocationId);
     const to = this.toGeoPointFromLocationDoc(trip?.route?.toLocationId);
-    const stops: any[] = Array.isArray(trip?.route?.stops) ? trip.route.stops : [];
+    const stops: any[] = Array.isArray(trip?.route?.stops)
+      ? trip.route.stops
+      : [];
     const stopPoints = stops
       .map((s) => this.toGeoPointFromLocationDoc(s?.locationId))
       .filter(Boolean) as GeoPoint[];
 
     if (!from || !to) {
-      throw new BadRequestException('Thiếu tọa độ điểm đi/đến để tính lộ trình.');
+      throw new BadRequestException(
+        'Thiếu tọa độ điểm đi/đến để tính lộ trình.',
+      );
     }
 
     const waypoints: GeoPoint[] = [from, ...stopPoints, to];
     const routeInfo = await this.mapsService.getRouteInfo(waypoints);
 
     // Cache vào trip để lần sau khỏi gọi lại
-    await this.tripsRepository.update(
-      tripId,
-      {
-        $set: {
-          'route.polyline': routeInfo.polyline,
-          'route.distance': routeInfo.distance,
-          'route.duration': routeInfo.duration,
-        },
-      } as any,
-    );
+    await this.tripsRepository.update(tripId, {
+      $set: {
+        'route.polyline': routeInfo.polyline,
+        'route.distance': routeInfo.distance,
+        'route.duration': routeInfo.duration,
+      },
+    } as any);
 
     return routeInfo;
   }
@@ -541,8 +548,10 @@ export class TripsService {
 
     const lat = Number((payload as any)?.lat);
     const lng = Number((payload as any)?.lng);
-    const heading = payload?.heading === undefined ? undefined : Number(payload.heading);
-    const speed = payload?.speed === undefined ? undefined : Number(payload.speed);
+    const heading =
+      payload?.heading === undefined ? undefined : Number(payload.heading);
+    const speed =
+      payload?.speed === undefined ? undefined : Number(payload.speed);
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       throw new BadRequestException('lat/lng không hợp lệ.');
@@ -563,17 +572,14 @@ export class TripsService {
 
     const updatedAt = new Date();
 
-    const updated = await this.tripsRepository.update(
-      tripId,
-      {
-        $set: {
-          currentLocation: { type: 'Point', coordinates: [lng, lat] },
-          currentHeading: Number.isFinite(heading as any) ? heading : undefined,
-          currentSpeed: Number.isFinite(speed as any) ? speed : undefined,
-          currentLocationUpdatedAt: updatedAt,
-        },
-      } as any,
-    );
+    const updated = await this.tripsRepository.update(tripId, {
+      $set: {
+        currentLocation: { type: 'Point', coordinates: [lng, lat] },
+        currentHeading: Number.isFinite(heading as any) ? heading : undefined,
+        currentSpeed: Number.isFinite(speed as any) ? speed : undefined,
+        currentLocationUpdatedAt: updatedAt,
+      },
+    } as any);
 
     return {
       tripId,
