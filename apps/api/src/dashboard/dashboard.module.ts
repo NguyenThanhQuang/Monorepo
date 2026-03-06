@@ -16,7 +16,8 @@ import {
 } from 'src/companies/schemas/company.schema';
 import { TripDefinition, TripSchema } from '../trips/schemas/trip.schema';
 import { UserDefinition, UserSchema } from '../users/schemas/user.schema';
-
+import { Response } from 'express'; 
+// Đảm bảo KHÔNG import từ '@types/express' mà chỉ import từ 'express'
 @Module({
   imports: [
     ConfigModule,

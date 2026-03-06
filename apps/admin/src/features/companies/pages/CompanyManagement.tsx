@@ -9,6 +9,8 @@ import {
   Clock,
   RefreshCw,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   CompanyStatus,
@@ -46,6 +48,10 @@ export function CompanyManagement() {
   const [showActivateModal, setShowActivateModal] = useState(false);
   const [selectedCompany, setSelectedCompany] =
     useState<CompanyStatsResponse | null>(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const handleSave = async (
     data: CreateCompanyPayload | UpdateCompanyPayload,
@@ -114,6 +120,13 @@ export function CompanyManagement() {
       return matchesSearch && matchesStatus;
     });
   }, [companies, filterStatus, searchQuery]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
+  const paginatedCompanies = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredCompanies.slice(start, start + itemsPerPage);
+  }, [filteredCompanies, currentPage]);
 
   const stats = useMemo(() => {
     return {
@@ -191,12 +204,7 @@ export function CompanyManagement() {
           <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border">
-          <p className="text-sm text-gray-500">Tổng doanh thu</p>
-          <p className="text-2xl font-bold text-purple-600">
-            {formatCurrency(stats.totalRevenue, true)}
-          </p>
-        </div>
+      
       </div>
 
       {/* TABLE */}
@@ -206,13 +214,19 @@ export function CompanyManagement() {
             type="text"
             placeholder="Tìm theo tên, mã..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset page khi search
+            }}
             className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-700 border rounded-xl"
           />
 
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              setCurrentPage(1); // Reset page khi filter
+            }}
             className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border rounded-xl"
           >
             <option value="all">Tất cả trạng thái</option>
@@ -243,7 +257,7 @@ export function CompanyManagement() {
             </thead>
 
             <tbody className="divide-y">
-              {filteredCompanies.map((company) => {
+              {paginatedCompanies.map((company) => {
                 const statusInfo =
                   statusConfig[company.status] ||
                   statusConfig[CompanyStatus.INACTIVE];
@@ -327,6 +341,33 @@ export function CompanyManagement() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {filteredCompanies.length > itemsPerPage && (
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Trang {currentPage} / {totalPages}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+              >
+                <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODALS */}

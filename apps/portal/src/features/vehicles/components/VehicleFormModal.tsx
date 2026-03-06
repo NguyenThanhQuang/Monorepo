@@ -358,8 +358,14 @@ export function VehicleFormModal({
             isOpen={showSafetyModal}
             title="Kiểm tra thông tin xe"
             variant="primary"
-            confirmText="Xác nhận tạo phương tiện"
-            description={`Bạn đang tạo xe: ${pendingData?.vehicleNumber} (${pendingData?.type}). Vui lòng kiểm tra kỹ sơ đồ ghế bên phải trước khi lưu vào hệ thống.`}
+            confirmText={
+              vehicleToEdit ? "Xác nhận cập nhật" : "Xác nhận tạo phương tiện"
+            }
+            description={
+              vehicleToEdit
+                ? `Bạn đang cập nhật thông tin xe: ${pendingData?.vehicleNumber} (${pendingData?.type}). Vui lòng kiểm tra kỹ sơ đồ ghế bên phải trước khi lưu thay đổi.`
+                : `Bạn đang tạo xe: ${pendingData?.vehicleNumber} (${pendingData?.type}). Vui lòng kiểm tra kỹ sơ đồ ghế bên phải trước khi lưu vào hệ thống.`
+            }
             onConfirm={handleFinalConfirm}
             onCancel={() => setShowSafetyModal(false)}
             isLoading={isLoading}

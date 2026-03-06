@@ -66,22 +66,8 @@ export function AdminDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Revenue */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-            {t("totalRevenue")}
-          </p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {formatCurrency(stats.totalRevenue, true)}
-          </p>
-          <p className="text-xs text-gray-400 mt-2 uppercase tracking-wider">
-            {t("allTime")}
-          </p>
-        </div>
+       
+         
 
         {/* Total Bookings */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">

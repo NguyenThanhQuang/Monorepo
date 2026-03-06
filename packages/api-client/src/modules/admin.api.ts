@@ -17,35 +17,25 @@ export const adminApi = {
     return response?.data || response;
   },
 
-  getRevenueStats: async (
-    params?: RevenueFilterParams,
-  ): Promise<CompanyRevenueStats[]> => {
+   getRevenueStats: async (params?: RevenueFilterParams): Promise<CompanyRevenueStats[]> => {
     const financeParams = transformRevenueParams(params);
-    const response = await http.get<FinancialReportResponse | any>(
-      "/dashboard/finance-report",
-      { params: financeParams },
-    );
+    const response = await http.get<FinancialReportResponse | any>("/dashboard/finance-report", { params: financeParams });
     const reportData: FinancialReportResponse = response?.data || response;
 
-    if (!reportData?.topCompanies) return[];
+    if (!reportData?.topCompanies) return [];
 
-    return reportData.topCompanies.map((company, index) => ({
-      companyId: `company-${index}`,
+    return reportData.topCompanies.map((company) => ({
+      companyId: (company as any).companyId, // <--- SỬA: Dùng ID thật từ Backend
       companyName: company.name,
-      companyCode: company.name.substring(0, 3).toUpperCase(),
+      companyCode: (company as any).companyCode || 'N/A',
       totalRevenue: company.revenue,
       totalBookings: company.bookings,
-      totalTrips: Math.round(company.bookings / 10),
-      averageRating: 4.5,
+      totalTrips: 0,
+      averageRating: 5,
       revenueGrowth: 0,
-      monthlyData: (reportData.revenueChartData ||[]).map((item) => ({
-        month: item.date,
-        revenue: item.revenue,
-        bookings: item.bookings,
-      })),
+      monthlyData: [],
     }));
   },
-
   getCompanyRevenueDetail: async (
     companyId: string,
     params?: RevenueFilterParams,
@@ -92,13 +82,13 @@ export const adminApi = {
     return reportData.revenueChartData ||[];
   },
 
-  exportRevenueReport: async (params?: RevenueFilterParams): Promise<Blob> => {
-    return http.get<Blob>("/dashboard/finance-report", {
-      params: transformRevenueParams(params),
-      responseType: "blob",
+exportRevenueReport: async (params: RevenueFilterParams): Promise<Blob> => {
+    // Ép kiểu responseType là 'blob' để Axios không parse JSON
+    return http.get("/dashboard/finance-report/export", {
+      params,
+      responseType: "blob", 
       headers: {
-        Accept:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
     });
   },
