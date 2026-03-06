@@ -101,6 +101,7 @@ export default function TripsPage() {
             size={18}
           />
           <Input
+            hasIcon
             className="h-11 pl-11 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-colors"
             placeholder="Tìm theo tuyến đường, biển số..."
             value={filters.searchQuery}

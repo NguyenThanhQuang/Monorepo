@@ -76,6 +76,7 @@ export function BookingTable({
             size={18}
           />
           <Input
+            hasIcon
             placeholder="Tìm theo mã vé, tên khách, số điện thoại..."
             className="pl-10 h-11 border-slate-200"
             value={filter}

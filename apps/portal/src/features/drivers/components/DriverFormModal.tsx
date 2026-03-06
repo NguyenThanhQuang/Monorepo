@@ -95,10 +95,11 @@ export function DriverFormModal({
             <div className="obtp-field">
               <label className="obtp-label">Họ và tên *</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 obtp-input-icon top-icon">
                   <User size={16} />
                 </div>
                 <Input
+                  hasIcon
                   {...register("name")}
                   className="pl-10"
                   placeholder="Nguyễn Văn A"
@@ -114,10 +115,11 @@ export function DriverFormModal({
             <div className="obtp-field">
               <label className="obtp-label">Số điện thoại *</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 obtp-input-icon top-icon">
                   <Phone size={16} />
                 </div>
                 <Input
+                  hasIcon
                   {...register("phone")}
                   className="pl-10"
                   placeholder="0909..."
@@ -134,10 +136,11 @@ export function DriverFormModal({
               <div className="obtp-field">
                 <label className="obtp-label">Số Bằng lái (GPLX) *</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 obtp-input-icon top-icon">
                     <FileBadge size={16} />
                   </div>
                   <Input
+                    hasIcon
                     {...register("licenseNumber")}
                     className="pl-10"
                     placeholder="B2-123456"
@@ -164,10 +167,11 @@ export function DriverFormModal({
             <div className="obtp-field">
               <label className="obtp-label">Kinh nghiệm (Năm)</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 obtp-input-icon top-icon">
                   <Award size={16} />
                 </div>
                 <Input
+                  hasIcon
                   type="number"
                   {...register("experienceYears", { valueAsNumber: true })}
                   className="pl-10"
