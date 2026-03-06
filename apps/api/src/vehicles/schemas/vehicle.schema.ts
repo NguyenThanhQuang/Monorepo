@@ -51,6 +51,9 @@ export class VehicleDefinition {
 
   @Prop({ type: Object })
   seatMapFloor2?: sharedTypes.SeatMap;
+
+  @Prop({ type: [Number], required: false, default: [] })
+  fullRows?: number[];
 }
 
 export const VehicleSchema = SchemaFactory.createForClass(VehicleDefinition);

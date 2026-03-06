@@ -56,6 +56,7 @@ export function VehicleFormModal({
       seatColumns: 3,
       aislePositions: [2],
       description: "",
+      fullRows: [],
     },
   });
 
@@ -99,6 +100,7 @@ export function VehicleFormModal({
   const seatRows = watch("seatRows");
   const seatColumns = watch("seatColumns");
   const aislePositions = watch("aislePositions");
+  const fullRows = watch("fullRows");
 
   const previewMap = useMemo(() => {
     try {
@@ -108,13 +110,14 @@ export function VehicleFormModal({
           seatColumns,
           aislePositions || [],
           floors,
+          fullRows || [],
         );
       }
     } catch (e) {
       return null;
     }
     return null;
-  }, [floors, seatRows, seatColumns, aislePositions]);
+  }, [floors, seatRows, seatColumns, aislePositions, fullRows]);
 
   useEffect(() => {
     if (isOpen) {
@@ -128,6 +131,8 @@ export function VehicleFormModal({
           seatRows: vehicleToEdit.seatRows,
           seatColumns: vehicleToEdit.seatColumns,
           aislePositions: vehicleToEdit.aislePositions,
+          fullRows: (vehicleToEdit as any).fullRows || [],
+
           description: vehicleToEdit.description || "",
         });
       } else {
@@ -140,6 +145,8 @@ export function VehicleFormModal({
           seatRows: 7,
           seatColumns: 3,
           aislePositions: [2],
+          fullRows: [],
+
           description: "",
         });
       }
@@ -156,6 +163,7 @@ export function VehicleFormModal({
       setValue("seatRows", p.r, { shouldValidate: true });
       setValue("seatColumns", p.c, { shouldValidate: true });
       setValue("aislePositions", p.a, { shouldValidate: true });
+      setValue("fullRows", (p as any).fr || [], { shouldValidate: true });
     }
   };
 
@@ -308,23 +316,78 @@ export function VehicleFormModal({
                 <Controller
                   name="aislePositions"
                   control={control}
-                  render={({ field }) => (
-                    <Input
-                      placeholder="Ví dụ: 2, 4"
-                      value={field.value?.join(", ") || ""}
-                      onChange={(e) => {
-                        const vals = e.target.value
-                          .split(",")
-                          .map((v) => parseInt(v.trim()))
-                          .filter((v) => !isNaN(v));
-                        field.onChange(vals);
-                      }}
-                    />
-                  )}
+                  render={({ field }) => {
+                    const [text, setText] = useState(
+                      field.value?.join(", ") || "",
+                    );
+
+                    useEffect(() => {
+                      if (field.value) {
+                        setText(field.value.join(", "));
+                      }
+                    }, [field.value]);
+
+                    return (
+                      <Input
+                        placeholder="Ví dụ: 2, 4"
+                        value={text}
+                        onChange={(e) => {
+                          setText(e.target.value);
+                          const vals = e.target.value
+                            .split(",")
+                            .map((v) => parseInt(v.trim()))
+                            .filter((v) => !isNaN(v));
+                          field.onChange(vals);
+                        }}
+                      />
+                    );
+                  }}
                 />
                 <p className="text-[11px] text-slate-400 mt-1">
                   Mẹo: Với xe giường nằm 3 dãy (3 cột ghế), lối đi thường nằm ở
                   cột 2 và 4 (Tổng 5 cột)
+                </p>
+              </div>
+
+              {/* NHẬP VỊ TRÍ HÀNG GHẾ BĂNG LIỀN (FULL ROWS) */}
+              <div className="obtp-field mt-4">
+                <label className="text-xs text-slate-500 font-medium">
+                  Hàng ghế nào là hàng băng liền (không lối đi)?
+                </label>
+                <Controller
+                  name="fullRows"
+                  control={control}
+                  render={({ field }) => {
+                    const [text, setText] = useState(
+                      field.value?.join(", ") || "",
+                    );
+
+                    // ĐƠN GIẢN HÓA LẠI ĐOẠN NÀY
+                    useEffect(() => {
+                      if (field.value) {
+                        setText(field.value.join(", "));
+                      }
+                    }, [field.value]);
+
+                    return (
+                      <Input
+                        placeholder="Ví dụ: 4, 5"
+                        value={text}
+                        onChange={(e) => {
+                          setText(e.target.value);
+                          const vals = e.target.value
+                            .split(",")
+                            .map((v) => parseInt(v.trim()))
+                            .filter((v) => !isNaN(v));
+                          field.onChange(vals);
+                        }}
+                      />
+                    );
+                  }}
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Mẹo: Với xe Limousine 9 chỗ, hàng ghế cuối (hàng 4) là hàng
+                  ghế liền, hãy nhập số 4.
                 </p>
               </div>
             </div>

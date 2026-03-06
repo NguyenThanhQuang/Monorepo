@@ -2,7 +2,6 @@ import { BUSINESS_CONSTANTS } from "@obtp/business-logic";
 import { VehicleStatus } from "@obtp/shared-types";
 import { z } from "zod";
 
-// Cấu hình vị trí lối đi: Mảng chứa số cột có lối đi, ví dụ [2, 5] nghĩa là sau cột 2 và cột 5 có lối đi
 const AislePositionSchema = z
   .array(z.number().int().min(1).max(10))
   .max(5, "Tối đa 5 lối đi")
@@ -22,15 +21,14 @@ export const CreateVehicleSchema = z.object({
   description: z.string().max(1000).optional(),
   status: z.enum(VehicleStatus).default(VehicleStatus.ACTIVE).optional(),
 
-  // Cấu hình vật lý
   floors: z.number().int().min(1).max(2).default(1),
   seatRows: z.number().int().min(1).max(50),
-  seatColumns: z.number().int().min(1).max(10), // Xe Bus thường max 5-6 cột thôi
+  seatColumns: z.number().int().min(1).max(10),
   aislePositions: AislePositionSchema,
+  fullRows: z.array(z.number()).optional().default([]),
 });
 
 export const UpdateVehicleSchema = z.object({
-  // Cho phép update từng phần
   vehicleNumber: z
     .string()
     .min(1)
@@ -45,4 +43,5 @@ export const UpdateVehicleSchema = z.object({
   seatRows: z.number().int().min(1).max(50).optional(),
   seatColumns: z.number().int().min(1).max(10).optional(),
   aislePositions: AislePositionSchema,
+  fullRows: z.array(z.number().int()).optional(),
 });

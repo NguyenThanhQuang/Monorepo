@@ -32,6 +32,7 @@ export class VehiclesService {
       payload.seatColumns,
       payload.aislePositions || [],
       payload.floors,
+      payload.fullRows || [],
     );
 
     return this.vehiclesRepository.create({
@@ -42,6 +43,7 @@ export class VehiclesService {
       seatMap: configResult.seatMapFloor1,
       seatMapFloor2: configResult.seatMapFloor2,
       aislePositions: payload.aislePositions || [],
+      fullRows: payload.fullRows || [],
     });
   }
 
@@ -112,19 +114,27 @@ export class VehiclesService {
     const currentCols = existingVehicle.seatColumns;
     const currentFloors = existingVehicle.floors;
     const currentAisles = JSON.stringify(existingVehicle.aislePositions.sort());
+    const currentFullRows = JSON.stringify(
+      (existingVehicle.fullRows || []).sort(),
+    );
 
     const newRows = payload.seatRows ?? currentRows;
     const newCols = payload.seatColumns ?? currentCols;
     const newFloors = payload.floors ?? currentFloors;
+
     const newAislesRaw =
       payload.aislePositions ?? existingVehicle.aislePositions;
     const newAislesStr = JSON.stringify(newAislesRaw.sort());
+
+    const newFullRowsRaw = payload.fullRows ?? (existingVehicle.fullRows || []);
+    const newFullRowsStr = JSON.stringify(newFullRowsRaw.sort());
 
     const isStructureChanged =
       newRows !== currentRows ||
       newCols !== currentCols ||
       newFloors !== currentFloors ||
-      newAislesStr !== currentAisles;
+      newAislesStr !== currentAisles ||
+      newFullRowsStr !== currentFullRows;
 
     let calculatedData = {};
 
@@ -142,6 +152,7 @@ export class VehiclesService {
         newCols,
         newAislesRaw,
         newFloors,
+        newFullRowsRaw,
       );
 
       calculatedData = {

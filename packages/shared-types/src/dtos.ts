@@ -247,12 +247,11 @@ export interface CreateVehiclePayload {
   type: string;
   description?: string;
   status?: VehicleStatus;
-
-  // Configuration params để generate map
   floors: number; // 1 or 2
   seatRows: number; // > 0
   seatColumns: number; // > 0
-  aislePositions?: number[]; // [2] -> Cột 2 là lối đi
+  aislePositions?: number[];
+  fullRows?: number[];
 }
 
 export interface UpdateVehiclePayload {
@@ -266,8 +265,7 @@ export interface UpdateVehiclePayload {
   seatRows?: number;
   seatColumns?: number;
   aislePositions?: number[];
-
-  // Không cho sửa companyId trực tiếp (Logic check role riêng)
+  fullRows?: number[];
 }
 
 // Response tái sử dụng Model Vehicle vì shape khớp 1-1

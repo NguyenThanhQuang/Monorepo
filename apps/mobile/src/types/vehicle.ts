@@ -3,12 +3,13 @@ export interface Vehicle {
   companyId: string;
   type: string;
   vehicleNumber: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
   description?: string;
   floors: number;
   seatColumns: number;
   seatRows: number;
   aislePositions: number[];
+  fullRows?: number[];
   totalSeats: number;
   createdAt: string;
   updatedAt: string;
@@ -18,7 +19,7 @@ export interface VehiclePayload {
   companyId: string;
   type: string;
   vehicleNumber: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
   description?: string;
   floors: number;
   seatColumns: number;
@@ -32,5 +33,3 @@ export interface VehicleResponse {
   page: number;
   limit: number;
 }
-
-

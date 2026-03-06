@@ -38,7 +38,15 @@ export const AUTH_CONSTANTS = {
 } as const;
 
 export const BUS_PRESETS = [
-  { label: "Xe Limousine 9 chỗ", type: "Limousine", f: 1, r: 4, c: 3, a: [2] },
+  {
+    label: "Xe Limousine 9 chỗ",
+    type: "Limousine",
+    f: 1,
+    r: 4,
+    c: 3,
+    a: [2],
+    fr: [4],
+  },
   {
     label: "Xe ghế ngồi 16 chỗ (Ford Transit)",
     type: "Ghế ngồi",
@@ -46,6 +54,7 @@ export const BUS_PRESETS = [
     r: 5,
     c: 4,
     a: [2],
+    fr: [5],
   },
   {
     label: "Xe ghế ngồi 29 chỗ (Samco)",
