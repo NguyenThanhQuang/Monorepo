@@ -27,17 +27,18 @@ export function StepPricing() {
         </h3>
         <p className="text-sm text-blue-600 dark:text-blue-400">
           Giá vé này sẽ áp dụng cho tất cả các ghế trên xe. Bạn có thể điều
-          chỉnh phụ thu sau này (nếu có tính năng nâng cao).
+          chỉnh phụ thu sau này
         </p>
       </div>
 
       <div className="obtp-field max-w-md">
         <label className="obtp-label">Giá vé (VNĐ) *</label>
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none obtp-input-icon top-icon">
             <DollarSign className="text-slate-400" size={18} />
           </div>
           <Input
+            hasIcon
             type="number"
             className="pl-10 text-lg font-semibold"
             placeholder="0"

@@ -26,10 +26,10 @@ export const CreateTripSchema = z
     }),
     route: z.object({
       fromLocationId: z.string().regex(BUSINESS_CONSTANTS.REGEX.MONGO_ID, {
-        message: "From Location ID không hợp lệ",
+        message: "Điểm đi không hợp lệ",
       }),
       toLocationId: z.string().regex(BUSINESS_CONSTANTS.REGEX.MONGO_ID, {
-        message: "To Location ID không hợp lệ",
+        message: "Điểm đến không hợp lệ",
       }),
       stops: z.array(TripStopSchema).optional(),
     }),
