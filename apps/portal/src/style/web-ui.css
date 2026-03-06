@@ -408,3 +408,23 @@ html:not(.dark) .obtp-error{ color: #991b1b; }
   vertical-align: middle;
   text-align: left !important;
 }
+
+.obtp-textarea-container {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.obtp-textarea-icon {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  color: var(--obtp-muted2);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.obtp-input-textarea {
+  padding-left: 42px !important;
+  line-height: 1.5;
+}

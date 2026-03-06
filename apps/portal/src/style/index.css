@@ -6164,3 +6164,35 @@ input[type="number"] {
   vertical-align: middle;
   text-align: left !important;
 }
+
+/* Container bao quanh icon và input */
+.obtp-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Định vị icon nằm chính xác ở phía bên trái */
+.obtp-input-icon {
+  position: absolute;
+  left: 14px; /* Khoảng cách từ lề trái */
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--obtp-muted2);
+  display: flex;
+  align-items: center;
+  pointer-events: none; /* Tránh cản trở việc click vào input */
+  z-index: 10;
+}
+
+/* Đối với Textarea có icon, icon nên nằm ở góc trên thay vì chính giữa */
+.obtp-field .relative > .obtp-input-icon.top-icon {
+  top: 14px;
+  transform: none;
+}
+
+/* Quan trọng: Phải có padding-left để chữ không đè lên icon */
+.obtp-input-pad {
+  padding-left: 42px !important; /* Buộc phải đẩy chữ ra 42px */
+}

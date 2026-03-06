@@ -216,9 +216,10 @@ export function CompanyProfileForm({ company }: Props) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Tên nhà xe */}
               <div className="obtp-field">
-                <label className="obtp-label">Tên nhà xe thương mại *</label>
+                <label className="obtp-label ">Tên nhà xe thương mại *</label>
                 <div className="relative">
                   <Input
+                    hasIcon
                     {...register("name")}
                     placeholder="Ví dụ: Hoàng Long Limousine"
                     className={
@@ -237,10 +238,11 @@ export function CompanyProfileForm({ company }: Props) {
               <div className="obtp-field">
                 <label className="obtp-label">Mã định danh (Hệ thống)</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 obtp-input-icon top-icon">
                     <Hash size={16} />
                   </div>
                   <Input
+                    hasIcon
                     {...register("code")}
                     disabled
                     className="pl-10 bg-slate-50 dark:bg-slate-800/50 font-mono text-blue-600 dark:text-blue-400 cursor-not-allowed opacity-80"
@@ -252,10 +254,11 @@ export function CompanyProfileForm({ company }: Props) {
               <div className="obtp-field">
                 <label className="obtp-label">Số điện thoại Hotline</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 obtp-input-icon top-icon">
                     <Phone size={16} />
                   </div>
                   <Input
+                    hasIcon
                     {...register("phone")}
                     className="pl-10"
                     placeholder="1900 xxxx hoặc 09xx..."
@@ -272,10 +275,11 @@ export function CompanyProfileForm({ company }: Props) {
               <div className="obtp-field">
                 <label className="obtp-label">Email hỗ trợ khách hàng</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 obtp-input-icon top-icon">
                     <Mail size={16} />
                   </div>
                   <Input
+                    hasIcon
                     {...register("email")}
                     className="pl-10"
                     placeholder="support@company.com"
@@ -292,10 +296,11 @@ export function CompanyProfileForm({ company }: Props) {
               <div className="obtp-field md:col-span-2">
                 <label className="obtp-label">Địa chỉ văn phòng chính</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 obtp-input-icon top-icon">
                     <MapPin size={16} />
                   </div>
                   <Input
+                    hasIcon
                     {...register("address")}
                     className="pl-10"
                     placeholder="Số nhà, tên đường, quận/huyện..."
@@ -313,18 +318,20 @@ export function CompanyProfileForm({ company }: Props) {
                 <label className="obtp-label">
                   Giới thiệu về nhà xe & Quy định
                 </label>
-                <div className="relative">
-                  <div className="absolute top-3 left-3 flex items-start pointer-events-none text-slate-400">
-                    <FileText size={16} />
-                  </div>
+
+                <div className="obtp-textarea-container">
+                  {" "}
+                  <span className="obtp-textarea-icon">
+                    {" "}
+                    <FileText size={18} />
+                  </span>
                   <textarea
                     {...register("description")}
-                    className={`obtp-input pl-10 min-h-[140px] py-3 resize-y w-full ${
-                      errors.description ? "border-red-500" : ""
-                    }`}
-                    placeholder="Mô tả ngắn gọn về dịch vụ, lịch sử hoặc các quy định chung dành cho hành khách..."
+                    className="obtp-input obtp-input-textarea min-h-[140px] py-3 resize-y w-full"
+                    placeholder="Mô tả ngắn gọn về dịch vụ..."
                   />
                 </div>
+
                 {errors.description && (
                   <p className="text-red-500 text-xs mt-1 font-medium">
                     {errors.description.message}
