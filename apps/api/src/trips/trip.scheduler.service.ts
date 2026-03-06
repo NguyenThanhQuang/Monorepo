@@ -1,20 +1,17 @@
-// src/trips/trip-scheduler.service.ts
-import { Injectable, Logger } from "@nestjs/common";
-import { Cron, CronExpression } from "@nestjs/schedule";
-import { initializeTripSeats } from "@obtp/business-logic";
-import { TripStatus, Vehicle } from "@obtp/shared-types";
-import { Types } from "mongoose";
-import { VehiclesService } from "../vehicles/vehicles.service";
-import { TripsRepository } from "./trips.repository";
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { initializeTripSeats } from '@obtp/business-logic';
+import { TripStatus, Vehicle } from '@obtp/shared-types';
+import { Types } from 'mongoose';
+import { VehiclesService } from '../vehicles/vehicles.service';
+import { TripsRepository } from './trips.repository';
 
 @Injectable()
 export class TripSchedulerService {
   private readonly logger = new Logger(TripSchedulerService.name);
 
-  // ✅ ENV flag để tắt scheduler trong dev/test
-  // DISABLE_TRIP_SCHEDULER=true
   private readonly disabled =
-    String(process.env.DISABLE_TRIP_SCHEDULER || "").toLowerCase() === "true";
+    String(process.env.DISABLE_TRIP_SCHEDULER || '').toLowerCase() === 'true';
 
   constructor(
     private readonly tripsRepository: TripsRepository,
@@ -23,19 +20,22 @@ export class TripSchedulerService {
 
   private shouldRun(jobName: string): boolean {
     if (!this.disabled) return true;
-    // log 1 dòng cho dễ hiểu
-    this.logger.warn(`SKIP ${jobName}: DISABLE_TRIP_SCHEDULER=true`);
+    this.logger.warn(`[SKIP] ${jobName}: DISABLE_TRIP_SCHEDULER is enabled.`);
     return false;
   }
 
-  // Tự động sinh chuyến đi hàng ngày (Daily Trip Gen)
+  /**
+   * 1. Tự động sinh chuyến đi từ Template cho ngày mai
+   * Chạy vào lúc 01:00 AM hàng ngày
+   */
   @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async handleDailyTripGeneration() {
-    if (!this.shouldRun("DailyTripGeneration")) return;
+    if (!this.shouldRun('DailyTripGeneration')) return;
 
-    this.logger.log("Started Daily Trip Generation...");
+    this.logger.log('>>> [JOB] Bắt đầu sinh chuyến đi tự động cho ngày mai...');
 
-    const templates = await this.tripsRepository.findActiveRecurrenceTemplates();
+    const templates =
+      await this.tripsRepository.findActiveRecurrenceTemplates();
     let count = 0;
 
     const tomorrow = new Date();
@@ -50,6 +50,7 @@ export class TripSchedulerService {
         template._id.toString(),
         nextDeparture,
       );
+
       if (exists) continue;
 
       const vehicle = await this.vehiclesService.findOne(
@@ -64,7 +65,9 @@ export class TripSchedulerService {
       const rawSeats = initializeTripSeats(vehicleParam);
       const seats = rawSeats.map((seat) => ({
         ...seat,
-        bookingId: seat.bookingId ? new Types.ObjectId(seat.bookingId) : undefined,
+        bookingId: seat.bookingId
+          ? new Types.ObjectId(seat.bookingId)
+          : undefined,
       }));
 
       const durationMs =
@@ -76,14 +79,11 @@ export class TripSchedulerService {
         vehicleId: template.vehicleId,
         route: template.route,
         price: template.price,
-
         departureTime: nextDeparture,
         expectedArrivalTime: nextArrival,
-
         isRecurrenceTemplate: false,
         isRecurrenceActive: false,
         recurrenceParentId: template._id as any,
-
         status: TripStatus.SCHEDULED,
         seats,
         availableSeatsCount: seats.length,
@@ -92,40 +92,60 @@ export class TripSchedulerService {
       count++;
     }
 
-    this.logger.log(`Generated ${count} trips for tomorrow.`);
+    this.logger.log(`<<< [JOB] Hoàn tất. Đã tạo ${count} chuyến đi.`);
   }
 
-  // Update Status (SCHEDULED -> DEPARTED)
-  // @Cron(CronExpression.EVERY_10_MINUTES)
+  /**
+   * 2. Tự động chuyển trạng thái: ĐÃ LÊN LỊCH -> ĐANG CHẠY (SCHEDULED -> DEPARTED)
+   * Chạy mỗi 10 phút
+   */
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async handleUpdateDepartedTrips() {
-    this.logger.log("SCAN: Updating DEPARTED trips...");
+    if (!this.shouldRun('UpdateDepartedTrips')) return;
+
+    this.logger.log('[SCAN] Kiểm tra các chuyến đi đến giờ khởi hành...');
     const now = new Date();
+
     const result = await this.tripsRepository.updateManyStatus(
       {
         status: TripStatus.SCHEDULED,
         departureTime: { $lte: now },
+        isRecurrenceTemplate: false, // Không tác động vào chuyến mẫu
       },
       TripStatus.DEPARTED,
     );
 
     if (result.modifiedCount > 0) {
-      this.logger.log(`UPDATED: ${result.modifiedCount} trips to DEPARTED.`);
+      this.logger.log(
+        `[SUCCESS] Đã chuyển ${result.modifiedCount} chuyến sang trạng thái ĐANG CHẠY.`,
+      );
     }
   }
 
-  // @Cron(CronExpression.EVERY_30_MINUTES)
+  /**
+   * 3. Tự động chuyển trạng thái: ĐANG CHẠY -> HOÀN THÀNH (DEPARTED -> ARRIVED)
+   * Chạy mỗi 30 phút
+   */
+  @Cron(CronExpression.EVERY_30_MINUTES)
   async handleUpdateArrivedTrips() {
-    this.logger.log("SCAN: Updating ARRIVED trips...");
+    if (!this.shouldRun('UpdateArrivedTrips')) return;
+
+    this.logger.log('[SCAN] Kiểm tra các chuyến đi đã kết thúc hành trình...');
     const now = new Date();
+
     const result = await this.tripsRepository.updateManyStatus(
       {
         status: { $in: [TripStatus.DEPARTED, TripStatus.SCHEDULED] },
         expectedArrivalTime: { $lt: now },
+        isRecurrenceTemplate: false,
       },
       TripStatus.ARRIVED,
     );
+
     if (result.modifiedCount > 0) {
-      this.logger.log(`UPDATED: ${result.modifiedCount} trips to ARRIVED.`);
+      this.logger.log(
+        `[SUCCESS] Đã chuyển ${result.modifiedCount} chuyến sang trạng thái HOÀN THÀNH.`,
+      );
     }
   }
 }
