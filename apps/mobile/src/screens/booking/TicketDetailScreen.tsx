@@ -9,6 +9,7 @@ import AppButton from "@/components/ui/AppButton";
 import AppFormMessage from "@/components/ui/AppFormMessage";
 
 import { bookingService } from "@/services/user/bookingService";
+import { downloadTicketPdfFromBooking } from "@/utils/ticketPdf";
 import { COLORS, SPACING, TYPOGRAPHY, LAYOUT, ICONS, withOpacity } from "@/theme";
 
 type Props = any;
@@ -87,6 +88,19 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
     );
   };
 
+  const onDownload = async () => {
+    try {
+      if (!booking) return;
+      await downloadTicketPdfFromBooking(booking, {
+        androidPickDirectory: true,
+        fileName: booking?.ticketCode ? `ve_${booking.ticketCode}` : `ve_${bookingId}`,
+      });
+    } catch (e) {
+      console.log("❌ download ticket error:", e);
+      Alert.alert("Lỗi", "Không thể tải vé. Vui lòng thử lại.");
+    }
+  };
+
   const driverObj = booking?.checkedInByDriverId;
   const driverId =
     (driverObj && (driverObj._id || driverObj.id)) ||
@@ -155,6 +169,8 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
 
               <View style={{ height: SPACING.sm }} />
               <AppButton title="Trạng thái sử dụng" variant="secondary" onPress={onShowUsed} />
+              <View style={{ height: SPACING.sm }} />
+              <AppButton title="Tải vé (PDF)" onPress={onDownload} />
             </View>
           ) : (
             <>

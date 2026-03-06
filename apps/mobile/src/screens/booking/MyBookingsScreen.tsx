@@ -20,6 +20,7 @@ import IconCircle from "@/components/ui/IconCircle";
 import AppButton from "@/components/ui/AppButton";
 
 import { bookingService } from "../../services/user/bookingService";
+import { downloadTicketPdfByBookingId } from "@/utils/ticketPdf";
 import { COLORS, SPACING, LAYOUT, TYPOGRAPHY, withOpacity } from "../../theme";
 
 type UiStatus = "confirmed" | "pending" | "held" | "cancelled" | "completed";
@@ -144,6 +145,7 @@ export default function MyBookingsScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [errorText, setErrorText] = useState<string>("");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<"all" | "upcoming" | "completed" | "cancelled">("all");
 
@@ -254,6 +256,26 @@ export default function MyBookingsScreen() {
 
   const goPay = (bookingId: string) => {
     navigation.navigate("PaymentCheckout", { bookingId });
+  };
+
+  const handleDownload = async (booking: BookingUI) => {
+    try {
+      if (!booking?.id) {
+        Alert.alert("Lỗi", "Thiếu bookingId.");
+        return;
+      }
+      setDownloadingId(booking.id);
+      await downloadTicketPdfByBookingId(booking.id, {
+        // Android sẽ hỏi chọn thư mục (bạn chọn Downloads để lưu)
+        androidPickDirectory: true,
+        fileName: booking.ticketCode ? `ve_${booking.ticketCode}` : `ve_${booking.id}`,
+      });
+    } catch (e) {
+      console.log("❌ download ticket error:", e);
+      Alert.alert("Lỗi", "Không thể tải vé. Vui lòng thử lại.");
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const Header = () => (
@@ -445,9 +467,9 @@ export default function MyBookingsScreen() {
             {showDownload && (
               <ActionChip
                 icon="download-outline"
-                label="Tải vé"
+                label={downloadingId === item.id ? "Đang tải..." : "Tải vé"}
                 color={COLORS.success.main}
-                onPress={() => Alert.alert("Thông báo", "Tính năng tải vé đang được phát triển")}
+                onPress={() => handleDownload(item)}
               />
             )}
 
