@@ -33,7 +33,13 @@ export function useHeroSearchLogic({
   );
   const [toLocation, setToLocation] = useState<Location | null>(initialTo);
 
-  const [date, setDate] = useState<string | undefined>(undefined);
+  const [date, setDate] = useState<string>(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
 
   const [fromSuggestions, setFromSuggestions] = useState<Location[]>([]);
   const [toSuggestions, setToSuggestions] = useState<Location[]>([]);
@@ -110,36 +116,21 @@ export function useHeroSearchLogic({
 
   const handleSearch = () => {
     if (!fromLocation) {
-      toast.error(t("selectDepartureFirst") || "Vui lòng chọn điểm đi", {
-        duration: 3000,
-        position: "top-center",
-        icon: "📍",
-      });
-      fromInputRef.current?.focus();
+      toast.error(t("selectDepartureFirst") || "Vui lòng chọn điểm đi");
       return;
     }
-
     if (!toLocation) {
-      toast.error(t("selectDestinationFirst") || "Vui lòng chọn điểm đến", {
-        duration: 3000,
-        position: "top-center",
-        icon: "🎯",
-      });
-      toInputRef.current?.focus();
+      toast.error(t("selectDestinationFirst") || "Vui lòng chọn điểm đến");
       return;
     }
 
-    if (
-      fromLocation.id === toLocation.id ||
-      (fromLocation as any)._id === (toLocation as any)._id
-    ) {
+    const fromId = fromLocation.id || (fromLocation as any)._id;
+    const toId = toLocation.id || (toLocation as any)._id;
+
+    if (fromId && toId && fromId === toId) {
       toast.error(
         t("sameLocation") || "Điểm đi và điểm đến không thể giống nhau",
-        {
-          duration: 3000,
-          position: "top-center",
-          icon: "🔄",
-        },
+        { duration: 3000, position: "top-center", icon: "🔄" },
       );
       return;
     }
@@ -169,30 +160,18 @@ export function useHeroSearchLogic({
   };
 
   const handleSwap = () => {
-    if (!fromLocation && !toLocation) {
-      toast(t("noLocationsToSwap") || "Chưa có địa điểm để hoán đổi", {
-        duration: 2000,
-        position: "top-center",
-        icon: "🔄",
-      });
-      return;
-    }
+    if (!fromLocation && !toLocation) return;
 
+    const tempLoc = fromLocation;
     setFromLocation(toLocation);
-    setToLocation(fromLocation);
+    setToLocation(tempLoc);
 
     setFromText(toLocation ? `${toLocation.name}, ${toLocation.province}` : "");
     setToText(
       fromLocation ? `${fromLocation.name}, ${fromLocation.province}` : "",
     );
 
-    if (fromLocation || toLocation) {
-      toast.success(t("swapSuccess") || "Đã hoán đổi điểm đi và điểm đến", {
-        duration: 1500,
-        position: "top-center",
-        icon: "🔄",
-      });
-    }
+    toast.success(t("swapSuccess") || "Đã hoán đổi điểm đi và điểm đến");
   };
 
   return {

@@ -1,74 +1,11 @@
-import { useState } from "react";
-import { useBookings, useBookingMutations } from "../api/useBookings";
 import { BookingTable } from "../components/BookingTable";
 import { EditBookingModal } from "../components/EditBookingModal";
-import { downloadTicketAsText } from "../utils/ticket-utils";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import type { Booking, UpdateBookingCustomerPayload } from "@obtp/shared-types";
-import { toast } from "sonner";
+import { useBookingsViewModel } from "../hooks/useBookingsViewModel";
 
 export default function BookingsPage() {
-  const user = useCurrentUser();
+  const { state, modals, actions } = useBookingsViewModel();
 
-  const { data: bookings = [], isLoading, isFetching } = useBookings();
-
-  const { cancelBooking, updateCustomerInfo } = useBookingMutations();
-
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-
-  /**
-   * Xử lý Hủy vé (Yêu cầu xác nhận trước khi thực hiện)
-   */
-  const handleCancel = (id: string) => {
-    if (
-      confirm(
-        "Bạn có chắc chắn muốn hủy vé này? Hành động này sẽ trả lại ghế cho chuyến đi và không thể hoàn tác.",
-      )
-    ) {
-      cancelBooking.mutate(id, {
-        onSuccess: () => toast.success("Đã hủy vé thành công"),
-        onError: (err: any) => toast.error(err.message || "Hủy vé thất bại"),
-      });
-    }
-  };
-
-  /**
-   * Xử lý tải vé định dạng text (.txt)
-   */
-  const handleDownload = (booking: Booking) => {
-    // Ưu tiên dùng tên nhà xe từ object Trip, fallback về thông tin user/mặc định
-    const companyName =
-      (booking as any).tripId?.companyId?.name || user?.name || "OBTP Bus Line";
-    downloadTicketAsText(booking, companyName);
-    toast.success("Đã chuẩn bị tệp tải về");
-  };
-
-  /**
-   * Mở Modal và gán thông tin vé cần chỉnh sửa
-   */
-  const handleEditInfo = (booking: Booking) => {
-    setSelectedBooking(booking);
-    setEditModalOpen(true);
-  };
-
-  /**
-   * Thực hiện gửi yêu cầu cập nhật thông tin khách hàng lên Server
-   */
-  const handleSubmitEdit = (id: string, data: UpdateBookingCustomerPayload) => {
-    updateCustomerInfo.mutate(
-      { id, payload: data },
-      {
-        onSuccess: () => {
-          setEditModalOpen(false);
-          setSelectedBooking(null);
-        },
-      },
-    );
-  };
-
-  // Trạng thái Loading ban đầu
-  if (isLoading)
+  if (state.isLoading)
     return (
       <div className="h-96 flex flex-col items-center justify-center text-slate-500 gap-3">
         <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -93,7 +30,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Chỉ thị trạng thái background sync */}
-        {isFetching && (
+        {state.isFetching && (
           <span className="text-[10px] bg-slate-100 text-slate-400 px-2 py-1 rounded-md flex items-center gap-1">
             <span className="w-1 h-1 bg-blue-500 rounded-full animate-ping" />
             Đang đồng bộ...
@@ -103,22 +40,19 @@ export default function BookingsPage() {
 
       {/* Bảng dữ liệu chính */}
       <BookingTable
-        bookings={bookings}
-        onEditInfo={handleEditInfo}
-        onCancel={handleCancel}
-        onDownload={handleDownload}
+        bookings={state.bookings}
+        onEditInfo={actions.openEdit}
+        onCancel={actions.cancel}
+        onDownload={actions.download}
       />
 
       {/* Modal Popup Chỉnh sửa thông tin khách hàng */}
       <EditBookingModal
-        isOpen={editModalOpen}
-        booking={selectedBooking}
-        onClose={() => {
-          setEditModalOpen(false);
-          setSelectedBooking(null);
-        }}
-        onSubmit={handleSubmitEdit}
-        isLoading={updateCustomerInfo.isPending}
+        isOpen={modals.edit.isOpen}
+        booking={modals.edit.data || null}
+        onClose={modals.edit.close}
+        onSubmit={actions.submitEdit}
+        isLoading={state.isMutating}
       />
     </div>
   );
