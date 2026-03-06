@@ -1,5 +1,5 @@
 import React from "react";
-import { DollarSign, Ticket, Building2, ArrowUpRight } from "lucide-react";
+import { DollarSign, Ticket, Building2, PieChart } from "lucide-react";
 import { formatCurrency, formatNumber } from "@obtp/business-logic";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -7,50 +7,76 @@ interface Props {
   totalRevenue: number;
   totalBookings: number;
   activeCompanies: number;
+  totalCommission: number;
 }
 
-export const RevenueStatsCards: React.FC<Props> = ({ totalRevenue, totalBookings, activeCompanies }) => {
+export const RevenueStatsCards: React.FC<Props> = ({ 
+  totalRevenue, 
+  totalBookings, 
+  activeCompanies, 
+  totalCommission 
+}) => {
   const { t } = useLanguage();
 
   const cardData = [
     {
+      key: "totalRevenue",
       label: t("totalRevenue"),
       value: formatCurrency(totalRevenue),
       icon: DollarSign,
-      color: "purple",
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      textColor: "text-purple-600 dark:text-purple-400",
+      iconBg: "bg-purple-100 dark:bg-purple-900/40",
     },
     {
+      key: "totalCommission",
+      label: t("totalCommission"),
+      value: formatCurrency(totalCommission),
+      icon: PieChart,
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      textColor: "text-blue-600 dark:text-blue-400",
+      iconBg: "bg-blue-100 dark:bg-blue-900/40",
+    },
+    {
+      key: "totalBookings",
       label: t("totalBookings"),
       value: formatNumber(totalBookings),
       icon: Ticket,
-      color: "blue",
+      bgColor: "bg-orange-50 dark:bg-orange-900/20",
+      textColor: "text-orange-600 dark:text-orange-400",
+      iconBg: "bg-orange-100 dark:bg-orange-900/40",
     },
     {
-      label: t("activeCompanies") || "Nhà xe hoạt động",
+      key: "activeCompanies",
+      label: t("activeCompanies"),
       value: formatNumber(activeCompanies),
       icon: Building2,
-      color: "green",
+      bgColor: "bg-green-50 dark:bg-green-900/20",
+      textColor: "text-green-600 dark:text-green-400",
+      iconBg: "bg-green-100 dark:bg-green-900/40",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {cardData.map((card, idx) => (
-        <div key={idx} className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm relative overflow-hidden group">
-          <div className="flex items-center gap-4 relative z-10">
-            <div className={`p-3 bg-${card.color}-100 dark:bg-${card.color}-900/30 rounded-2xl text-${card.color}-600 dark:text-${card.color}-400 group-hover:scale-110 transition-transform`}>
-              <card.icon className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-gray-400 uppercase tracking-tighter">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      {cardData.map((card) => (
+        <div
+          key={card.key}
+          className={`${card.bgColor} rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-100 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300`}
+        >
+          <div className="flex items-start justify-between">
+            <div className="space-y-1 lg:space-y-2">
+              <p className="text-[10px] lg:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 {card.label}
               </p>
-              <h2 className="text-2xl font-black dark:text-white tracking-tight">
+              <h3 className={`text-xl lg:text-2xl xl:text-3xl font-bold ${card.textColor} break-words`}>
                 {card.value}
-              </h2>
+              </h3>
+            </div>
+            <div className={`${card.iconBg} p-2 lg:p-3 rounded-xl lg:rounded-2xl shrink-0`}>
+              <card.icon className={`w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 ${card.textColor}`} />
             </div>
           </div>
-          <ArrowUpRight className={`absolute -right-2 -bottom-2 w-20 h-20 text-${card.color}-500/5 group-hover:text-${card.color}-500/10 transition-colors`} />
         </div>
       ))}
     </div>
