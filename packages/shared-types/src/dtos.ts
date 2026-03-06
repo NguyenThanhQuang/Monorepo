@@ -469,8 +469,8 @@ export interface RouteInfoResponse {
   polyline: string; // Chuỗi mã hóa đường đi
   duration: number; // Giây
   distance: number; // Mét
+  legDurations?: number[]; // Mảng thời gian (giây) của từng chặng nối tiếp
 }
-
 export interface CompanyRevenueStats {
   companyId: string;
   companyName: string;

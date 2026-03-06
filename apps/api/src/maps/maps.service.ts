@@ -50,10 +50,18 @@ export class MapsService {
         1.0,
       );
 
+      const legDurations =
+        route.legs && Array.isArray(route.legs)
+          ? route.legs.map((leg: any) =>
+              Math.round(leg.duration * durationMultiplier),
+            )
+          : [];
+
       return {
         polyline: route.geometry,
         distance: route.distance,
         duration: Math.round(route.duration * durationMultiplier),
+        legDurations,
       };
     } catch (error) {
       let errorMessage = 'Lỗi kết nối Map Service';
