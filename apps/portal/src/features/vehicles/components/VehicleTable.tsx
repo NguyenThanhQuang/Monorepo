@@ -37,7 +37,7 @@ export function VehicleTable({
       case VehicleStatus.MAINTENANCE:
         return <Badge variant="warning">Bảo trì</Badge>;
       case VehicleStatus.INACTIVE:
-        return <Badge variant="secondary">Ngưng HD</Badge>;
+        return <Badge variant="secondary">Ngưng HĐ</Badge>;
       default:
         return <Badge>N/A</Badge>;
     }
