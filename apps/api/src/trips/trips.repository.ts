@@ -435,12 +435,12 @@ export class TripsRepository {
       .populate({
         path: 'route.fromLocationId',
         model: 'Location',
-        select: '_id name province district address',
+        select: '_id name province district address location',
       })
       .populate({
         path: 'route.toLocationId',
         model: 'Location',
-        select: '_id name province district address',
+        select: '_id name province district address location',
       })
       .sort({ departureTime: 1 })
       .lean()

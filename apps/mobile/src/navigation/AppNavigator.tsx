@@ -20,11 +20,13 @@ import ChangePasswordScreen from "../screens/auth/ChangePasswordScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 import LoyaltyProgramScreen from "../screens/profile/LoyaltyProgramScreen";
 import BusTrackingScreen from "../screens/common/BusTrackingScreen";
+import TripMapScreen from "../screens/common/TripMapScreen";
 import DriveScreen from "../screens/profile/DriveScreen";
 import DriverHomeScreen from "../screens/driver/DriverHomeScreen";
 import DriverScannerScreen from "../screens/driver/DriverScannerScreen";
 import DriverRegisterScreen from "../screens/driver/DriverRegisterScreen";
 import DriverRatingsScreen from "../screens/driver/DriverRatingsScreen";
+import DriverTrackingScreen from "../screens/driver/DriverTrackingScreen";
 import ReviewDriverScreen from "../screens/reviews/ReviewDriverScreen";
 import ResetPasswordScreen from "../screens/auth/ResetPasswordScreen";
 import VerifyEmailScreen from "../screens/auth/VerifyEmailScreen";
@@ -65,10 +67,12 @@ const MainStackNavigator = () => (
     <MainStack.Screen name="Drive" component={DriveScreen} />
     <MainStack.Screen name="LoyaltyProgram" component={LoyaltyProgramScreen} />
     <MainStack.Screen name="BusTracking" component={BusTrackingScreen} />
+    <MainStack.Screen name="TripMap" component={TripMapScreen} />
     <MainStack.Screen name="DriverHome" component={DriverHomeScreen} />
     <MainStack.Screen name="DriverScanner" component={DriverScannerScreen} />
     <MainStack.Screen name="DriverRegister" component={DriverRegisterScreen} />
     <MainStack.Screen name="DriverRatings" component={DriverRatingsScreen} />
+    <MainStack.Screen name="DriverTracking" component={DriverTrackingScreen} />
     <MainStack.Screen name="ReviewDriver" component={ReviewDriverScreen} />
   </MainStack.Navigator>
 );

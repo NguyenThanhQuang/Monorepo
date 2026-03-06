@@ -92,6 +92,10 @@ export const API_ENDPOINTS = {
     BASE: "/trips",
     SEARCH: "/trips/search", // ✅ đổi từ "/trips/search" -> "/trips"
     SEARCH_BY_ID: "/trips/:id",
+    ACTIVE: "/trips/active",
+    DRIVER_ME: "/trips/driver/me",
+    ROUTE: "/trips/:id/route",
+    LOCATION: "/trips/:id/location",
     AVAILABLE: "/trips/available",
     POPULAR: "/trips/popular",
     BY_COMPANY: "/companies/:companyId/trips",

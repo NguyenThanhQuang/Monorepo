@@ -1,5 +1,10 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { SeatStatus, TripStatus, TripStopStatus } from '@obtp/shared-types';
+import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
+import {
+  GeoJsonPoint,
+  SeatStatus,
+  TripStatus,
+  TripStopStatus,
+} from '@obtp/shared-types';
 import { Document, Types } from 'mongoose';
 
 export type TripDocument = TripDefinition & Document;
@@ -96,6 +101,27 @@ export class TripDefinition {
 
   @Prop({ type: Types.ObjectId, ref: 'UserDefinition' })
   driverId?: Types.ObjectId;
+
+  // ─────────────────────────────────────────────────────────────
+  // ✅ Live tracking (driver cập nhật tọa độ theo thời gian thực)
+  // GeoJSON: [lng, lat]
+  // ─────────────────────────────────────────────────────────────
+  @Prop(
+    raw({
+      type: { type: String, enum: ['Point'], default: 'Point' },
+      coordinates: { type: [Number] },
+    }),
+  )
+  currentLocation?: GeoJsonPoint;
+
+  @Prop({ type: Number })
+  currentHeading?: number;
+
+  @Prop({ type: Number })
+  currentSpeed?: number;
+
+  @Prop({ type: Date })
+  currentLocationUpdatedAt?: Date;
 }
 
 export const TripSchema = SchemaFactory.createForClass(TripDefinition);

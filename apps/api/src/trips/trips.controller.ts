@@ -39,6 +39,23 @@ export class TripsController {
     const trips = await this.tripsService.findActiveTrips(date);
     return { success: true, data: trips, count: trips.length };
   }
+  // ✅ Driver: danh sách chuyến được phân công trong ngày (không cần nhập tripId)
+  @Get('driver/me')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(
+    (sharedTypes.UserRole as any).DRIVER ?? ('driver' as any),
+    sharedTypes.UserRole.ADMIN,
+    sharedTypes.UserRole.COMPANY_ADMIN,
+  )
+  async myDriverTrips(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Query('date') date?: string,
+  ) {
+    const driverUserId = (user as any)?.userId ?? (user as any)?.id;
+    const trips = await this.tripsService.findTripsForDriver(driverUserId, date);
+    return { success: true, data: trips, count: trips.length };
+  }
+
 
   @Get('management/all')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -104,6 +121,43 @@ export class TripsController {
   @Get('search/from')
   searchByFrom(@Query('fromId') fromId: string) {
     return this.tripsService.searchByFrom(fromId);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // ✅ MAP / LIVE TRACKING
+  // ─────────────────────────────────────────────────────────────
+  @Get(':id/route')
+  async getTripRoute(@Param('id') id: string) {
+    const data = await this.tripsService.getRouteForTrip(id);
+    return { success: true, data };
+  }
+
+  @Get(':id/location')
+  async getTripLocation(@Param('id') id: string) {
+    const data = await this.tripsService.getLiveLocation(id);
+    return { success: true, data };
+  }
+
+  @Post(':id/location')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(
+    sharedTypes.UserRole.DRIVER,
+    sharedTypes.UserRole.ADMIN,
+    sharedTypes.UserRole.COMPANY_ADMIN,
+  )
+  async updateTripLocation(
+    @CurrentUser() user: sharedTypes.AuthUserResponse,
+    @Param('id') id: string,
+    @Body()
+    payload: {
+      lat: number;
+      lng: number;
+      heading?: number;
+      speed?: number;
+    },
+  ) {
+    const data = await this.tripsService.updateLiveLocation(id, payload, user);
+    return { success: true, data };
   }
 
   @Post()

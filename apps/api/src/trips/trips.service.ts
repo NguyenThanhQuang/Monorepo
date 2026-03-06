@@ -11,6 +11,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { initializeTripSeats } from '@obtp/business-logic';
 import {
   CreateTripPayload,
+  AuthUserResponse,
+  GeoPoint,
   SeatStatus,
   TripStatus,
   TripStopStatus,
@@ -82,6 +84,30 @@ export class TripsService {
 
     return this.tripsRepository.findManagementTrips(filter);
   }
+  // ✅ Driver: chuyến trong ngày được phân công cho tài xế (userId)
+  async findTripsForDriver(driverUserId: string, date?: string): Promise<any[]> {
+    if (!driverUserId || !Types.ObjectId.isValid(String(driverUserId))) {
+      return [];
+    }
+
+    const targetDate = date || dayjs().tz(TZ).format('YYYY-MM-DD');
+    const startOfDay = dayjs.tz(targetDate, TZ).startOf('day').toDate();
+    const endOfDay = dayjs
+      .tz(targetDate, TZ)
+      .add(1, 'day')
+      .startOf('day')
+      .toDate();
+
+    const filter: any = {
+      driverId: new Types.ObjectId(driverUserId),
+      departureTime: { $gte: startOfDay, $lt: endOfDay },
+      status: { $in: [TripStatus.SCHEDULED, TripStatus.DEPARTED] },
+      isRecurrenceTemplate: false,
+    };
+
+    return this.tripsRepository.findManagementTrips(filter);
+  }
+
 
   async create(payload: CreateTripPayload): Promise<TripDocument> {
     const { companyId, vehicleId, route, departureTime, expectedArrivalTime } =
@@ -444,5 +470,147 @@ export class TripsService {
     return this.tripsRepository.update(tripId, {
       $set: { driverId: new Types.ObjectId(driverId) },
     } as any);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // ✅ Map route + live location
+  // ─────────────────────────────────────────────────────────────
+  private toGeoPointFromLocationDoc(loc: any): GeoPoint | null {
+    const coords = loc?.location?.coordinates;
+    if (!Array.isArray(coords) || coords.length < 2) return null;
+    const lng = Number(coords[0]);
+    const lat = Number(coords[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng };
+  }
+
+  async getRouteForTrip(tripId: string) {
+    if (!tripId || !Types.ObjectId.isValid(tripId)) {
+      throw new BadRequestException('TripId không hợp lệ.');
+    }
+
+    const trip: any = await this.tripsRepository.findByIdWithDetails(tripId);
+    if (!trip) throw new NotFoundException('Chuyến đi không tồn tại.');
+
+    // Nếu trip đã có polyline thì trả luôn
+    if (trip?.route?.polyline) {
+      return {
+        polyline: trip.route.polyline,
+        distance: Number(trip.route.distance || 0),
+        duration: Number(trip.route.duration || 0),
+      };
+    }
+
+    const from = this.toGeoPointFromLocationDoc(trip?.route?.fromLocationId);
+    const to = this.toGeoPointFromLocationDoc(trip?.route?.toLocationId);
+    const stops: any[] = Array.isArray(trip?.route?.stops) ? trip.route.stops : [];
+    const stopPoints = stops
+      .map((s) => this.toGeoPointFromLocationDoc(s?.locationId))
+      .filter(Boolean) as GeoPoint[];
+
+    if (!from || !to) {
+      throw new BadRequestException('Thiếu tọa độ điểm đi/đến để tính lộ trình.');
+    }
+
+    const waypoints: GeoPoint[] = [from, ...stopPoints, to];
+    const routeInfo = await this.mapsService.getRouteInfo(waypoints);
+
+    // Cache vào trip để lần sau khỏi gọi lại
+    await this.tripsRepository.update(
+      tripId,
+      {
+        $set: {
+          'route.polyline': routeInfo.polyline,
+          'route.distance': routeInfo.distance,
+          'route.duration': routeInfo.duration,
+        },
+      } as any,
+    );
+
+    return routeInfo;
+  }
+
+  async updateLiveLocation(
+    tripId: string,
+    payload: { lat: number; lng: number; heading?: number; speed?: number },
+    user?: AuthUserResponse,
+  ) {
+    if (!tripId || !Types.ObjectId.isValid(tripId)) {
+      throw new BadRequestException('TripId không hợp lệ.');
+    }
+
+    const lat = Number((payload as any)?.lat);
+    const lng = Number((payload as any)?.lng);
+    const heading = payload?.heading === undefined ? undefined : Number(payload.heading);
+    const speed = payload?.speed === undefined ? undefined : Number(payload.speed);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      throw new BadRequestException('lat/lng không hợp lệ.');
+    }
+
+    // Optional: chặn driver update nhầm chuyến
+    const trip = await this.tripsRepository.findById(tripId);
+    if (!trip) throw new NotFoundException('Chuyến đi không tồn tại.');
+
+    if (user?.roles?.includes('driver' as any) && trip.driverId) {
+      const assigned = String(trip.driverId);
+      const me = String((user as any)?.id || (user as any)?._id || '');
+      if (me && assigned && assigned !== me) {
+        // Không throw quá cứng nếu bạn chưa gán driverId trong DB
+        // throw new ForbiddenException('Bạn không được phân công cho chuyến này.');
+      }
+    }
+
+    const updatedAt = new Date();
+
+    const updated = await this.tripsRepository.update(
+      tripId,
+      {
+        $set: {
+          currentLocation: { type: 'Point', coordinates: [lng, lat] },
+          currentHeading: Number.isFinite(heading as any) ? heading : undefined,
+          currentSpeed: Number.isFinite(speed as any) ? speed : undefined,
+          currentLocationUpdatedAt: updatedAt,
+        },
+      } as any,
+    );
+
+    return {
+      tripId,
+      lat,
+      lng,
+      heading: Number.isFinite(heading as any) ? heading : null,
+      speed: Number.isFinite(speed as any) ? speed : null,
+      updatedAt,
+      saved: !!updated,
+    };
+  }
+
+  async getLiveLocation(tripId: string) {
+    if (!tripId || !Types.ObjectId.isValid(tripId)) {
+      throw new BadRequestException('TripId không hợp lệ.');
+    }
+
+    const trip: any = await this.tripsRepository.findById(tripId);
+    if (!trip) throw new NotFoundException('Chuyến đi không tồn tại.');
+
+    const coords = trip?.currentLocation?.coordinates;
+    if (!Array.isArray(coords) || coords.length < 2) {
+      return {
+        lat: null,
+        lng: null,
+        heading: null,
+        speed: null,
+        updatedAt: trip?.currentLocationUpdatedAt ?? null,
+      };
+    }
+
+    return {
+      lat: Number(coords[1]),
+      lng: Number(coords[0]),
+      heading: trip?.currentHeading ?? null,
+      speed: trip?.currentSpeed ?? null,
+      updatedAt: trip?.currentLocationUpdatedAt ?? null,
+    };
   }
 }

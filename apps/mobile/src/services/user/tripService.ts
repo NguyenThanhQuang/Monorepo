@@ -51,6 +51,35 @@ export const getTripById = async (id: string): Promise<Trip> => {
   }
 };
 
+// ✅ Danh sách chuyến đang chạy trong ngày (dùng cho tài xế chọn, khỏi nhập tripId)
+export const getActiveTrips = async (date?: string): Promise<any[]> => {
+  const response = await apiService.get(API_ENDPOINTS.TRIPS.ACTIVE ?? "/trips/active", {
+    params: date ? { date } : undefined,
+  });
+  const payload = unwrap(response.data) ?? {};
+  const trips = Array.isArray((payload as any)?.data)
+    ? (payload as any).data
+    : Array.isArray(payload)
+      ? payload
+      : [];
+  return trips;
+};
+
+// ✅ Danh sách chuyến của tài xế (backend mới: GET /trips/driver/me)
+export const getMyDriverTrips = async (date?: string): Promise<any[]> => {
+  const url = (API_ENDPOINTS as any)?.TRIPS?.DRIVER_ME ?? "/trips/driver/me";
+  const response = await apiService.get(url, {
+    params: date ? { date } : undefined,
+  });
+  const payload = unwrap(response.data) ?? {};
+  const trips = Array.isArray((payload as any)?.data)
+    ? (payload as any).data
+    : Array.isArray(payload)
+      ? payload
+      : [];
+  return trips;
+};
+
 export const getPopularTrips = async (): Promise<Trip[]> => {
   try {
     const response = await apiService.get<Trip[]>(API_ENDPOINTS.TRIPS.POPULAR);

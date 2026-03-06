@@ -9,7 +9,6 @@ import AppButton from "@/components/ui/AppButton";
 import AppFormMessage from "@/components/ui/AppFormMessage";
 
 import { bookingService } from "@/services/user/bookingService";
-import { downloadTicketPdfFromBooking } from "@/utils/ticketPdf";
 import { COLORS, SPACING, TYPOGRAPHY, LAYOUT, ICONS, withOpacity } from "@/theme";
 
 type Props = any;
@@ -75,6 +74,27 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
     return `${d.toLocaleDateString("vi-VN")} • ${d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`;
   }, [trip?.departureTime]);
 
+  const resolvedTripId = useMemo(() => {
+    const t = trip;
+    const raw =
+      (t && (t._id || t.id || t.tripId)) ||
+      (booking && (booking.tripId?._id || booking.tripId?.id)) ||
+      booking?.tripId;
+
+    if (!raw) return "";
+    if (typeof raw === "string") return raw;
+    if (typeof raw === "object") return String((raw as any)._id || (raw as any).id || "");
+    return "";
+  }, [trip, booking]);
+
+  const onTrackTrip = () => {
+    if (!resolvedTripId) {
+      Alert.alert("Lỗi", "Thiếu tripId để mở bản đồ.");
+      return;
+    }
+    (navigation as any).navigate("TripMap", { tripId: resolvedTripId });
+  };
+
   const onPay = () => {
     (navigation as any).navigate("PaymentCheckout", { bookingId });
   };
@@ -86,19 +106,6 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
         ? `Vé đã được quét lúc: ${new Date(booking.checkedInAt).toLocaleString("vi-VN")}`
         : "Vé chưa được quét.",
     );
-  };
-
-  const onDownload = async () => {
-    try {
-      if (!booking) return;
-      await downloadTicketPdfFromBooking(booking, {
-        androidPickDirectory: true,
-        fileName: booking?.ticketCode ? `ve_${booking.ticketCode}` : `ve_${bookingId}`,
-      });
-    } catch (e) {
-      console.log("❌ download ticket error:", e);
-      Alert.alert("Lỗi", "Không thể tải vé. Vui lòng thử lại.");
-    }
   };
 
   const driverObj = booking?.checkedInByDriverId;
@@ -146,6 +153,9 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
             <KV label="Tổng" value={`${Number(booking?.totalAmount ?? 0).toLocaleString("vi-VN")}đ`} />
             <KV label="Trạng thái" value={String(booking?.status ?? "-")} />
           </View>
+
+          <View style={{ height: SPACING.sm }} />
+          <AppButton title="Theo dõi lộ trình" variant="secondary" onPress={onTrackTrip} />
         </AppCard>
 
         <AppCard style={styles.card}>
@@ -169,8 +179,6 @@ export default function TicketDetailScreen({ navigation, route }: Props) {
 
               <View style={{ height: SPACING.sm }} />
               <AppButton title="Trạng thái sử dụng" variant="secondary" onPress={onShowUsed} />
-              <View style={{ height: SPACING.sm }} />
-              <AppButton title="Tải vé (PDF)" onPress={onDownload} />
             </View>
           ) : (
             <>

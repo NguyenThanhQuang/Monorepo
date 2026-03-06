@@ -18,11 +18,13 @@ export type MainStackParamList = {
   Profile: undefined;
   LoyaltyProgram: undefined;
   BusTracking: { tripId?: string } | undefined;
+  TripMap: { tripId: string };
   Drive: undefined;
   DriverHome: undefined;
   DriverScanner: undefined;
   DriverRegister: undefined;
   DriverRatings: undefined;
+  DriverTracking: { tripId?: string } | undefined;
   ReviewDriver: { bookingId: string };
 };
 

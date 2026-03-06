@@ -255,12 +255,12 @@ export default function ProfileScreen() {
 
           <View style={styles.divider} />
 
-          <MenuRow
+          {/* <MenuRow
             icon="gift-outline"
             title="Khách hàng thân thiết"
             subtitle="Tích điểm & đổi voucher"
             onPress={() => navigation.navigate("LoyaltyProgram" as never)}
-          />
+          /> */}
 
           <View style={styles.divider} />
 

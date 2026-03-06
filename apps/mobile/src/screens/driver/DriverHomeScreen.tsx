@@ -36,6 +36,14 @@ export default function DriverHomeScreen({ navigation }: any) {
             <Text style={styles.cardSubtitle}>Xem điểm trung bình & nhận xét</Text>
           </View>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('DriverTracking')}>
+          <Ionicons name="navigate-outline" size={30} color="#1976d2" />
+          <View style={{ marginLeft: 12 }}>
+            <Text style={styles.cardTitle}>Chia sẻ vị trí</Text>
+            <Text style={styles.cardSubtitle}>Bật GPS để hành khách theo dõi lộ trình</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </View>
   );

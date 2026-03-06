@@ -7,7 +7,7 @@ class NetworkService {
     'http://10.0.2.2:3001/api/v1',        // Android emulator
     'http://localhost:3001/api/v1',       // iOS simulator (thường ok)
     'http://127.0.0.1:3001/api/v1',       // Alternative localhost
-    'http://192.168.1.13:3001/api/v1',  // Physical device: đổi IP đúng máy bạn
+    'http://192.168.1.14:3001/api/v1',  // Physical device: đổi IP đúng máy bạn
   ];
 
   async checkApiConnectivity(): Promise<NetworkStatus> {
