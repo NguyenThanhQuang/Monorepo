@@ -45,13 +45,27 @@ export class VehiclesService {
     });
   }
 
-  async findAll(companyId?: string): Promise<VehicleDocument[]> {
+  async findAll(companyId?: string): Promise<any[]> {
     const filter: any = {};
     if (companyId) {
       if (!Types.ObjectId.isValid(companyId)) return [];
       filter.companyId = new Types.ObjectId(companyId);
     }
-    return this.vehiclesRepository.findAll(filter);
+
+    const vehicles = await this.vehiclesRepository.findAll(filter);
+
+    const result = await Promise.all(
+      vehicles.map(async (v) => {
+        const hasActiveTrips =
+          await this.tripsService.checkVehicleHasActiveTrips(v._id.toString());
+        return {
+          ...v.toObject(),
+          hasActiveTrips,
+        };
+      }),
+    );
+
+    return result;
   }
 
   async findOne(id: string): Promise<VehicleDocument> {
@@ -79,6 +93,19 @@ export class VehiclesService {
         throw new ConflictException(
           `Biển số ${payload.vehicleNumber} đã tồn tại.`,
         );
+    }
+
+    if (
+      payload.status &&
+      payload.status !== VehicleStatus.ACTIVE &&
+      payload.status !== existingVehicle.status
+    ) {
+      const hasTrips = await this.tripsService.checkVehicleHasActiveTrips(id);
+      if (hasTrips) {
+        throw new ConflictException(
+          'Xe đang có chuyến đi đã lên lịch. Không thể đổi trạng thái lúc này.',
+        );
+      }
     }
 
     const currentRows = existingVehicle.seatRows;

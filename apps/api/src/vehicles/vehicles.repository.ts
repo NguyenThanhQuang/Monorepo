@@ -77,9 +77,23 @@ export class VehiclesRepository {
     updateData: Partial<VehicleDefinition>,
     session?: ClientSession,
   ): Promise<VehicleDocument | null> {
-    return this.vehicleModel
-      .findByIdAndUpdate(id, updateData, { new: true, session })
-      .populate('companyId', 'name code') // Return populate
-      .exec();
+    try {
+      return await this.vehicleModel
+        .findByIdAndUpdate(id, updateData, { new: true, session })
+        .populate('companyId', 'name code')
+        .exec();
+    } catch (error) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        (error as Record<string, unknown>).code === 11000
+      ) {
+        throw new ConflictException(
+          'Biển số xe đã tồn tại trong hệ thống của nhà xe này.',
+        );
+      }
+      throw error;
+    }
   }
 }

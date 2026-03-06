@@ -10,15 +10,11 @@ import { http } from "../core/http-client";
 
 // ================= TYPES =================
 
-
-
-
 export interface TripSearchParams {
   fromId: string;
   toId: string;
   date: string;
 }
-
 
 export interface TripStats {
   totalTrips: number;
@@ -45,7 +41,7 @@ export const tripsApi = {
     return http.get<Trip[]>("/trips", { params: query });
   },
   searchTrips: (params: TripSearchParams) => {
-    return http.get<TripResponse>('/trips/search', { params });
+    return http.get<TripResponse>("/trips/search", { params });
   },
   /* ===== SEARCH BY LOCATION IDS ===== */
   search: async (params: TripSearchParams): Promise<Trip[]> => {
@@ -67,13 +63,17 @@ export const tripsApi = {
     date: string,
   ): Promise<Trip[]> => {
     try {
-      const response = await http.get<TripResponse>("/trips", {
+      const response = await http.get<any>("/trips", {
         params: {
           from: fromProvince,
           to: toProvince,
           date,
         },
       });
+
+      if (Array.isArray(response)) {
+        return response;
+      }
       return response?.data || [];
     } catch (error) {
       console.error("Error searching trips by provinces:", error);
@@ -133,70 +133,25 @@ export const tripsApi = {
   /* ===== GET BY ID (with safe handling) ===== */
   getTripById: async (id: string): Promise<Trip | null> => {
     try {
-      // Kiểm tra ID null/undefined
-      if (!id || id === "undefined" || id === "null") {
-        console.error("❌ Invalid trip ID (null/undefined):", id);
-        return null;
-      }
+      if (!id || !isValidObjectId(id)) return null;
 
-      console.log("🔍 Fetching trip with ID:", id);
-      console.log("📏 ID length:", id.length);
-
-      // ObjectId chuẩn phải là 24 ký tự
-      if (id.length !== 24) {
-        console.error("❌ Invalid ID length. Expected 24, got:", id.length);
-        return null;
-      }
-
-      // Kiểm tra format ID
-      if (!isValidObjectId(id)) {
-        console.error("❌ Invalid ID format - not a valid ObjectId:", id);
-        return null;
-      }
-
-      // Đảm bảo ID không có khoảng trắng
       const cleanId = id.trim();
-
       const response = await http.get<any>(`/trips/${cleanId}`);
 
-      console.log("📦 Response from server:", response);
+      // Vì http-client.ts đã intercept và return data.data (nếu có)
+      // Nên response lúc này thường chính là object Trip.
 
-      // CẤU TRÚC THỰC TẾ: { statusCode, message, data: { success, data: Trip } }
-      // Trip nằm ở response.data.data
-      if (response?.data?.data) {
-        const tripData = response.data.data;
+      // Xử lý an toàn:
+      const tripData = response?.data || response; // Lấy cái nào là object chứa _id
 
-        // Kiểm tra xem có phải là Trip object không (có id hoặc _id)
-        if (tripData.id || tripData._id) {
-          console.log("✅ Trip found in response.data.data");
-
-          // Chuyển đổi id thành _id để đồng bộ với interface Trip
-          if (tripData.id && !tripData._id) {
-            tripData._id = tripData.id;
-          }
-
-          return tripData as Trip;
-        }
+      if (tripData && (tripData._id || tripData.id)) {
+        return tripData as Trip;
       }
 
-      // Fallback: kiểm tra các cấu trúc khác
-      if (response?.data?._id) {
-        console.log("✅ Trip found in response.data");
-        return response.data as Trip;
-      }
-
-      if (response?._id) {
-        console.log("✅ Trip found directly in response");
-        return response as Trip;
-      }
-
-      console.error(
-        "❌ Invalid response structure. Full response:",
-        JSON.stringify(response, null, 2),
-      );
+      console.error("Unrecognized trip format:", response);
       return null;
     } catch (error) {
-      console.error("❌ Error fetching trip by ID:", error);
+      console.error("Error fetching trip detail:", error);
       return null;
     }
   },
@@ -676,13 +631,11 @@ export const tripsApi = {
       return "Invalid Time";
     }
   },
- async getTripDetail(
-  tripId: string,
-): Promise<TripDetailResponse> {
-  const res = await fetch(`/api/trips/${tripId}`);
-  if (!res.ok) throw new Error('Không lấy được chi tiết chuyến đi');
-  return res.json();
-},
+  async getTripDetail(tripId: string): Promise<TripDetailResponse> {
+    const res = await fetch(`/api/trips/${tripId}`);
+    if (!res.ok) throw new Error("Không lấy được chi tiết chuyến đi");
+    return res.json();
+  },
   // Helper function để format price
   formatPrice: (price: number): string => {
     return new Intl.NumberFormat("vi-VN").format(price) + "đ";

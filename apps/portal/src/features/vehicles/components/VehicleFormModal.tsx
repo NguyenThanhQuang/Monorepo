@@ -20,6 +20,7 @@ interface Props {
   onClose: () => void;
   onSubmit: (data: CreateVehiclePayload) => void;
   isLoading: boolean;
+  existingVehicles: Vehicle[];
 }
 
 export function VehicleFormModal({
@@ -28,6 +29,7 @@ export function VehicleFormModal({
   onClose,
   onSubmit,
   isLoading,
+  existingVehicles,
 }: Props) {
   const user = useCurrentUser();
 
@@ -37,6 +39,7 @@ export function VehicleFormModal({
     reset,
     setValue,
     watch,
+    setError,
     control,
     formState: { errors },
   } = useForm<CreateVehiclePayload>({
@@ -62,6 +65,25 @@ export function VehicleFormModal({
   );
 
   const handleFormSubmit = (data: CreateVehiclePayload) => {
+    const normalizePlate = (plate: string) =>
+      plate.trim().toUpperCase().replace(/\s/g, "");
+
+    const newPlate = normalizePlate(data.vehicleNumber);
+
+    const isDuplicate = existingVehicles.some((v) => {
+      if (vehicleToEdit && v.id === vehicleToEdit.id) return false;
+
+      return normalizePlate(v.vehicleNumber) === newPlate;
+    });
+
+    if (isDuplicate) {
+      setError("vehicleNumber", {
+        type: "manual",
+        message: "Biển số xe này đã tồn tại trong hệ thống!",
+      });
+      return;
+    }
+
     setPendingData(data);
     setShowSafetyModal(true);
   };
