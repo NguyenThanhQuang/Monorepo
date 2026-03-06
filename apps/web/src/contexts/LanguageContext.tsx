@@ -18,7 +18,7 @@ const translations: Record<Language, Record<string, string>> = {
   vi: {
     // Header
     home: "Trang chủ",
-    routes: "Tyumen đường",
+    routes: "Tuyến đường",
     ticketLookup: "Tra cứu vé",
     contact: "Liên hệ",
     hotline: "Hotline",

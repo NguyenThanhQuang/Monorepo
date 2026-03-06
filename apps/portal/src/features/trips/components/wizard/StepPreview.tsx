@@ -16,7 +16,6 @@ export function StepPreview() {
     (l) => l.id === formData.route.toLocationId,
   );
 
-  // Helper formats
   const formatMoney = (amount: number) =>
     new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -104,7 +103,7 @@ export function StepPreview() {
               <div className="text-xs text-slate-500">
                 {fromLocation?.province}
               </div>
-              <div className="flex items-center text-blue-600 text-sm mt-1 font-medium">
+              <div className="flex items-center text-blue-600 text-sm mt-1 font-medium ">
                 <Clock size={14} className="mr-1" />{" "}
                 {formatDate(formData.departureTime)}
               </div>
