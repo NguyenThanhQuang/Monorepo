@@ -89,6 +89,8 @@ describe('VehiclesService', () => {
   describe('Tầng hiển thị: Danh sách xe (findAll)', () => {
     it('Bổ sung cờ hasActiveTrips cho mỗi xe trong danh sách', async () => {
       const vehicleId = new Types.ObjectId();
+      const validCompanyId = new Types.ObjectId().toString(); // ✅ FIX: Tạo ID hợp lệ
+
       const mockVehicles = [
         { _id: vehicleId, toObject: () => ({ vehicleNumber: '30B-99999' }) },
       ];
@@ -96,7 +98,7 @@ describe('VehiclesService', () => {
       vehiclesRepository.findAll.mockResolvedValue(mockVehicles);
       tripsService.checkVehicleHasActiveTrips.mockResolvedValue(true);
 
-      const result = await service.findAll('company_id_here');
+      const result = await service.findAll(validCompanyId);
 
       expect(vehiclesRepository.findAll).toHaveBeenCalled();
       expect(tripsService.checkVehicleHasActiveTrips).toHaveBeenCalledWith(

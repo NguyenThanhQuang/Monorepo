@@ -25,10 +25,10 @@ import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { Types } from 'mongoose';
-import { BookingsRepository } from 'src/bookings/bookings.repository';
-import { LocationsRepository } from 'src/locations/locations.repository';
-import { MapsService } from 'src/maps/maps.service';
+import { BookingsRepository } from '../bookings/bookings.repository';
 import { CompaniesService } from '../companies/companies.service';
+import { LocationsRepository } from '../locations/locations.repository';
+import { MapsService } from '../maps/maps.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { TripDocument } from './schemas/trip.schema';
 import { TripsRepository } from './trips.repository';
@@ -138,13 +138,6 @@ export class TripsService {
     const vehicleCoIdStr = String(rawVehicleCoId).trim();
     const payloadCoIdStr = String(companyId).trim();
 
-    // Bước 3: Log type ra để vạch mặt kẻ thủ ác (bạn có thể xóa sau khi fix xong)
-    console.log('🔍 DEBUG OWNERSHIP CHECK:', {
-      Vehicle: { val: vehicleCoIdStr, type: typeof vehicleCoIdStr },
-      Payload: { val: payloadCoIdStr, type: typeof payloadCoIdStr },
-      IsMatch: vehicleCoIdStr === payloadCoIdStr,
-    });
-
     if (vehicleCoIdStr !== payloadCoIdStr) {
       throw new BadRequestException(
         `Xe không thuộc về nhà xe này. (Xe: ${vehicleCoIdStr} vs Yêu cầu: ${payloadCoIdStr})`,
@@ -196,15 +189,6 @@ export class TripsService {
       isRecurrenceActive: payload.isRecurrenceTemplate || false,
       seats: readySeats,
     };
-
-    console.log('Creating trip with data:', {
-      companyId: tripData.companyId,
-      vehicleId: tripData.vehicleId,
-      companyIdType: typeof tripData.companyId,
-      vehicleIdType: typeof tripData.vehicleId,
-      companyIdInstance: tripData.companyId instanceof Types.ObjectId,
-      vehicleIdInstance: tripData.vehicleId instanceof Types.ObjectId,
-    });
 
     const createdTrip = await this.tripsRepository.create(tripData);
     return createdTrip;
@@ -272,8 +256,6 @@ export class TripsService {
   }
 
   async findOne(id: string): Promise<TripDocument> {
-    console.log('🔍 TripsService.findOne called with ID:', id);
-
     try {
       if (!id || !Types.ObjectId.isValid(id)) {
         throw new BadRequestException('ID chuyến đi không hợp lệ.');
@@ -393,9 +375,7 @@ export class TripsService {
       filter.companyId = new Types.ObjectId(companyId);
     }
 
-    console.log('Service filter:', filter);
     const trips = await this.tripsRepository.findManagementTrips(filter);
-    console.log(`Found ${trips.length} trips for management`);
 
     return trips;
   }

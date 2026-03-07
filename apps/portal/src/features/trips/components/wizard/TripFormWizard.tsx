@@ -128,8 +128,6 @@ export function TripFormWizard() {
   }, [isEditMode, tripData, reset, companyId]);
   useEffect(() => {
     if (isEditMode && tripData) {
-      console.log("Trip Data Loaded for Edit:", tripData);
-
       const formData: CreateTripPayload = {
         companyId: companyId || "",
 

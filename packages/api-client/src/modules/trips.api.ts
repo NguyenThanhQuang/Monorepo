@@ -221,11 +221,7 @@ export const tripsApi = {
   /* ===== CREATE ===== */
   create: async (payload: CreateTripPayload): Promise<Trip | null> => {
     try {
-      console.log("Calling API create with payload:", payload);
-
       const response = await http.post<any>("/trips", payload);
-
-      console.log("API create response:", response);
 
       // Kiểm tra cấu trúc response
       if (response && response.data && response.data.data) {

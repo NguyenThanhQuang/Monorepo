@@ -223,11 +223,6 @@ export class TripsRepository {
   }
 
   async findManagementTrips(filter: QueryFilter<TripDocument>): Promise<any[]> {
-    console.log(
-      'Finding management trips with filter:',
-      JSON.stringify(filter),
-    );
-
     return this.tripModel
       .find(filter)
       .populate({
@@ -417,8 +412,6 @@ export class TripsRepository {
       status: { $in: statuses },
       isRecurrenceTemplate: false,
     };
-
-    console.log('Mongoose Query:', filter);
 
     return this.tripModel
       .find(filter)

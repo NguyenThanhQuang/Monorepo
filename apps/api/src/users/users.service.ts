@@ -21,7 +21,7 @@ import {
   UserRole,
 } from '@obtp/shared-types';
 import { Types } from 'mongoose';
-import { BookingsRepository } from 'src/bookings/bookings.repository';
+import { BookingsRepository } from '../bookings/bookings.repository';
 import { UserDocument } from './schemas/user.schema';
 import { UsersRepository } from './users.repository';
 

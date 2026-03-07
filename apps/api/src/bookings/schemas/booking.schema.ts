@@ -1,14 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { BookingStatus, PaymentStatus } from '@obtp/shared-types';
 import { HydratedDocument, Types } from 'mongoose';
-import { CompanyDefinition } from 'src/companies/schemas/company.schema';
+import { CompanyDefinition } from '../../companies/schemas/company.schema';
 import { TripDefinition } from '../../trips/schemas/trip.schema';
 import { UserDefinition } from '../../users/schemas/user.schema';
 
 export type BookingDocument = HydratedDocument<BookingDefinition>;
 
-@Schema({
-})
+@Schema({})
 export class PassengerInfo {
   @Prop({ type: String, required: true, trim: true })
   name: string;
@@ -24,10 +23,7 @@ export class PassengerInfo {
 }
 export const PassengerInfoSchema = SchemaFactory.createForClass(PassengerInfo);
 
-@Schema({ timestamps: true,
-    collection: 'bookings',
-
- })
+@Schema({ timestamps: true, collection: 'bookings' })
 export class BookingDefinition {
   @Prop({
     type: Types.ObjectId,
@@ -117,7 +113,6 @@ export class BookingDefinition {
   })
   checkedInByDriverId?: Types.ObjectId;
 
-
   @Prop({
     type: Types.ObjectId,
     ref: 'ReviewDefinition',
@@ -133,13 +128,12 @@ export class BookingDefinition {
     index: true,
   })
   driverReviewId?: Types.ObjectId;
-   @Prop()
+  @Prop()
   createdAt?: Date;
 
   @Prop()
   updatedAt?: Date;
 }
-
 
 export const BookingSchema = SchemaFactory.createForClass(BookingDefinition);
 

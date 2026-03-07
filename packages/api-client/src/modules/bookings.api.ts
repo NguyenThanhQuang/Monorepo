@@ -33,8 +33,6 @@ export const bookingsApi = {
     try {
       const response = await http.get<any>("/users/me/bookings");
 
-      console.log("Raw response:", response);
-
       // Xử lý response
       if (!response) return [];
 
@@ -108,13 +106,13 @@ export const bookingsApi = {
     );
     return response.data;
   },
-  async fetchBookings(): Promise<BookingUI[]>  {
-  try {
-    const res = await http.get<BookingUI[]>('/bookings'); 
-    return res
-  } catch (error) {
-    console.error('Error fetching bookings:', error);
-    throw error;
-  }
-}
+  async fetchBookings(): Promise<BookingUI[]> {
+    try {
+      const res = await http.get<BookingUI[]>("/bookings");
+      return res;
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      throw error;
+    }
+  },
 };
