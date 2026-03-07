@@ -19,8 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "seed:trips": "ts-node -r tsconfig-paths/register scripts/seed-trips.ts",
-    "seed": "node scripts/seed.js",
-    "seed:all": "node scripts/seed.js"
+    "seed": "ts-node -r tsconfig-paths/register src/seed.ts"
   },
   "dependencies": {
     "@jest/globals": "^30.2.0",
